@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Nexra AI</title>
+<script src="https://js.puter.com/v2/"></script>
+<style>
+:root{--lime:#8bea42;--lime2:#5fbd25;--ink:#151915;--muted:#7c8478;--line:#e7eee2;--soft:#f5faef}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#fff}
+button,textarea,select{font:inherit}button{cursor:pointer}
+.app{height:100%;display:flex;flex-direction:column}
+header{height:72px;flex:0 0 72px;border-bottom:1px solid #f0f3ee;display:flex;align-items:center;justify-content:space-between;padding:0 max(16px,5vw);background:rgba(255,255,255,.92)}
+.brand{display:flex;align-items:center;gap:11px}.logo{width:39px;height:39px;border-radius:13px;background:var(--lime);display:grid;place-items:center;box-shadow:0 5px 18px #8bea4238;animation:float 3s ease-in-out infinite}.logo svg{width:25px;height:25px}.name{font-size:22px;font-weight:850;letter-spacing:-1px}.name span{font-weight:500}
+.header-actions{display:flex;align-items:center;gap:13px}.online{font-size:11px;color:#55972d;display:flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#73d63a;animation:pulse 1.5s infinite}.new{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;font-size:12px;color:#3f463c}.new:hover{background:var(--soft);border-color:var(--lime)}
+main{width:100%;max-width:980px;margin:auto;min-height:0;flex:1;display:flex;flex-direction:column;padding:18px 18px 12px}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:25px 8px;animation:rise .5s ease}
+.hero{width:80px;height:80px;border-radius:26px;background:linear-gradient(145deg,#d5ffb5,#8bea42);display:grid;place-items:center;box-shadow:0 15px 45px #8bea4230;animation:float 3s ease-in-out infinite;margin-bottom:25px}.hero svg{width:46px;height:46px}
+h1{font-size:clamp(38px,8vw,58px);line-height:1;letter-spacing:-3px;margin:0;font-weight:850}h1 span{color:var(--lime2)}
+.sub{margin:15px 0 0;color:var(--muted);font-size:14px;line-height:1.7}.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:29px}.chip{border:1px solid var(--line);background:#fff;color:#596055;border-radius:99px;padding:10px 14px;font-size:11px}.chip:hover{border-color:var(--lime);background:var(--soft);transform:translateY(-1px)}
+#chat{display:none;flex:1;overflow:auto;padding:20px 4px 30px;min-height:0}.msg{max-width:86%;margin:0 0 24px;font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;animation:rise .2s ease}.user{margin-left:auto;background:#f0f9e9;border:1px solid #e1efd8;padding:12px 16px;border-radius:18px 18px 4px 18px}.ai{margin-right:auto;padding:2px 3px}.label{display:block;color:var(--lime2);font-size:10px;font-weight:850;letter-spacing:.7px;margin-bottom:6px}
+.composer{border:1px solid #dfe9d9;border-radius:19px;background:#fff;padding:12px 14px;box-shadow:0 9px 35px #9fbe8d18}.composer:focus-within{border-color:#8bd950;box-shadow:0 9px 35px #8bea4220}
+textarea{display:block;width:100%;min-height:50px;max-height:150px;resize:none;border:0;outline:0;background:transparent;color:var(--ink);padding:8px 4px;font-size:14px;line-height:1.55}textarea::placeholder{color:#a1a99c}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #f0f3ed;padding-top:10px}.model{min-width:0;max-width:74%;border:1px solid #e5ecdf;background:#f8fbf5;color:#41493c;border-radius:10px;padding:9px 11px;font-size:11px;outline:0}.send{border:0;background:var(--lime);color:#17220f;font-weight:850;border-radius:11px;padding:10px 18px}.send:hover{background:#9af04f}.send:disabled{opacity:.45;cursor:not-allowed}
+.info{text-align:center;font-size:10px;color:#929a8c;margin-top:10px}#error{text-align:center;color:#c85353;font-size:11px;min-height:0;margin-top:5px}footer{text-align:center;font-size:9px;color:#a3aa9f;padding:10px 0 2px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}@keyframes pulse{50%{opacity:.25}}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:600px){header{height:64px;flex-basis:64px;padding:0 15px}.name{font-size:20px}.online{display:none}main{padding:10px 13px 9px}.hero{width:70px;height:70px;margin-bottom:22px}h1{font-size:43px}.sub{font-size:13px}.msg{max-width:94%}.model{max-width:72%}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="brand"><div class="logo"><svg viewBox="0 0 48 48" fill="none"><rect x="9" y="13" width="30" height="26" rx="9" stroke="#17220f" stroke-width="2.8"/><path d="M24 7v6" stroke="#17220f" stroke-width="2.8" stroke-linecap="round"/><circle cx="24" cy="5" r="2.5" fill="#17220f"/><circle cx="19" cy="25" r="2.5" fill="#17220f"/><circle cx="29" cy="25" r="2.5" fill="#17220f"/><path d="M19 32q5 4 10 0" stroke="#17220f" stroke-width="2.5" stroke-linecap="round"/></svg></div><div class="name">Nexra <span>AI</span></div></div>
+<div class="header-actions"><div class="online"><i class="dot"></i><span id="status">Connecting</span></div><button class="new" id="newChat">+ New chat</button></div>
+</header>
+<main>
+<section class="welcome" id="welcome">
+<div class="hero"><svg viewBox="0 0 48 48" fill="none"><rect x="9" y="13" width="30" height="26" rx="9" stroke="#17220f" stroke-width="2.8"/><path d="M24 7v6" stroke="#17220f" stroke-width="2.8" stroke-linecap="round"/><circle cx="24" cy="5" r="2.5" fill="#17220f"/><circle cx="19" cy="25" r="2.5" fill="#17220f"/><circle cx="29" cy="25" r="2.5" fill="#17220f"/><path d="M19 32q5 4 10 0" stroke="#17220f" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+<h1>Ask <span>Anything.</span></h1><p class="sub">Think bigger. Explore ideas. Create something amazing.</p>
+<div class="chips"><button class="chip" data-prompt="Explain quantum physics simply">✦ Explain something</button><button class="chip" data-prompt="Help me build a website">◈ Build a website</button><button class="chip" data-prompt="Teach me something fascinating">◎ Teach me</button><button class="chip" data-prompt="Write a Python program">⌘ Write code</button></div>
+</section>
+<section id="chat"></section>
+<div class="composer"><textarea id="prompt" rows="2" placeholder="Ask anything..."></textarea><div class="controls"><select id="model" class="model"><option>Loading models...</option></select><button id="send" class="send">↑ Send</button></div></div>
+<div class="info" id="info">Loading model information...</div><div id="error"></div><footer>Nexra AI · Powered by Puter.js · Free variants are subject to provider quotas</footer>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id), chat=$('chat'), welcome=$('welcome'), prompt=$('prompt'), modelBox=$('model'), send=$('send');
+let models=[],history=[],busy=false;
+function add(text,role){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'ai');if(role==='assistant'){const l=document.createElement('span');l.className='label';l.textContent='NEXRA AI';d.appendChild(l)}const c=document.createElement('span');c.textContent=text;d.appendChild(c);chat.appendChild(d);chat.scrollTop=chat.scrollHeight;return c}
+function info(){const m=models.find(x=>x.id===modelBox.value);if(!m)return;$('info').textContent=m.id.endsWith(':free')?'Free variant · provider quota applies':'Standard model · Puter allowance/pricing may apply'}
+async function load(){try{models=await puter.ai.listModels();modelBox.innerHTML='';const groups={};models.forEach(m=>(groups[m.provider||'Other']??=[]).push(m));Object.entries(groups).sort().forEach(([p,arr])=>{const g=document.createElement('optgroup');g.label=p.toUpperCase();arr.forEach(m=>{const o=document.createElement('option');o.value=m.id;o.textContent=(m.name||m.id)+(m.id.endsWith(':free')?' · FREE':'');g.appendChild(o)});modelBox.appendChild(g)});const preferred=models.find(m=>/deepseek/i.test(m.id)&&m.id.endsWith(':free'))||models.find(m=>/deepseek/i.test(m.id))||models.find(m=>m.id.endsWith(':free'));if(preferred)modelBox.value=preferred.id;info();$('status').textContent='Ready'}catch(e){$('status').textContent='Unavailable';modelBox.innerHTML='<option>Could not load models</option>';$('error').textContent='Puter could not load its model catalogue. Open Nexra over HTTPS and sign in.'}}
+async function sendMessage(){const text=prompt.value.trim(),mid=modelBox.value;if(!text||!mid||busy)return;$('error').textContent='';welcome.style.display='none';chat.style.display='block';add(text,'user');history.push({role:'user',content:text});prompt.value='';const out=add('','assistant');busy=true;send.disabled=true;$('status').textContent='Thinking…';try{const r=await puter.ai.chat(history,{model:mid,stream:true});let answer='';for await(const p of r){if(p.text){answer+=p.text;out.textContent=answer;chat.scrollTop=chat.scrollHeight}}if(!answer)throw Error('Empty response');history.push({role:'assistant',content:answer});$('status').textContent='Ready'}catch(e){out.textContent='Sorry, Nexra could not complete that request.';$('error').textContent=e.message||String(e);history.pop();$('status').textContent='Error'}finally{busy=false;send.disabled=false;prompt.focus()}}
+send.onclick=sendMessage;modelBox.onchange=info;$('newChat').onclick=()=>{if(busy)return;history=[];chat.innerHTML='';chat.style.display='none';welcome.style.display='flex';prompt.value='';$('error').textContent='';$('status').textContent='Ready'};document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{prompt.value=b.dataset.prompt;prompt.focus()});prompt.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}};load();
+</script>
+</body>
+</html>
