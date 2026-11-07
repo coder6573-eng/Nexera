@@ -63,7 +63,7 @@ class MainActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     val scheme = request?.url?.scheme ?: return true
-                    return if (exposeNativeBridge) scheme != "file" && scheme != "https" else true
+                    return if (exposeNativeBridge) scheme != "file" else true
                 }
             }
             if (exposeNativeBridge) {
@@ -156,6 +156,7 @@ class MainActivity : Activity() {
 
         @JavascriptInterface
         fun showPreview(html: String) {
+            if (html.length > 2_000_000) return
             runOnUiThread { displayIsolatedPreview(html) }
         }
 
