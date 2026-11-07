@@ -1,0 +1,28 @@
+{
+  "name": "nexera-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nexera AI desktop app",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "dist:win": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "ai.nexera.desktop",
+    "productName": "Nexera AI",
+    "asar": true,
+    "files": [
+      "desktop/**/*",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "target": ["portable"],
+      "artifactName": "Nexera-AI-Setup-${version}.${ext}"
+    }
+  }
+}
