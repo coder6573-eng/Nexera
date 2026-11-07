@@ -3,7 +3,7 @@ name: Build Nexera Android APK
 on:
   push:
     branches:
-      - feature/nexra-android-v1
+      - main
   workflow_dispatch:
 
 permissions:
