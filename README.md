@@ -64,6 +64,6 @@ Run:
 npm test
 ```
 
-This parses the shared UI script and desktop bridge scripts and checks that the main UI controls are wired.
+This parses the shared UI and desktop bridge scripts, then runs jsdom interaction checks for the drawer, settings, mode selectors, web-search toggle, project navigation, terminal commands, archive/restore, export surface, and send flow.
 
 A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine.
