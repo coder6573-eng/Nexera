@@ -76,10 +76,9 @@ try {
   assert.notEqual(document.getElementById("homeWebSearch").style.display, "none");
   click("homeWebSearch");
   assert.ok(document.getElementById("homeWebSearch").classList.contains("active"));
-  click("chatWebSearch");
   assert.ok(document.getElementById("chatWebSearch").classList.contains("active"));
-  click("homeWebSearch");
-  assert.ok(!document.getElementById("chatWebSearch").classList.contains("active"));
+  click("chatWebSearch");
+  assert.ok(!document.getElementById("homeWebSearch").classList.contains("active"));
 
   click("menuBtn");
   click("newProject");
