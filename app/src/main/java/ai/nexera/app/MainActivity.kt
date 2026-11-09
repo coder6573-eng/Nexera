@@ -104,15 +104,22 @@ class MainActivity : Activity() {
                         "Only HTTPS model endpoints are allowed."
                     }
                     require(model.isNotBlank() && model.length <= 160) { "Enter a valid model ID." }
+                    require(provider.matches(Regex("[A-Za-z0-9_-]{1,40}"))) {
+                        "Invalid provider identifier."
+                    }
                     val apiKey = secureKeys.get(provider)
-                        ?: error("No API key saved for this provider. Open Settings to add one.")
+                    val kiloFreeModel = provider == "kilo" &&
+                        (model == "kilo-auto/free" || model.endsWith(":free"))
+                    require(apiKey != null || kiloFreeModel) {
+                        "No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free."
+                    }
 
                     val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
                         requestMethod = "POST"
                         connectTimeout = 20000
                         readTimeout = 90000
                         doOutput = true
-                        setRequestProperty("Authorization", "Bearer $apiKey")
+                        if (apiKey != null) setRequestProperty("Authorization", "Bearer $apiKey")
                         setRequestProperty("Content-Type", "application/json")
                         setRequestProperty("Accept", "application/json")
                     }
