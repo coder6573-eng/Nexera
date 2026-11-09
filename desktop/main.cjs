@@ -188,7 +188,8 @@ app.whenReady().then(() => {
         filters: [{ name: "ZIP archive", extensions: ["zip"] }]
       });
       if (canceled || !filePath) return;
-      const names = ["index.html", "style.css", "script.js"];
+      const names = Object.keys(files).filter(name => /^[A-Za-z0-9._-]{1,80}$/.test(name) && !name.includes(".."));
+      if (!names.length) throw new Error("There are no exportable project files.");
       const tempDir = path.join(app.getPath("temp"), "nexera-export-" + Date.now());
       fs.mkdirSync(tempDir, { recursive: true });
       for (const name of names) fs.writeFileSync(path.join(tempDir, name), String(files[name] || ""), "utf8");
