@@ -3,6 +3,8 @@ package ai.nexera.app
 import android.app.Activity
 import android.os.Bundle
 import android.graphics.Color
+import android.net.Uri
+import android.text.Html
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +25,7 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 import java.util.concurrent.Executors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -157,6 +160,56 @@ class MainActivity : Activity() {
                     sendResult(requestId, JSONObject().put("content", content))
                 } catch (e: Exception) {
                     sendResult(requestId, JSONObject().put("error", e.message ?: "Model request failed."))
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun searchWeb(query: String, requestId: String) {
+            networkExecutor.execute {
+                try {
+                    require(query.isNotBlank() && query.length <= 300) { "Enter a shorter search query." }
+                    val encoded = URLEncoder.encode(query, "UTF-8")
+                    val connection = (URL("https://html.duckduckgo.com/html/?q=$encoded")
+                        .openConnection() as HttpURLConnection).apply {
+                        requestMethod = "GET"
+                        connectTimeout = 15000
+                        readTimeout = 20000
+                        setRequestProperty("User-Agent", "Mozilla/5.0 NexeraAI/1.0")
+                        setRequestProperty("Accept", "text/html")
+                    }
+                    val status = connection.responseCode
+                    if (status !in 200..299) error("Web search returned HTTP $status.")
+                    val body = connection.inputStream.bufferedReader().use { it.readText() }
+                    connection.disconnect()
+                    val anchors = Regex(
+                        """(?is)<a\\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?</a>"""
+                    ).findAll(body).take(6)
+                    val results = JSONArray()
+                    anchors.forEach { match ->
+                        val tag = match.value
+                        val href = Regex("""(?is)href=["']([^"']+)["']""")
+                            .find(tag)?.groupValues?.get(1) ?: ""
+                        val titleHtml = Regex("""(?is)>(.*?)</a>""")
+                            .find(tag)?.groupValues?.get(1) ?: ""
+                        val title = Html.fromHtml(titleHtml, Html.FROM_HTML_MODE_LEGACY)
+                            .toString().replace(Regex("\\s+"), " ").trim()
+                        val next = body.substring(match.range.last + 1)
+                        val snippetHtml = Regex(
+                            """(?is)<(?:a|div)[^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*>(.*?)</(?:a|div)>"""
+                        ).find(next)?.groupValues?.get(1) ?: ""
+                        val snippet = Html.fromHtml(snippetHtml, Html.FROM_HTML_MODE_LEGACY)
+                            .toString().replace(Regex("\\s+"), " ").trim()
+                        val parsedHref = if (href.startsWith("//")) "https:$href" else href
+                        val parsedUri = Uri.parse(parsedHref)
+                        val actualUrl = parsedUri.getQueryParameter("uddg") ?: parsedHref
+                        if (title.isNotBlank() && actualUrl.startsWith("http")) {
+                            results.put(JSONObject().put("title", title).put("url", actualUrl).put("snippet", snippet))
+                        }
+                    }
+                    sendResult(requestId, JSONObject().put("content", results.toString()))
+                } catch (e: Exception) {
+                    sendResult(requestId, JSONObject().put("error", e.message ?: "Web search failed."))
                 }
             }
         }
