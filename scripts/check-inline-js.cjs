@@ -2,12 +2,16 @@ const fs = require("node:fs");
 const vm = require("node:vm");
 
 const html = fs.readFileSync("index.html", "utf8");
-const scripts = [...html.matchAll(/<script\\b[^>]*>([\\s\\S]*?)<\\/script\\s*>/gi)]
-  .map(match => match[1])
-  .filter(source => source.trim());
+const scripts = [];
+const scriptTag = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
+let match;
+
+while ((match = scriptTag.exec(html)) !== null) {
+  if (match[1].trim()) scripts.push(match[1]);
+}
 
 if (scripts.length !== 1) {
-  throw new Error(`Expected one inline application script, found ${scripts.length}.`);
+  throw new Error("Expected one inline application script, found " + scripts.length + ".");
 }
 
 new vm.Script(scripts[0], { filename: "index.html:inline-script" });
@@ -19,11 +23,8 @@ const requiredIds = [
 ];
 
 for (const id of requiredIds) {
-  if (!html.includes(`id="${id}"`) || !scripts[0].includes(`$(' ${id}')`.replace("$(' ", "$('"))) {
-    // The source uses compact $('id') selectors; keep this check explicit.
-    if (!html.includes(`id="${id}"`) || !scripts[0].includes(`$(' ${id}')`.replace(" ", ""))) {
-      throw new Error(`Missing UI wiring for #${id}.`);
-    }
+  if (!html.includes('id="' + id + '"') || !scripts[0].includes("$('" + id + "')")) {
+    throw new Error("Missing UI wiring for #" + id + ".");
   }
 }
 
