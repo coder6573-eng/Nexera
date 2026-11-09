@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld("NexeraNative", {
   deleteApiKey: (provider) => ipcRenderer.sendSync("nexera:delete-key", provider),
   chat: (provider, endpoint, model, messagesJson, requestId) =>
     ipcRenderer.send("nexera:chat", { provider, endpoint, model, messagesJson, requestId }),
+  searchWeb: (query, requestId) => ipcRenderer.send("nexera:search", { query, requestId }),
   showPreview: (html) => ipcRenderer.send("nexera:preview", html),
   exportZip: (projectName, filesJson) =>
     ipcRenderer.send("nexera:export-zip", { projectName, filesJson })
