@@ -227,7 +227,11 @@ class MainActivity : Activity() {
                     val files = JSONObject(filesJson)
                     val bytes = ByteArrayOutputStream()
                     ZipOutputStream(bytes).use { zip ->
-                        listOf("index.html", "style.css", "script.js").forEach { name ->
+                        val names = files.keys().asSequence()
+                            .filter { it.matches(Regex("[A-Za-z0-9._-]{1,80}")) && !it.contains("..") }
+                            .toList()
+                        require(names.isNotEmpty()) { "There are no exportable project files." }
+                        names.forEach { name ->
                             zip.putNextEntry(ZipEntry(name))
                             zip.write(files.optString(name, "").toByteArray(Charsets.UTF_8))
                             zip.closeEntry()
