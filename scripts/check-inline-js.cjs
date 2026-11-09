@@ -16,6 +16,10 @@ if (scripts.length !== 1) {
 
 new vm.Script(scripts[0], { filename: "index.html:inline-script" });
 
+for (const file of ["desktop/main.cjs", "desktop/preload.cjs"]) {
+  new vm.Script(fs.readFileSync(file, "utf8"), { filename: file });
+}
+
 const requiredIds = [
   "menuBtn", "closeDrawer", "scrim", "newChatBtn", "newProject",
   "showArchives", "settingsBtn", "chatSettings", "drawerSettings",
