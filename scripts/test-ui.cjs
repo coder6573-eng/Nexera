@@ -64,14 +64,22 @@ try {
   assert.notEqual(document.getElementById("homeAgentMode").style.display, "none");
   assert.notEqual(document.getElementById("homeSkill").style.display, "none");
   assert.equal(document.getElementById("homeWebSearch").style.display, "none");
+  document.getElementById("homeAgentMode").value = "agent";
+  change("homeAgentMode");
+  assert.equal(document.getElementById("chatAgentMode").value, "agent");
+  document.getElementById("homeSkill").value = "debug";
+  change("homeSkill");
+  assert.equal(document.getElementById("chatSkill").value, "debug");
 
   homeMode.value = "chat";
   change("homeMode");
   assert.notEqual(document.getElementById("homeWebSearch").style.display, "none");
   click("homeWebSearch");
   assert.ok(document.getElementById("homeWebSearch").classList.contains("active"));
+  click("chatWebSearch");
+  assert.ok(document.getElementById("chatWebSearch").classList.contains("active"));
   click("homeWebSearch");
-  assert.ok(!document.getElementById("homeWebSearch").classList.contains("active"));
+  assert.ok(!document.getElementById("chatWebSearch").classList.contains("active"));
 
   click("menuBtn");
   click("newProject");
@@ -87,6 +95,13 @@ try {
   assert.ok(projectButton, "Project list should contain the seeded project");
   projectButton.click();
   assert.equal(document.getElementById("projectView").style.display, "flex");
+  const notesButton = [...document.querySelectorAll(".file-row")].find(button => button.textContent.includes("notes.txt"));
+  assert.ok(notesButton, "Files tab should list workspace files");
+  notesButton.click();
+  assert.equal(document.querySelector(".file-editor").value, "Nexera workspace terminal works.");
+  document.querySelector(".file-editor").value = "Updated from the editor.";
+  document.querySelector(".file-editor").dispatchEvent(new window.Event("input", { bubbles: true }));
+  assert.ok(JSON.parse(window.localStorage.getItem("nexera.projects.v1"))[0].files["notes.txt"].includes("Updated"));
 
   document.querySelector('[data-tab="terminal"]').click();
   const terminalInput = document.getElementById("terminalInput");
@@ -110,6 +125,11 @@ try {
   terminalInput.value = "run";
   click("terminalRun");
   assert.ok(document.querySelector(".preview-frame"), "Run command should open the isolated preview tab");
+  document.querySelector('[data-tab="files"]').click();
+  const previewButton = [...document.querySelectorAll("#projectContent button")].find(button => button.textContent === "Preview project");
+  assert.ok(previewButton, "Files tab should expose the preview action");
+  previewButton.click();
+  assert.ok(document.querySelector(".preview-frame"));
 
   document.querySelector('[data-tab="export"]').click();
   const exportButton = [...document.querySelectorAll("#projectContent button")].find(button => button.textContent.includes("Download project ZIP"));
@@ -128,7 +148,10 @@ try {
   click("menuBtn");
   click("showArchives");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
-  click("modalClose");
+  const restoreButton = document.querySelector(".restore-btn");
+  assert.ok(restoreButton, "Archived project should have a restore action");
+  restoreButton.click();
+  assert.equal(JSON.parse(window.localStorage.getItem("nexera.projects.v1"))[0].archived, false);
   assert.ok(!document.getElementById("modalBackdrop").classList.contains("open"));
 
   click("menuBtn");
@@ -136,11 +159,23 @@ try {
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
   click("cancelSettings");
 
+  click("chatSettings");
+  assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
+  click("deleteKey");
+  click("cancelSettings");
+
+  click("menuBtn");
+  click("scrim");
+  assert.ok(!document.getElementById("drawer").classList.contains("open"));
+
   const homePrompt = document.getElementById("homePrompt");
   homePrompt.value = "Hello Nexera";
   click("homeSend");
   assert.equal(document.getElementById("conversation").style.display, "block");
   assert.ok(document.getElementById("conversation").textContent.includes("add an API key"));
+  document.getElementById("chatPrompt").value = "Follow-up question";
+  click("chatSend");
+  assert.ok(document.getElementById("conversation").textContent.includes("Follow-up question"));
 
   if (runtimeErrors.length) {
     throw new Error("Runtime errors: " + runtimeErrors.map(error => error.message).join("; "));
