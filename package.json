@@ -6,11 +6,12 @@
   "main": "desktop/main.cjs",
   "scripts": {
     "dist:win": "electron-builder --win portable",
-    "test": "node scripts/check-inline-js.cjs"
+    "test": "node scripts/check-inline-js.cjs && node scripts/test-ui.cjs"
   },
   "devDependencies": {
     "electron": "^35.0.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "jsdom": "^26.1.0"
   },
   "build": {
     "appId": "ai.nexera.desktop",
