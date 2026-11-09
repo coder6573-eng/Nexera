@@ -111,18 +111,18 @@ function searchWeb(query, requestId) {
         .replace(/<[^>]*>/g, " ")
         .replace(/&amp;/g, "&").replace(/&quot;/g, '"')
         .replace(/&#39;|&#x27;/gi, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
-        .replace(/\\s+/g, " ").trim();
-      const anchors = [...html.matchAll(/<a\\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?<\\/a>/gis)].slice(0, 6);
+        .replace(/\s+/g, " ").trim();
+      const anchors = [...html.matchAll(/<a\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?<\/a>/gis)].slice(0, 6);
       const results = anchors.map(match => {
         const tag = match[0];
         const href = tag.match(/href=["']([^"']+)["']/i)?.[1] || "";
-        const title = clean(tag.match(/>(.*?)<\\/a>/is)?.[1] || "");
+        const title = clean(tag.match(/>(.*?)<\/a>/is)?.[1] || "");
         const tail = html.slice(match.index + tag.length);
-        const snippet = clean(tail.match(/<(?:a|div)[^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*>(.*?)<\\/(?:a|div)>/is)?.[1] || "");
+        const snippet = clean(tail.match(/<(?:a|div)[^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*>(.*?)<\/(?:a|div)>/is)?.[1] || "");
         let url = href.startsWith("//") ? "https:" + href : href;
         try { url = new URL(url).searchParams.get("uddg") || url; } catch {}
         return { title, url, snippet };
-      }).filter(item => item.title && /^https?:\\/\\//i.test(item.url));
+      }).filter(item => item.title && /^https?:\/\//i.test(item.url));
       sendResult(requestId, { content: JSON.stringify(results) });
     } catch (error) {
       sendResult(requestId, { error: error.message || "Web search failed." });
