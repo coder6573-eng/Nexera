@@ -183,7 +183,7 @@ class MainActivity : Activity() {
                     val body = connection.inputStream.bufferedReader().use { it.readText() }
                     connection.disconnect()
                     val anchors = Regex(
-                        """(?is)<a\\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?</a>"""
+                        """(?is)<a\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?</a>"""
                     ).findAll(body).take(6)
                     val results = JSONArray()
                     anchors.forEach { match ->
