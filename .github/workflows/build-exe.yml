@@ -21,11 +21,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Check application JavaScript
-        run: node scripts/check-inline-js.cjs
-
       - name: Install dependencies
         run: npm install
+
+      - name: Run UI regression tests
+        run: npm test
 
       - name: Build portable Windows EXE
         run: npm run dist:win
