@@ -77,6 +77,59 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
     }
   })();
 }
+function searchWeb(query, requestId) {
+  (async () => {
+    try {
+      if (typeof query !== "string" || !query.trim() || query.length > 300) {
+        throw new Error("Enter a shorter search query.");
+      }
+      const target = new URL("https://html.duckduckgo.com/html/");
+      target.searchParams.set("q", query.trim());
+      const html = await new Promise((resolve, reject) => {
+        const req = https.request(target, {
+          method: "GET",
+          headers: { "User-Agent": "Mozilla/5.0 NexeraAI/1.0", Accept: "text/html" },
+          timeout: 20000
+        }, res => {
+          let body = "";
+          res.setEncoding("utf8");
+          res.on("data", chunk => {
+            body += chunk;
+            if (body.length > 1_500_000) req.destroy(new Error("Search response was too large."));
+          });
+          res.on("end", () => {
+            if ((res.statusCode || 0) < 200 || (res.statusCode || 0) >= 300) {
+              reject(new Error("Web search returned HTTP " + res.statusCode + "."));
+            } else resolve(body);
+          });
+        });
+        req.on("timeout", () => req.destroy(new Error("Web search timed out.")));
+        req.on("error", reject);
+        req.end();
+      });
+      const clean = value => String(value || "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&amp;/g, "&").replace(/&quot;/g, '"')
+        .replace(/&#39;|&#x27;/gi, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+        .replace(/\\s+/g, " ").trim();
+      const anchors = [...html.matchAll(/<a\\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?<\\/a>/gis)].slice(0, 6);
+      const results = anchors.map(match => {
+        const tag = match[0];
+        const href = tag.match(/href=["']([^"']+)["']/i)?.[1] || "";
+        const title = clean(tag.match(/>(.*?)<\\/a>/is)?.[1] || "");
+        const tail = html.slice(match.index + tag.length);
+        const snippet = clean(tail.match(/<(?:a|div)[^>]*class=["'][^"']*result__snippet[^"']*["'][^>]*>(.*?)<\\/(?:a|div)>/is)?.[1] || "");
+        let url = href.startsWith("//") ? "https:" + href : href;
+        try { url = new URL(url).searchParams.get("uddg") || url; } catch {}
+        return { title, url, snippet };
+      }).filter(item => item.title && /^https?:\\/\\//i.test(item.url));
+      sendResult(requestId, { content: JSON.stringify(results) });
+    } catch (error) {
+      sendResult(requestId, { error: error.message || "Web search failed." });
+    }
+  })();
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1180, height: 820, minWidth: 360, minHeight: 560,
@@ -114,6 +167,7 @@ app.whenReady().then(() => {
     } catch { event.returnValue = false; }
   });
   ipcMain.on("nexera:chat", (_event, payload) => postChat(payload));
+  ipcMain.on("nexera:search", (_event, payload) => searchWeb(payload?.query, payload?.requestId));
   ipcMain.on("nexera:preview", (_event, html) => {
     if (typeof html !== "string" || html.length > 2_000_000) return;
     const preview = new BrowserWindow({
