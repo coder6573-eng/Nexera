@@ -19,7 +19,8 @@ new vm.Script(scripts[0], { filename: "index.html:inline-script" });
 const requiredIds = [
   "menuBtn", "closeDrawer", "scrim", "newChatBtn", "newProject",
   "showArchives", "settingsBtn", "chatSettings", "drawerSettings",
-  "homeSend", "chatSend", "backChat", "projectMore"
+  "homeSend", "chatSend", "backChat", "projectMore", "homeMode", "chatMode",
+  "homeAgentMode", "chatAgentMode", "homeSkill", "chatSkill", "homeWebSearch", "chatWebSearch"
 ];
 
 for (const id of requiredIds) {
