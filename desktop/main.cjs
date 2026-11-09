@@ -31,7 +31,11 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       if (target.protocol !== "https:") throw new Error("Only HTTPS model endpoints are allowed.");
       if (!model || model.length > 160) throw new Error("Enter a valid model ID.");
       const apiKey = readKeys()[provider];
-      if (!apiKey) throw new Error("No API key saved for this provider. Open Settings to add one.");
+      const kiloFreeModel = provider === "kilo" &&
+        (model === "kilo-auto/free" || model.endsWith(":free"));
+      if (!apiKey && !kiloFreeModel) {
+        throw new Error("No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free.");
+      }
       let messages;
       try { messages = JSON.parse(messagesJson); } catch { throw new Error("Invalid chat message data."); }
       if (!Array.isArray(messages) || messages.length > 80) throw new Error("Invalid chat message list.");
@@ -40,7 +44,7 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
         const req = https.request(target, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${apiKey}`,
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
             "Content-Type": "application/json",
             Accept: "application/json",
             "Content-Length": Buffer.byteLength(body)
