@@ -5,7 +5,8 @@
   "description": "Nexera AI desktop app",
   "main": "desktop/main.cjs",
   "scripts": {
-    "dist:win": "electron-builder --win portable"
+    "dist:win": "electron-builder --win portable",
+    "test": "node scripts/check-inline-js.cjs"
   },
   "devDependencies": {
     "electron": "^35.0.0",
@@ -21,7 +22,9 @@
       "package.json"
     ],
     "win": {
-      "target": ["portable"],
+      "target": [
+        "portable"
+      ],
       "artifactName": "Nexera-AI-Setup-${version}.${ext}"
     }
   }
