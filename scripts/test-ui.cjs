@@ -112,7 +112,7 @@ try {
 
   terminalInput.value = "cat notes.txt";
   click("terminalRun");
-  assert.ok(document.getElementById("terminalOutput").textContent.includes("Nexera workspace terminal works."));
+  assert.ok(document.getElementById("terminalOutput").textContent.includes("Updated from the editor."));
 
   terminalInput.value = "touch scratch.txt";
   click("terminalRun");
