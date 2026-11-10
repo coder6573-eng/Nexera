@@ -55,8 +55,8 @@ try {
 
   click("settingsBtn");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
-  assert.equal(document.getElementById("provider").value, "puter");
-  assert.notEqual(document.getElementById("connectPuter").style.display, "none");
+  assert.equal(document.getElementById("provider").value, "kilo");
+  assert.equal(document.getElementById("connectPuter").style.display, "none");\n  assert.ok(document.getElementById("kiloInfo").textContent.includes("GLM 5 Free"));
   document.getElementById("provider").value = "openrouter";
   change("provider");
   assert.equal(document.getElementById("endpoint").value, "https://openrouter.ai/api/v1/chat/completions");
@@ -181,7 +181,7 @@ try {
   homePrompt.value = "Hello Nexera";
   click("homeSend");
   assert.equal(document.getElementById("conversation").style.display, "block");
-  assert.ok(document.getElementById("conversation").textContent.includes("add an API key"));
+  assert.ok(document.getElementById("conversation").textContent.includes("add an API key") || document.getElementById("conversation").textContent.includes("Kilo"));
   document.getElementById("chatPrompt").value = "Follow-up question";
   click("chatSend");
   assert.ok(document.getElementById("conversation").textContent.includes("Follow-up question"));
