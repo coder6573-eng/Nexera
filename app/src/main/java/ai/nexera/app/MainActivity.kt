@@ -42,6 +42,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         secureKeys = SecureKeyStore(this)
+        android.webkit.CookieManager.getInstance().setAcceptCookie(true)
         assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
@@ -63,6 +64,7 @@ class MainActivity : Activity() {
         return WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
+            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             settings.allowFileAccess = false
             settings.allowContentAccess = false
             settings.allowFileAccessFromFileURLs = false
@@ -94,6 +96,7 @@ class MainActivity : Activity() {
 
     private fun openAuthPopup(resultMsg: android.os.Message): Boolean {
         val popup = WebView(this).apply {
+            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.javaScriptCanOpenWindowsAutomatically = true
