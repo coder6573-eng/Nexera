@@ -1,4 +1,4 @@
-# Nexera AI v10.0.0
+# Nexera AI v10.1.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -9,18 +9,18 @@ The same interface is packaged as an Android app (WebView) and a Windows portabl
 
 ## AI providers
 
-Open **Settings** to configure a provider, HTTPS endpoint, model ID, and API key.
+Kilo Auto Free is the default. If that route is busy, Nexera automatically tries three additional Kilo free models in sequence. Open **Settings** to choose another provider, change the model, or configure BYOK.
 
 | Provider | Default model | Key required |
 | --- | --- | --- |
 | OpenRouter | `openrouter/free` | Yes |
-| Kilo AI Gateway | `kilo-auto/free` | No for this free route |
+| Kilo AI Gateway (default) | `kilo-auto/free` → `z-ai/glm-5:free` → `minimax/minimax-m2.1:free` → `google/gemma-4-26b-a4b-it:free` | No for free routes |
 | DeepSeek | `deepseek-chat` | Yes |
 | GLM / Zhipu | `glm-4.5-flash` | Yes |
 | Qwen / DashScope | `qwen-plus` | Yes |
 | Custom | User supplied | Depends on provider |
 
-OpenRouter and Kilo free routes are subject to availability and provider rate limits. Kilo Auto Free may route requests to providers with different data-handling practices; do not send private or confidential information when using it.
+Kilo free routes are subject to availability and provider rate limits. Kilo documents anonymous access for free models, with a gateway rate limit of 200 requests per hour per IP. The free model catalog can change. Kilo Auto Free may route requests to providers with different data-handling practices; do not send private or confidential information when using it.
 
 API keys are not stored in browser localStorage. Android uses Android Keystore-backed encryption; Windows uses Electron safeStorage.
 
