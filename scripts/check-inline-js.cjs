@@ -33,7 +33,7 @@ for (const id of requiredIds) {
   }
 }
 
-if (!html.includes('<script src="https://js.puter.com/v2/"></script>')) throw new Error("Puter SDK loader is missing.");
+if (!/<script\\b[^>]*src="https:\\/\\/js\\.puter\\.com\\/v2\\/"[^>]*async/i.test(html)) throw new Error("Asynchronous Puter SDK loader is missing.");
 if (!scripts[0].includes("window.puter.ai.chat") || !scripts[0].includes("window.NexeraNative.saveApiKey")) throw new Error("Puter or secure BYOK provider routing is missing.");
 
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
