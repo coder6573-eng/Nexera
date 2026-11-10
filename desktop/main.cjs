@@ -220,7 +220,9 @@ function createWindow() {
     } catch { return { action: "deny" }; }
   });
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (!url.startsWith(localOrigin)) event.preventDefault();
+    try {
+      if (new URL(url).origin !== localOrigin) event.preventDefault();
+    } catch { event.preventDefault(); }
   });
   mainWindow.on("closed", () => { mainWindow = null; });
 }
