@@ -55,6 +55,16 @@ try {
 
   click("settingsBtn");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
+  assert.equal(document.getElementById("provider").value, "puter");
+  assert.notEqual(document.getElementById("connectPuter").style.display, "none");
+  document.getElementById("provider").value = "openrouter";
+  change("provider");
+  assert.equal(document.getElementById("endpoint").value, "https://openrouter.ai/api/v1/chat/completions");
+  assert.equal(document.getElementById("apiKeyWrap").style.display, "block");
+  document.getElementById("provider").value = "puter";
+  change("provider");
+  assert.equal(document.getElementById("endpointWrap").style.display, "none");
+  assert.equal(document.getElementById("apiKeyWrap").style.display, "none");
   click("cancelSettings");
   assert.ok(!document.getElementById("modalBackdrop").classList.contains("open"));
 
