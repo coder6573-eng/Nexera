@@ -52,7 +52,7 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
             Accept: "application/json",
             "Content-Length": Buffer.byteLength(body)
           },
-          timeout: 90000
+          timeout: 45000
         }, res => {
           let data = "";
           res.setEncoding("utf8");
