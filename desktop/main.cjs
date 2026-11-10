@@ -133,36 +133,63 @@ function searchWeb(query, requestId) {
   })();
 }
 
-function startLocalServer() {
-  return new Promise((resolve, reject) => {
-    const root = path.resolve(__dirname, "..");
-    const server = http.createServer((request, response) => {
-      let pathname = "/";
-      try { pathname = decodeURIComponent(new URL(request.url || "/", "http://127.0.0.1").pathname); }
-      catch { response.writeHead(400).end("Bad request"); return; }
-      if (pathname !== "/" && pathname !== "/index.html") {
-        response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
-        return;
-      }
-      try {
-        const html = fs.readFileSync(path.join(root, "index.html"));
-        response.writeHead(200, {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "no-store",
-          "Content-Security-Policy": "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: wss:; img-src 'self' data: https: blob:; frame-src 'self' https: data: blob:; object-src 'none'; base-uri 'self'"
-        });
-        response.end(html);
-      } catch {
-        response.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" }).end("Could not load Nexera.");
-      }
-    });
-    server.once("error", reject);
-    server.listen(0, "localhost", () => {
-      localServer = server;
-      localOrigin = "http://localhost:" + server.address().port;
-      resolve(localOrigin);
-    });
+function localPortFile() {
+  return path.join(app.getPath("userData"), "local-origin.json");
+}
+function preferredLocalPort() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(localPortFile(), "utf8"));
+    if (Number.isInteger(saved.port) && saved.port >= 1024 && saved.port <= 65535) return saved.port;
+  } catch {}
+  return 40000 + Math.floor(Math.random() * 20000);
+}
+function createLocalServer() {
+  const root = path.resolve(__dirname, "..");
+  return http.createServer((request, response) => {
+    let pathname = "/";
+    try { pathname = decodeURIComponent(new URL(request.url || "/", "http://localhost").pathname); }
+    catch { response.writeHead(400).end("Bad request"); return; }
+    if (pathname !== "/" && pathname !== "/index.html") {
+      response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
+      return;
+    }
+    try {
+      const html = fs.readFileSync(path.join(root, "index.html"));
+      response.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+        "Content-Security-Policy": "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: wss:; img-src 'self' data: https: blob:; frame-src 'self' https: data: blob:; object-src 'none'; base-uri 'self'"
+      });
+      response.end(html);
+    } catch {
+      response.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" }).end("Could not load Nexera.");
+    }
   });
+}
+async function startLocalServer() {
+  let port = preferredLocalPort();
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const server = createLocalServer();
+    try {
+      await new Promise((resolve, reject) => {
+        const onError = error => { server.off("listening", onListening); reject(error); };
+        const onListening = () => { server.off("error", onError); resolve(); };
+        server.once("error", onError);
+        server.once("listening", onListening);
+        server.listen(port, "localhost");
+      });
+      localServer = server;
+      localOrigin = "http://localhost:" + port;
+      fs.mkdirSync(path.dirname(localPortFile()), { recursive: true });
+      fs.writeFileSync(localPortFile(), JSON.stringify({ port }), { mode: 0o600 });
+      return localOrigin;
+    } catch (error) {
+      server.close();
+      if (error.code !== "EADDRINUSE" || attempt === 11) throw error;
+      port = 40000 + Math.floor(Math.random() * 20000);
+    }
+  }
+  throw new Error("Could not reserve a local app origin.");
 }
 
 function createWindow() {
