@@ -57,6 +57,8 @@ try {
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
   assert.equal(document.getElementById("provider").value, "kilo");
   assert.equal(document.getElementById("connectPuter").style.display, "none");\n  assert.ok(document.getElementById("kiloInfo").textContent.includes("GLM 5 Free"));
+  assert.ok(html.includes("-webkit-tap-highlight-color:transparent"));
+  assert.ok(html.includes("KILO_FREE_BACKUPS"));
   document.getElementById("provider").value = "openrouter";
   change("provider");
   assert.equal(document.getElementById("endpoint").value, "https://openrouter.ai/api/v1/chat/completions");
