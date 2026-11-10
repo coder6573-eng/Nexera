@@ -1,6 +1,7 @@
 package ai.nexera.app
 
 import android.app.Activity
+import android.app.Dialog
 import android.os.Bundle
 import android.graphics.Color
 import android.net.Uri
@@ -14,6 +15,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebViewAssetLoader
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -34,11 +36,15 @@ class MainActivity : Activity() {
     private lateinit var root: FrameLayout
     private lateinit var appWebView: WebView
     private lateinit var secureKeys: SecureKeyStore
+    private lateinit var assetLoader: WebViewAssetLoader
     private val networkExecutor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         secureKeys = SecureKeyStore(this)
+        assetLoader = WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .build()
 
         window.statusBarColor = Color.rgb(251, 252, 249)
         window.navigationBarColor = Color.rgb(251, 252, 249)
@@ -49,7 +55,7 @@ class MainActivity : Activity() {
         appWebView = buildWebView(exposeNativeBridge = true)
         root.addView(appWebView, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
-        appWebView.loadUrl("file:///android_asset/www/index.html")
+        appWebView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
     }
 
     @Suppress("SetJavaScriptEnabled")
@@ -57,22 +63,69 @@ class MainActivity : Activity() {
         return WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            settings.allowFileAccess = exposeNativeBridge
+            settings.allowFileAccess = false
             settings.allowContentAccess = false
             settings.allowFileAccessFromFileURLs = false
             settings.allowUniversalAccessFromFileURLs = false
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-            webChromeClient = WebChromeClient()
+            settings.javaScriptCanOpenWindowsAutomatically = exposeNativeBridge
+            settings.setSupportMultipleWindows(exposeNativeBridge)
+            webChromeClient = object : WebChromeClient() {
+                override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: android.os.Message?): Boolean {
+                    if (!exposeNativeBridge || resultMsg == null) return false
+                    return openAuthPopup(resultMsg)
+                }
+            }
             webViewClient = object : WebViewClient() {
+                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+                    return if (exposeNativeBridge && request != null) assetLoader.shouldInterceptRequest(request.url) else null
+                }
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    val scheme = request?.url?.scheme ?: return true
-                    return if (exposeNativeBridge) scheme != "file" else true
+                    if (!exposeNativeBridge) return true
+                    val uri = request?.url ?: return true
+                    return uri.scheme != "https" || uri.host != "appassets.androidplatform.net"
                 }
             }
             if (exposeNativeBridge) {
                 addJavascriptInterface(NexeraBridge(), "NexeraNative")
             }
         }
+    }
+
+    private fun openAuthPopup(resultMsg: android.os.Message): Boolean {
+        val popup = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.javaScriptCanOpenWindowsAutomatically = true
+            settings.setSupportMultipleWindows(false)
+            settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
+        }
+        val dialog = Dialog(this)
+        dialog.setContentView(popup)
+        dialog.setOnDismissListener {
+            popup.stopLoading()
+            popup.destroy()
+        }
+        popup.webViewClient = object : WebViewClient() {
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): android.webkit.WebResourceResponse? {
+                return if (request != null) assetLoader.shouldInterceptRequest(request.url) else null
+            }
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                val uri = request?.url ?: return true
+                return uri.scheme != "https"
+            }
+        }
+        popup.webChromeClient = object : WebChromeClient() {
+            override fun onCloseWindow(window: WebView?) {
+                dialog.dismiss()
+            }
+        }
+        val transport = resultMsg.obj as? WebView.WebViewTransport ?: return false
+        transport.webView = popup
+        resultMsg.sendToTarget()
+        dialog.show()
+        dialog.window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        return true
     }
 
     private inner class NexeraBridge {
