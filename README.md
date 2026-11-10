@@ -26,8 +26,8 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 
 ## Vibecoding
 
-- **Build** — planning pass followed by a complete project build.
-- **Agent** — planning, build, and a review/polish pass.
+- **Build** — one-pass generation with an embedded quality checklist to reduce wait time.
+- **Agent** — a concise planning pass followed by building and a built-in quality review.
 - **Skills** — Frontend, UI/UX, Debugging, Accessibility, and Performance guidance.
 - **Workspace terminal** — restricted commands that operate only on the current app workspace. It is not an operating-system shell and does not run arbitrary commands.
 - **Files / Preview / Terminal / Export** — edit project files, preview in an isolated surface, run safe workspace commands, and export a ZIP.
