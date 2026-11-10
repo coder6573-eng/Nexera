@@ -157,9 +157,9 @@ function startLocalServer() {
       }
     });
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
+    server.listen(0, "localhost", () => {
       localServer = server;
-      localOrigin = "http://127.0.0.1:" + server.address().port;
+      localOrigin = "http://localhost:" + server.address().port;
       resolve(localOrigin);
     });
   });
