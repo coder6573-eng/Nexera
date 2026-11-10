@@ -2,10 +2,13 @@ const { app, BrowserWindow, ipcMain, dialog, safeStorage } = require("electron")
 const path = require("node:path");
 const fs = require("node:fs");
 const https = require("node:https");
+const http = require("node:http");
 const { URL } = require("node:url");
 const { execFile } = require("node:child_process");
 
 let mainWindow;
+let localServer;
+let localOrigin;
 const keyFile = () => path.join(app.getPath("userData"), "credentials.enc");
 const allowedProvider = /^[a-z0-9_-]{1,40}$/i;
 
@@ -130,6 +133,38 @@ function searchWeb(query, requestId) {
   })();
 }
 
+function startLocalServer() {
+  return new Promise((resolve, reject) => {
+    const root = path.resolve(__dirname, "..");
+    const server = http.createServer((request, response) => {
+      let pathname = "/";
+      try { pathname = decodeURIComponent(new URL(request.url || "/", "http://127.0.0.1").pathname); }
+      catch { response.writeHead(400).end("Bad request"); return; }
+      if (pathname !== "/" && pathname !== "/index.html") {
+        response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
+        return;
+      }
+      try {
+        const html = fs.readFileSync(path.join(root, "index.html"));
+        response.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "no-store",
+          "Content-Security-Policy": "default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: wss:; img-src 'self' data: https: blob:; frame-src 'self' https: data: blob:; object-src 'none'; base-uri 'self'"
+        });
+        response.end(html);
+      } catch {
+        response.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" }).end("Could not load Nexera.");
+      }
+    });
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      localServer = server;
+      localOrigin = "http://127.0.0.1:" + server.address().port;
+      resolve(localOrigin);
+    });
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1180, height: 820, minWidth: 360, minHeight: 560,
@@ -144,14 +179,25 @@ function createWindow() {
       webSecurity: true
     }
   });
-  mainWindow.loadFile(path.join(__dirname, "..", "index.html"));
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  mainWindow.loadURL(localOrigin);
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      if (new URL(url).protocol !== "https:") return { action: "deny" };
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          width: 520, height: 760, autoHideMenuBar: true,
+          webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true }
+        }
+      };
+    } catch { return { action: "deny" }; }
+  });
   mainWindow.webContents.on("will-navigate", (event, url) => {
-    if (!url.startsWith("file://")) event.preventDefault();
+    if (!url.startsWith(localOrigin)) event.preventDefault();
   });
   mainWindow.on("closed", () => { mainWindow = null; });
 }
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   ipcMain.on("nexera:has-key", (event, provider) => {
     event.returnValue = allowedProvider.test(provider || "") && typeof readKeys()[provider] === "string";
   });
@@ -207,7 +253,9 @@ app.whenReady().then(() => {
       dialog.showErrorBox("Nexera export failed", error.message || "Could not export the ZIP.");
     }
   });
+  await startLocalServer();
   createWindow();
   app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
+app.on("before-quit", () => { if (localServer) localServer.close(); });
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
