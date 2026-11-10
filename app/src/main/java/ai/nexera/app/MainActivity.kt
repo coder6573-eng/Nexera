@@ -176,7 +176,7 @@ class MainActivity : Activity() {
                     val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
                         requestMethod = "POST"
                         connectTimeout = 20000
-                        readTimeout = 90000
+                        readTimeout = 45000
                         doOutput = true
                         if (apiKey != null) setRequestProperty("Authorization", "Bearer $apiKey")
                         setRequestProperty("Content-Type", "application/json")
