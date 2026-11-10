@@ -56,7 +56,8 @@ try {
   click("settingsBtn");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
   assert.equal(document.getElementById("provider").value, "kilo");
-  assert.equal(document.getElementById("connectPuter").style.display, "none");\n  assert.ok(document.getElementById("kiloInfo").textContent.includes("GLM 5 Free"));
+  assert.equal(document.getElementById("connectPuter").style.display, "none");
+  assert.ok(document.getElementById("kiloInfo").textContent.includes("GLM 5 Free"));
   assert.ok(html.includes("-webkit-tap-highlight-color:transparent"));
   assert.ok(html.includes("KILO_FREE_BACKUPS"));
   document.getElementById("provider").value = "openrouter";
