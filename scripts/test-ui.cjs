@@ -313,6 +313,52 @@ try {
   }
 
   console.log("Nexera UI interaction tests passed.");
+async function testLinkedLocalFolder() {
+  let savedFiles = null;
+  const nativeBridge = {
+    openFolder: async () => ({
+      ok: true,
+      folderName: "DemoSite",
+      files: {
+        "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Demo</h1><script src='script.js'></script></body></html>",
+        "style.css": "body { color: green; }",
+        "script.js": "window.demo = true;",
+        "src/app.js": "window.app = true;"
+      }
+    }),
+    saveFolder: async filesJson => {
+      savedFiles = JSON.parse(filesJson);
+      return { ok: true, count: Object.keys(savedFiles).length };
+    }
+  };
+  const folderDom = new JSDOM(instrumentedHtml, {
+    runScripts: "dangerously",
+    url: "https://appassets.androidplatform.net/assets/www/index.html",
+    beforeParse(window) { window.NexeraNative = nativeBridge; }
+  });
+  const folderWindow = folderDom.window;
+  assert.equal(folderWindow.document.getElementById("openLocalFolder").style.display, "flex");
+  await folderWindow.__testHooks.openLocalFolder();
+  const project = folderWindow.__testHooks.getActiveProject();
+  assert.equal(project.name, "DemoSite");
+  assert.equal(project.files["src/app.js"], "window.app = true;");
+  assert.equal(folderWindow.document.getElementById("chatMode").value, "vibe");
+  assert.equal(folderWindow.document.getElementById("agentWorkbench").hidden, false);
+  assert.ok(folderWindow.document.getElementById("livePreviewFrame").srcdoc.includes("body { color: green; }"));
+  project.files["style.css"] = "body { color: purple; }";
+  const saved = await folderWindow.__testHooks.saveLinkedFolder();
+  assert.equal(saved.ok, true);
+  assert.equal(savedFiles["style.css"], "body { color: purple; }");
+  assert.equal(savedFiles["src/app.js"], "window.app = true;");
+  folderDom.window.close();
+}
+testLinkedLocalFolder().then(() => {
+  console.log("Nexera linked local-folder interaction tests passed.");
+}).catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+});
+
 } finally {
   dom.window.close();
 }
