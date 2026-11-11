@@ -37,8 +37,9 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       const kiloFreeModel = provider === "kilo" &&
         (model === "kilo-auto/free" || model.endsWith(":free"));
       const llmFaucetFree = provider === "llmfaucet";
-      if (!apiKey && !kiloFreeModel && !llmFaucetFree) {
-        throw new Error("No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free.");
+      const ovhAnonymousFree = provider === "ovh";
+      if (!apiKey && !kiloFreeModel && !llmFaucetFree && !ovhAnonymousFree) {
+        throw new Error("No API key saved for this provider. Open Settings to add one, or choose a free route.");
       }
       let messages;
       try { messages = JSON.parse(messagesJson); } catch { throw new Error("Invalid chat message data."); }
