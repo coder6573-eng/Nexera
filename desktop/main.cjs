@@ -36,7 +36,8 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       const apiKey = readKeys()[provider];
       const kiloFreeModel = provider === "kilo" &&
         (model === "kilo-auto/free" || model.endsWith(":free"));
-      if (!apiKey && !kiloFreeModel) {
+      const llmFaucetFree = provider === "llmfaucet";
+      if (!apiKey && !kiloFreeModel && !llmFaucetFree) {
         throw new Error("No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free.");
       }
       let messages;
@@ -47,7 +48,7 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
         const req = https.request(target, {
           method: "POST",
           headers: {
-            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : (llmFaucetFree ? { Authorization: "Bearer free" } : {})),
             "Content-Type": "application/json",
             Accept: "application/json",
             "Content-Length": Buffer.byteLength(body)
