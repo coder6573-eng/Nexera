@@ -26,7 +26,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
-import java.net.HttpURLConnection
+import javax.net.ssl.HttpsURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.util.concurrent.Executors
@@ -194,7 +194,8 @@ class MainActivity : Activity() {
                         "No API key saved for this provider. Open Settings to add one, or choose a free route."
                     }
 
-                    val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
+                    val connection = (URL(endpoint).openConnection() as HttpsURLConnection).apply {
+                        instanceFollowRedirects = false
                         requestMethod = "POST"
                         connectTimeout = 20000
                         readTimeout = 45000
@@ -249,7 +250,8 @@ class MainActivity : Activity() {
                     require(query.isNotBlank() && query.length <= 300) { "Enter a shorter search query." }
                     val encoded = URLEncoder.encode(query, "UTF-8")
                     val connection = (URL("https://html.duckduckgo.com/html/?q=$encoded")
-                        .openConnection() as HttpURLConnection).apply {
+                        .openConnection() as HttpsURLConnection).apply {
+                            instanceFollowRedirects = false
                         requestMethod = "GET"
                         connectTimeout = 15000
                         readTimeout = 20000
