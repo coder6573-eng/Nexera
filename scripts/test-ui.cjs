@@ -222,7 +222,7 @@ try {
   assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
   assert.ok(previewHtml.includes("window.previewLoaded = true"), "Preview should inline linked JavaScript");
   assert.ok(previewHtml.includes("window.extraLoaded = true"), "Preview should include additional JS files");
-  assert.ok(previewHtml.includes("<\\\\/script>"), "Preview should escape script-closing text inside generated JavaScript");
+  assert.ok(previewHtml.includes("<" + String.fromCharCode(92) + "/script>"), "Preview should escape script-closing text inside generated JavaScript");
 
   // Existing projects accept partial file updates while preserving untouched files.
   const partialEdit = window.__testHooks.mergeProjectFiles({
