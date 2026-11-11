@@ -52,7 +52,7 @@ function writeWorkspaceFiles(filesJson) {
     if (!entries.length || entries.length > 100) throw new Error("The workspace must contain between 1 and 100 files.");
     const root = fs.realpathSync(linkedWorkspaceDirectory);
     let totalBytes = 0;
-    for (const [name, value] of entries) {
+    const prepared = entries.map(([name, value]) => {
       if (!safeWorkspaceRelativePath(name) || !WORKSPACE_EXTENSIONS.has(path.extname(name).toLowerCase())) throw new Error("Unsupported workspace file path or type: " + name);
       if (typeof value !== "string") throw new Error("Invalid content for " + name);
       const bytes = Buffer.byteLength(value, "utf8");
@@ -60,17 +60,19 @@ function writeWorkspaceFiles(filesJson) {
       totalBytes += bytes;
       if (totalBytes > 700_000) throw new Error("The workspace update is too large.");
       const target = path.resolve(root, ...name.split("/"));
-      if (target !== root && !target.startsWith(root + path.sep)) throw new Error("Invalid workspace path.");
-      const parent = path.dirname(target);
-      fs.mkdirSync(parent, { recursive: true });
-      const realParent = fs.realpathSync(parent);
+      if (target === root || !target.startsWith(root + path.sep)) throw new Error("Invalid workspace path.");
+      return { name, value, target, parent: path.dirname(target) };
+    });
+    for (const item of prepared) {
+      fs.mkdirSync(item.parent, { recursive: true });
+      const realParent = fs.realpathSync(item.parent);
       if (realParent !== root && !realParent.startsWith(root + path.sep)) throw new Error("Workspace path escapes the selected folder.");
-      if (fs.existsSync(target)) {
-        const stat = fs.lstatSync(target);
-        if (stat.isSymbolicLink() || !stat.isFile()) throw new Error("Refusing to replace a non-file workspace entry: " + name);
+      if (fs.existsSync(item.target)) {
+        const stat = fs.lstatSync(item.target);
+        if (stat.isSymbolicLink() || !stat.isFile()) throw new Error("Refusing to replace a non-file workspace entry: " + item.name);
       }
-      fs.writeFileSync(target, value, "utf8");
     }
+    for (const item of prepared) fs.writeFileSync(item.target, item.value, "utf8");
     return { ok: true, count: entries.length };
   } catch (error) {
     return { ok: false, error: error.message || "Could not save the local workspace." };
