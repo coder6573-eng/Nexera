@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -206,6 +206,22 @@ try {
   assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
   assert.ok(previewHtml.includes("window.previewLoaded = true"), "Preview should inline linked JavaScript");
   assert.ok(previewHtml.includes("window.extraLoaded = true"), "Preview should include additional JS files");
+
+  // Existing projects accept partial file updates while preserving untouched files.
+  const partialEdit = window.__testHooks.mergeProjectFiles({
+    "index.html": "<html><body>Existing</body></html>",
+    "style.css": "body { color: black; }",
+    "script.js": "window.keepThis = true;"
+  }, { "style.css": "body { color: green; }" });
+  assert.equal(partialEdit["style.css"], "body { color: green; }");
+  assert.equal(partialEdit["script.js"], "window.keepThis = true;", "Untouched project files must survive iterative edits");
+  assert.equal(window.__testHooks.mergeProjectFiles(null, { "style.css": "body{}" }), null, "New projects still require core files");
+  const filteredEdit = window.__testHooks.mergeProjectFiles({ "index.html": "<html></html>" }, {
+    "../escape.js": "bad",
+    "script.js": "window.safe = true;"
+  });
+  assert.equal(filteredEdit["../escape.js"], undefined, "Project file paths must be constrained");
+  assert.equal(filteredEdit["script.js"], "window.safe = true;");
 
   // AI-generated file names are untrusted text and must never become executable HTML.
   const workbench = document.getElementById("agentWorkbench");
