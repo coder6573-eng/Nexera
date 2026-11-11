@@ -192,6 +192,33 @@ try {
   click("chatSend");
   assert.ok(document.getElementById("conversation").textContent.includes("Follow-up question"));
 
+  // Preview assembly must inline linked workspace assets and keep script-closing text inert.
+  const previewHtml = window.buildPreviewHtml({
+    "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Preview</h1><script src='script.js'></script></body></html>",
+    "style.css": "body { color: rgb(1, 2, 3); }",
+    "script.js": "window.previewLoaded = true; const sample = '<\\/script>';",
+    "extra.js": "window.extraLoaded = true;"
+  });
+  assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
+  assert.ok(previewHtml.includes("window.previewLoaded = true"), "Preview should inline linked JavaScript");
+  assert.ok(previewHtml.includes("window.extraLoaded = true"), "Preview should include additional JS files");
+
+  // AI-generated file names are untrusted text and must never become executable HTML.
+  const workbench = document.getElementById("agentWorkbench");
+  workbench.hidden = false;
+  window.updateAgentWorkbench(["<img src=x onerror=alert(1)>", "index.html"], 0, "building");
+  assert.equal(document.querySelector("#agentSteps img"), null, "Agent file names must not be interpreted as HTML");
+  assert.equal(document.querySelector("#agentSteps .agent-file").textContent, "<img src=x onerror=alert(1)>");
+  workbench.hidden = true;
+
+  // Assistant formatting should create semantic elements without parsing raw HTML.
+  const formatted = document.createElement("div");
+  window.renderAssistantContent(formatted, "## Heading\n- **bold** item\n- `code`\n\n<script>alert(1)</script>");
+  assert.equal(formatted.querySelector("h3")?.textContent, "Heading");
+  assert.equal(formatted.querySelectorAll("ul li").length, 2);
+  assert.equal(formatted.querySelector("strong")?.textContent, "bold");
+  assert.equal(formatted.querySelector("code")?.textContent, "code");
+  assert.equal(formatted.querySelector("script"), null, "Assistant text must not execute embedded HTML");
   if (runtimeErrors.length) {
     throw new Error("Runtime errors: " + runtimeErrors.map(error => error.message).join("; "));
   }
