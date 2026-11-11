@@ -1,4 +1,4 @@
-# Nexera AI v10.4.0
+# Nexera AI v10.4.1
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -31,9 +31,9 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 
 ## Vibecoding
 
-- **Iterative editing** — after the first build, keep chatting in the same conversation. Nexera uses the current project files as context and updates only the requested changes.
-- **Real live preview** — the build card contains a sandboxed iframe preview generated from the current project files. It refreshes after every completed build/edit, and the full preview can be opened separately.
-- **Chat polish** — assistant responses render basic headings, lists, links, inline code, and fenced code blocks safely, with a one-tap copy action. The composer auto-grows with the message.
+- **Iterative editing** — after the first build, keep chatting in the same conversation. Nexera uses the current project files as context and merges partial file updates, preserving untouched files. If a request is materially unclear, it asks a clarification question before building.
+- **Real live preview** — the build card contains a sandboxed iframe preview generated from the current project files. It refreshes after every completed build/edit, and the full preview can be opened separately. Returning from the project preview keeps the active project attached to the chat.
+- **Chat polish** — assistant responses render basic headings, lists, links, inline code, and fenced code blocks safely, with a one-tap copy action that copies the final response. The composer auto-grows with the message.
 
 
 - **Build** — one-pass generation with an embedded quality checklist to reduce wait time.
