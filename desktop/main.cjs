@@ -41,9 +41,10 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       if (!apiKey && !kiloFreeModel && !llmFaucetFree && !ovhAnonymousFree) {
         throw new Error("No API key saved for this provider. Open Settings to add one, or choose a free route.");
       }
+      if (typeof messagesJson !== "string" || messagesJson.length > 1_000_000) throw new Error("The chat request was too large.");
       let messages;
       try { messages = JSON.parse(messagesJson); } catch { throw new Error("Invalid chat message data."); }
-      if (!Array.isArray(messages) || messages.length > 80) throw new Error("Invalid chat message list.");
+      if (!Array.isArray(messages) || messages.length < 1 || messages.length > 80) throw new Error("Invalid chat message list.");
       const body = JSON.stringify({ model, messages, temperature: 0.3 });
       const result = await new Promise((resolve, reject) => {
         const req = https.request(target, {
@@ -256,8 +257,15 @@ app.whenReady().then(async () => {
     preview.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
   });
   ipcMain.on("nexera:export-zip", async (_event, payload) => {
+    let tempDir = "";
     try {
+      if (typeof payload?.filesJson !== "string" || payload.filesJson.length > 5_000_000) {
+        throw new Error("The project is too large to export.");
+      }
       const files = JSON.parse(payload.filesJson);
+      if (!files || typeof files !== "object" || Array.isArray(files)) {
+        throw new Error("Invalid project file data.");
+      }
       const safeName = String(payload.projectName || "Nexera-project").replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 80) || "Nexera-project";
       const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
         title: "Export project",
@@ -266,10 +274,18 @@ app.whenReady().then(async () => {
       });
       if (canceled || !filePath) return;
       const names = Object.keys(files).filter(name => /^[A-Za-z0-9._-]{1,80}$/.test(name) && !name.includes(".."));
-      if (!names.length) throw new Error("There are no exportable project files.");
-      const tempDir = path.join(app.getPath("temp"), "nexera-export-" + Date.now());
+      if (!names.length || names.length > 100) throw new Error("The project must contain between 1 and 100 exportable files.");
+      let totalBytes = 0;
+      tempDir = path.join(app.getPath("temp"), "nexera-export-" + Date.now());
       fs.mkdirSync(tempDir, { recursive: true });
-      for (const name of names) fs.writeFileSync(path.join(tempDir, name), String(files[name] || ""), "utf8");
+      for (const name of names) {
+        const content = String(files[name] || "");
+        const bytes = Buffer.byteLength(content, "utf8");
+        if (bytes > 2_000_000) throw new Error("A project file is too large to export: " + name);
+        totalBytes += bytes;
+        if (totalBytes > 10_000_000) throw new Error("The project is too large to export.");
+        fs.writeFileSync(path.join(tempDir, name), content, "utf8");
+      }
       await new Promise((resolve, reject) => {
         const ps = [
           "-NoProfile", "-NonInteractive", "-Command",
@@ -278,10 +294,11 @@ app.whenReady().then(async () => {
         ];
         execFile("powershell.exe", ps, error => error ? reject(error) : resolve());
       });
-      fs.rmSync(tempDir, { recursive: true, force: true });
       dialog.showMessageBox(mainWindow, { type: "info", message: "Project ZIP exported successfully." });
     } catch (error) {
       dialog.showErrorBox("Nexera export failed", error.message || "Could not export the ZIP.");
+    } finally {
+      if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
     }
   });
   await startLocalServer();
