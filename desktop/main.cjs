@@ -247,6 +247,17 @@ app.whenReady().then(async () => {
       const result = await dialog.showOpenDialog(mainWindow, { title: "Open local web project folder", properties: ["openDirectory"] });
       if (result.canceled || !result.filePaths?.[0]) return { canceled: true };
       const root = fs.realpathSync(result.filePaths[0]);
+      const confirmation = await dialog.showMessageBox(mainWindow, {
+        type: "warning",
+        title: "Link local project folder",
+        message: "Nexera can save agent changes into " + path.basename(root) + ".",
+        detail: "Nexera will only update supported text files and add new ones. It will not delete files. You can cancel at any time by starting a new chat.",
+        buttons: ["Cancel", "Link folder"],
+        defaultId: 1,
+        cancelId: 0,
+        noLink: true
+      });
+      if (confirmation.response !== 1) return { canceled: true };
       const files = readWorkspaceFiles(root);
       if (typeof files["index.html"] !== "string") throw new Error("The selected folder needs an index.html file.");
       linkedWorkspaceDirectory = root;
