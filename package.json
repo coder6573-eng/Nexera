@@ -6,7 +6,7 @@
   "main": "desktop/main.cjs",
   "scripts": {
     "dist:win": "electron-builder --win portable",
-    "test": "node scripts/check-inline-js.cjs && node scripts/test-ui.cjs"
+    "test": "node scripts/check-inline-js.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs"
   },
   "devDependencies": {
     "electron": "^45.3.0",
