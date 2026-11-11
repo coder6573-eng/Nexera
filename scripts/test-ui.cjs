@@ -93,6 +93,17 @@ try {
   click("cancelSettings");
   assert.ok(!document.getElementById("modalBackdrop").classList.contains("open"));
 
+  click("settingsBtn");
+  document.getElementById("provider").value = "ovh";
+  change("provider");
+  click("saveSettings");
+  assert.equal(document.getElementById("homeProvider").value, "ovh", "Saving settings should apply the provider to the home composer");
+  assert.equal(document.getElementById("chatProvider").value, "ovh", "Saving settings should apply the provider to the chat composer");
+  click("settingsBtn");
+  document.getElementById("provider").value = "kilo";
+  change("provider");
+  click("saveSettings");
+
   const homeMode = document.getElementById("homeMode");
   homeMode.value = "vibe";
   change("homeMode");
