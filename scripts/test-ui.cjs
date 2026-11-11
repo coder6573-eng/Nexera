@@ -69,6 +69,12 @@ try {
 
   click("settingsBtn");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
+  for (const id of ["provider", "endpoint", "modelId", "plannerModel", "orchestratorModel", "apiKey"]) {
+    assert.ok(document.querySelector('label[for="' + id + '"]'), "Settings field #" + id + " needs an associated label");
+  }
+  for (const button of document.querySelectorAll("button")) {
+    assert.ok(button.textContent.trim() || button.getAttribute("aria-label") || button.title, "Every button needs an accessible name");
+  }
   assert.equal(document.getElementById("provider").value, "kilo");
   assert.equal(document.getElementById("connectPuter").style.display, "none");
   assert.ok(document.getElementById("kiloInfo").textContent.includes("three Kilo free models"));
