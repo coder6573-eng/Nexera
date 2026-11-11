@@ -9,6 +9,73 @@ const { execFile } = require("node:child_process");
 let mainWindow;
 let localServer;
 let localOrigin;
+let linkedWorkspaceDirectory = null;
+const WORKSPACE_EXTENSIONS = new Set([".html", ".css", ".js", ".json", ".txt", ".md", ".svg", ".xml", ".webmanifest"]);
+const WORKSPACE_IGNORED_DIRS = new Set([".git", "node_modules", "dist", "build", ".next", ".cache", ".idea"]);
+function safeWorkspaceRelativePath(value) {
+  if (typeof value !== "string" || value.startsWith("/") || value.includes("\\\\") || value.length > 400) return false;
+  const parts = value.split("/");
+  return parts.length <= 5 && parts.every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..");
+}
+function readWorkspaceFiles(root) {
+  const files = {};
+  let totalBytes = 0;
+  const walk = (directory, depth) => {
+    if (depth > 4 || Object.keys(files).length >= 100 || totalBytes >= 700_000) return;
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (Object.keys(files).length >= 100 || totalBytes >= 700_000) break;
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) {
+        if (!WORKSPACE_IGNORED_DIRS.has(entry.name)) walk(path.join(directory, entry.name), depth + 1);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      const fullPath = path.join(directory, entry.name);
+      const relative = path.relative(root, fullPath).split(path.sep).join("/");
+      if (!safeWorkspaceRelativePath(relative) || !WORKSPACE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
+      const stat = fs.statSync(fullPath);
+      if (stat.size > 400_000 || totalBytes + stat.size > 700_000) continue;
+      files[relative] = fs.readFileSync(fullPath, "utf8");
+      totalBytes += stat.size;
+    }
+  };
+  walk(root, 0);
+  return files;
+}
+function writeWorkspaceFiles(filesJson) {
+  if (!linkedWorkspaceDirectory) return { ok: false, error: "No local folder is linked." };
+  try {
+    if (typeof filesJson !== "string" || filesJson.length > 1_000_000) throw new Error("The workspace update is too large.");
+    const files = JSON.parse(filesJson);
+    if (!files || typeof files !== "object" || Array.isArray(files)) throw new Error("Invalid workspace file data.");
+    const entries = Object.entries(files);
+    if (!entries.length || entries.length > 100) throw new Error("The workspace must contain between 1 and 100 files.");
+    const root = fs.realpathSync(linkedWorkspaceDirectory);
+    let totalBytes = 0;
+    for (const [name, value] of entries) {
+      if (!safeWorkspaceRelativePath(name) || !WORKSPACE_EXTENSIONS.has(path.extname(name).toLowerCase())) continue;
+      if (typeof value !== "string") throw new Error("Invalid content for " + name);
+      const bytes = Buffer.byteLength(value, "utf8");
+      if (bytes > 400_000) throw new Error("A workspace file is too large: " + name);
+      totalBytes += bytes;
+      if (totalBytes > 700_000) throw new Error("The workspace update is too large.");
+      const target = path.resolve(root, ...name.split("/"));
+      if (target !== root && !target.startsWith(root + path.sep)) throw new Error("Invalid workspace path.");
+      const parent = path.dirname(target);
+      fs.mkdirSync(parent, { recursive: true });
+      const realParent = fs.realpathSync(parent);
+      if (realParent !== root && !realParent.startsWith(root + path.sep)) throw new Error("Workspace path escapes the selected folder.");
+      if (fs.existsSync(target)) {
+        const stat = fs.lstatSync(target);
+        if (stat.isSymbolicLink() || !stat.isFile()) throw new Error("Refusing to replace a non-file workspace entry: " + name);
+      }
+      fs.writeFileSync(target, value, "utf8");
+    }
+    return { ok: true, count: entries.length };
+  } catch (error) {
+    return { ok: false, error: error.message || "Could not save the local workspace." };
+  }
+}
 const keyFile = () => path.join(app.getPath("userData"), "credentials.enc");
 const allowedProvider = /^[a-z0-9_-]{1,40}$/i;
 
@@ -230,6 +297,20 @@ function createWindow() {
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 app.whenReady().then(async () => {
+  ipcMain.handle("nexera:open-folder", async () => {
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, { title: "Open local web project folder", properties: ["openDirectory"] });
+      if (result.canceled || !result.filePaths?.[0]) return { canceled: true };
+      const root = fs.realpathSync(result.filePaths[0]);
+      const files = readWorkspaceFiles(root);
+      if (typeof files["index.html"] !== "string") throw new Error("The selected folder needs an index.html file.");
+      linkedWorkspaceDirectory = root;
+      return { ok: true, folderName: path.basename(root), files };
+    } catch (error) {
+      return { ok: false, error: error.message || "Could not open that folder." };
+    }
+  });
+  ipcMain.handle("nexera:save-folder", async (_event, filesJson) => writeWorkspaceFiles(filesJson));
   ipcMain.on("nexera:has-key", (event, provider) => {
     event.returnValue = allowedProvider.test(provider || "") && typeof readKeys()[provider] === "string";
   });
