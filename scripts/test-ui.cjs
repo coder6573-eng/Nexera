@@ -3,6 +3,8 @@ const fs = require("node:fs");
 const { JSDOM, VirtualConsole } = require("jsdom");
 
 const html = fs.readFileSync("index.html", "utf8");
+const instrumentedHtml = html.replace(/\}\)\(\);\s*<\\/script>/, "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent };})();</script>");
+assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
 virtualConsole.on("jsdomError", error => runtimeErrors.push(error));
@@ -20,7 +22,7 @@ const seed = [{
   updated: 1
 }];
 
-const dom = new JSDOM(html, {
+const dom = new JSDOM(instrumentedHtml, {
   url: "https://nexera.test/",
   runScripts: "dangerously",
   pretendToBeVisual: true,
@@ -193,7 +195,7 @@ try {
   assert.ok(document.getElementById("conversation").textContent.includes("Follow-up question"));
 
   // Preview assembly must inline linked workspace assets and keep script-closing text inert.
-  const previewHtml = window.buildPreviewHtml({
+  const previewHtml = window.__testHooks.buildPreviewHtml({
     "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Preview</h1><script src='script.js'></script></body></html>",
     "style.css": "body { color: rgb(1, 2, 3); }",
     "script.js": "window.previewLoaded = true; const sample = '<\\/script>';",
@@ -206,14 +208,14 @@ try {
   // AI-generated file names are untrusted text and must never become executable HTML.
   const workbench = document.getElementById("agentWorkbench");
   workbench.hidden = false;
-  window.updateAgentWorkbench(["<img src=x onerror=alert(1)>", "index.html"], 0, "building");
+  window.__testHooks.updateAgentWorkbench(["<img src=x onerror=alert(1)>", "index.html"], 0, "building");
   assert.equal(document.querySelector("#agentSteps img"), null, "Agent file names must not be interpreted as HTML");
   assert.equal(document.querySelector("#agentSteps .agent-file").textContent, "<img src=x onerror=alert(1)>");
   workbench.hidden = true;
 
   // Assistant formatting should create semantic elements without parsing raw HTML.
   const formatted = document.createElement("div");
-  window.renderAssistantContent(formatted, "## Heading\n- **bold** item\n- `code`\n\n<script>alert(1)</script>");
+  window.__testHooks.renderAssistantContent(formatted, "## Heading\n- **bold** item\n- `code`\n\n<script>alert(1)</script>");
   assert.equal(formatted.querySelector("h3")?.textContent, "Heading");
   assert.equal(formatted.querySelectorAll("ul li").length, 2);
   assert.equal(formatted.querySelector("strong")?.textContent, "bold");
