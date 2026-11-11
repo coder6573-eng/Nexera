@@ -113,6 +113,11 @@ try {
   click("newProject");
   assert.equal(document.getElementById("chatMode").value, "vibe");
   assert.equal(window.__testHooks.getActiveProject()?.id, "test-project", "Returning to chat must preserve the active project for iterative edits");
+  click("openLivePreview");
+  assert.equal(document.getElementById("projectView").style.display, "flex", "Browser preview action should open the project preview view");
+  assert.ok(document.querySelector(".preview-frame"), "Browser preview action should show the live iframe");
+  click("backChat");
+  assert.equal(window.__testHooks.getActiveProject()?.id, "test-project", "Preview return should preserve the active project");
   assert.equal(document.getElementById("chatComposer").style.display, "block");
 
   click("newChatBtn");
