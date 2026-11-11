@@ -222,14 +222,20 @@ try {
 
   // Preview assembly must inline linked workspace assets and keep script-closing text inert.
   const previewHtml = window.__testHooks.buildPreviewHtml({
-    "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Preview</h1><script src='script.js'></script></body></html>",
+    "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'><link rel='stylesheet' href='nav.css'></head><body><h1>Preview</h1><script src='script.js'></script><script src='nav.js'></script></body></html>",
     "style.css": "body { color: rgb(1, 2, 3); }",
+    "nav.css": ".nav { display: flex; }",
     "script.js": "window.previewLoaded = true; const sample = '</script>';",
+    "nav.js": "window.navLoaded = true;",
     "extra.js": "window.extraLoaded = true;"
   });
   assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
   assert.ok(previewHtml.includes("window.previewLoaded = true"), "Preview should inline linked JavaScript");
   assert.ok(previewHtml.includes("window.extraLoaded = true"), "Preview should include additional JS files");
+  assert.ok(previewHtml.includes(".nav { display: flex; }"), "Preview should inline every CSS file");
+  assert.equal(previewHtml.split("window.previewLoaded = true").length - 1, 1, "Multiple script tags must not duplicate the bundled JavaScript");
+  assert.equal(previewHtml.split("window.navLoaded = true").length - 1, 1, "Each bundled script should execute only once");
+  assert.equal(previewHtml.split("body { color: rgb(1, 2, 3); }").length - 1, 1, "Multiple stylesheet links must not duplicate bundled CSS");
   assert.ok(previewHtml.includes("<" + String.fromCharCode(92) + "/script>"), "Preview should escape script-closing text inside generated JavaScript");
 
   // Existing projects accept partial file updates while preserving untouched files.
