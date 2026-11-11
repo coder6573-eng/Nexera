@@ -21,7 +21,7 @@ for (const file of ["desktop/main.cjs", "desktop/preload.cjs"]) {
 }
 
 const requiredIds = [
-  "menuBtn", "closeDrawer", "scrim", "newChatBtn", "newProject",
+  "menuBtn", "closeDrawer", "scrim", "newChatBtn", "newProject", "openLocalFolder",
   "showArchives", "settingsBtn", "chatSettings", "drawerSettings",
   "homeSend", "chatSend", "backChat", "projectMore", "homeMode", "chatMode",
   "homeAgentMode", "chatAgentMode", "homeSkill", "chatSkill", "homeWebSearch", "chatWebSearch"
@@ -44,6 +44,20 @@ if (!scripts[0].includes('"kind":"question"') || !scripts[0].includes("parsed?.k
 }
 if (!scripts[0].includes("mergeProjectFiles(activeProject?.files,parsed?.files)")) {
   throw new Error("Iterative partial project merge flow is missing.");
+}
+
+const desktopMain = fs.readFileSync("desktop/main.cjs", "utf8");
+const desktopPreload = fs.readFileSync("desktop/preload.cjs", "utf8");
+if (!desktopMain.includes('ipcMain.handle("nexera:open-folder"') ||
+    !desktopMain.includes('ipcMain.handle("nexera:save-folder"') ||
+    !desktopPreload.includes("openFolder:") ||
+    !desktopPreload.includes("saveFolder:")) {
+  throw new Error("Desktop local-folder workspace bridge is incomplete.");
+}
+if (!scripts[0].includes("typeof window.NexeraNative?.openFolder") ||
+    !scripts[0].includes("await window.NexeraNative.openFolder()") ||
+    !scripts[0].includes("await saveLinkedFolder()")) {
+  throw new Error("Local-folder UI import or save wiring is incomplete.");
 }
 
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
