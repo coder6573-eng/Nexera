@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -261,6 +261,11 @@ try {
   window.__testHooks.updateAgentWorkbench(["<img src=x onerror=alert(1)>", "index.html"], 0, "building");
   assert.equal(document.querySelector("#agentSteps img"), null, "Agent file names must not be interpreted as HTML");
   assert.equal(document.querySelector("#agentSteps .agent-file").textContent, "<img src=x onerror=alert(1)>");
+  workbench.hidden = false;
+  window.__testHooks.renderAgentWorkbench(["index.html", "script.js"]);
+  window.__testHooks.failAgentWorkbench();
+  assert.equal(document.getElementById("agentStatus").textContent, "needs attention");
+  assert.equal(document.querySelectorAll("#agentSteps .agent-step.failed").length, 2, "Failed builds should not remain marked as working");
   workbench.hidden = true;
 
   // Assistant formatting should create semantic elements without parsing raw HTML.
