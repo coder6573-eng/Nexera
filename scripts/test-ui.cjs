@@ -50,6 +50,16 @@ const change = id => {
 };
 
 try {
+  const routeValues = [...document.getElementById("homeProvider").options].map(option => option.value);
+  for (const route of ["kilo", "llmfaucet", "ovh", "llm7", "puter", "openrouter"]) {
+    assert.ok(routeValues.includes(route), "Missing chat route: " + route);
+  }
+  document.getElementById("homeProvider").value = "ovh";
+  change("homeProvider");
+  assert.equal(document.getElementById("chatProvider").value, "ovh", "Provider selection should sync between composers");
+  document.getElementById("homeProvider").value = "kilo";
+  change("homeProvider");
+
   assert.equal(document.getElementById("home").style.display, "flex");
 
   click("menuBtn");
