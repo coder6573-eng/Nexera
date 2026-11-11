@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -99,6 +99,8 @@ try {
   click("saveSettings");
   assert.equal(document.getElementById("homeProvider").value, "ovh", "Saving settings should apply the provider to the home composer");
   assert.equal(document.getElementById("chatProvider").value, "ovh", "Saving settings should apply the provider to the chat composer");
+  assert.equal(window.__testHooks.providerConfig().provider, "ovh", "Provider requests should use the newly saved route");
+  assert.equal(window.__testHooks.providerConfig().endpoint, "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions");
   click("settingsBtn");
   document.getElementById("provider").value = "kilo";
   change("provider");
