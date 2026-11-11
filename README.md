@@ -1,4 +1,4 @@
-# Nexera AI v10.2.0
+# Nexera AI v10.3.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -9,12 +9,17 @@ The same interface is packaged as an Android app (WebView) and a Windows portabl
 
 ## AI providers
 
-Kilo Auto Free is the default, with LLMFaucet, Puter, and OpenRouter Free available as alternate routes. If that route is busy, Nexera automatically tries three additional Kilo free models in sequence. Open **Settings** to choose another provider, change the model, or configure BYOK.
+Kilo Auto Free is the default. The chat composer also lets users switch directly between Kilo Auto, LLMFaucet, OVH Free, LLM7 Free, Puter, and OpenRouter Free. Kilo Auto automatically tries its free model pool and then keyless fallback gateways when capacity is unavailable. Open **Settings** to configure BYOK routes.
 
 | Provider | Default model | Key required |
 | --- | --- | --- |
 | OpenRouter | `openrouter/free` | Yes |
-| Kilo AI Gateway (default) | `kilo-auto/free` → `z-ai/glm-5:free` → `minimax/minimax-m2.1:free` → `google/gemma-4-26b-a4b-it:free` | No for free routes |
+| Kilo AI Gateway (default) | `kilo-auto/free` → free Kilo fallbacks | No for free routes |
+| LLMFaucet | `auto:coding` | No |
+| OVH AI Endpoints | `gpt-oss-120b` | No on anonymous path |
+| LLM7 | `gpt-oss:20b` | Free provider key |
+| Puter AI | `openai/gpt-6-luna` | Puter account |
+| OpenRouter | `openrouter/free` | Yes |
 | DeepSeek | `deepseek-chat` | Yes |
 | GLM / Zhipu | `glm-4.5-flash` | Yes |
 | Qwen / DashScope | `qwen-plus` | Yes |
@@ -25,6 +30,10 @@ Kilo free routes are subject to availability and provider rate limits. Kilo docu
 API keys are not stored in browser localStorage. Android uses Android Keystore-backed encryption; Windows uses Electron safeStorage.
 
 ## Vibecoding
+
+- **Iterative editing** — after the first build, keep chatting in the same conversation. Nexera uses the current project files as context and updates only the requested changes.
+- **Real live preview** — the build card contains a sandboxed iframe preview generated from the current project files. It refreshes after every completed build/edit, and the full preview can be opened separately.
+
 
 - **Build** — one-pass generation with an embedded quality checklist to reduce wait time.
 - **Agent** — a concise planning pass followed by building and a built-in quality review.
