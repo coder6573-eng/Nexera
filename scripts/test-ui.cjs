@@ -239,6 +239,7 @@ try {
   });
   assert.equal(filteredEdit["../escape.js"], undefined, "Project file paths must be constrained");
   assert.equal(filteredEdit["script.js"], "window.safe = true;");
+  assert.equal(window.__testHooks.mergeProjectFiles({ "index.html": "<html></html>" }, { "oversized.js": "x".repeat(400001) }), null, "Oversized generated files must be rejected");
 
   // AI-generated file names are untrusted text and must never become executable HTML.
   const workbench = document.getElementById("agentWorkbench");
