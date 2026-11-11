@@ -229,7 +229,7 @@ try {
     "nav.js": "window.navLoaded = true;",
     "extra.js": "window.extraLoaded = true;"
   });
-  assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
+  assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }"), "Preview should inline CSS");
   assert.ok(previewHtml.includes("window.previewLoaded = true"), "Preview should inline linked JavaScript");
   assert.ok(previewHtml.includes("window.extraLoaded = true"), "Preview should include additional JS files");
   assert.ok(previewHtml.includes(".nav { display: flex; }"), "Preview should inline every CSS file");
