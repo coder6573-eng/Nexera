@@ -13,7 +13,7 @@ virtualConsole.on("jsdomError", error => runtimeErrors.push(error));
 
 const seed = [{
   id: "test-project",
-  name: "Button Test Project",
+  name: "<img src=x onerror=alert(1)> Button Test Project",
   files: {
     "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Test</h1><script src='script.js'></script></body></html>",
     "style.css": "body { color: #333; }",
@@ -189,6 +189,8 @@ try {
   click("menuBtn");
   click("showArchives");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
+  assert.equal(document.querySelector("#modal img"), null, "Archived project names must not be parsed as HTML");
+  assert.equal(document.querySelector(".archive-name").textContent, "<img src=x onerror=alert(1)> Button Test Project");
   const restoreButton = document.querySelector(".restore-btn");
   assert.ok(restoreButton, "Archived project should have a restore action");
   restoreButton.click();
