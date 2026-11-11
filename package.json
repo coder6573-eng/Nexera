@@ -9,7 +9,7 @@
     "test": "node scripts/check-inline-js.cjs && node scripts/test-ui.cjs"
   },
   "devDependencies": {
-    "electron": "^35.0.0",
+    "electron": "^45.3.0",
     "electron-builder": "^26.0.12",
     "jsdom": "^26.1.0"
   },
