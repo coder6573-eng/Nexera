@@ -247,6 +247,8 @@ app.whenReady().then(async () => {
       const result = await dialog.showOpenDialog(mainWindow, { title: "Open local web project folder", properties: ["openDirectory"] });
       if (result.canceled || !result.filePaths?.[0]) return { canceled: true };
       const root = fs.realpathSync(result.filePaths[0]);
+      const files = readWorkspaceFiles(root);
+      if (typeof files["index.html"] !== "string") throw new Error("The selected folder needs an index.html file.");
       const confirmation = await dialog.showMessageBox(mainWindow, {
         type: "warning",
         title: "Link local project folder",
@@ -258,8 +260,6 @@ app.whenReady().then(async () => {
         noLink: true
       });
       if (confirmation.response !== 1) return { canceled: true };
-      const files = readWorkspaceFiles(root);
-      if (typeof files["index.html"] !== "string") throw new Error("The selected folder needs an index.html file.");
       linkedWorkspaceDirectory = root;
       return { ok: true, folderName: path.basename(root), files };
     } catch (error) {
