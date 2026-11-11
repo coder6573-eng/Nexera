@@ -1,4 +1,4 @@
-# Nexera AI v10.1.0
+# Nexera AI v10.2.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -9,7 +9,7 @@ The same interface is packaged as an Android app (WebView) and a Windows portabl
 
 ## AI providers
 
-Kilo Auto Free is the default. If that route is busy, Nexera automatically tries three additional Kilo free models in sequence. Open **Settings** to choose another provider, change the model, or configure BYOK.
+Kilo Auto Free is the default, with LLMFaucet, Puter, and OpenRouter Free available as alternate routes. If that route is busy, Nexera automatically tries three additional Kilo free models in sequence. Open **Settings** to choose another provider, change the model, or configure BYOK.
 
 | Provider | Default model | Key required |
 | --- | --- | --- |
