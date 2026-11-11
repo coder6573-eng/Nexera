@@ -112,7 +112,7 @@ function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=
 function hideAgentWorkbench(){const w=$('agentWorkbench');if(w)w.hidden=true}
 function getSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS)||'{}')}catch{return {}}}
 function saveSettings(s){try{localStorage.setItem(SETTINGS,JSON.stringify(s));return true}catch(e){toast('Could not save settings on this device.');return false}}
-function secretAvailable(provider,model){if(provider==='puter')return !!window.puter?.ai?.chat;if(provider==='kilo'&&(model==='kilo-auto/free'||model.endsWith(':free')))return !!window.NexeraNative;if(provider==='llmfaucet'||provider==='ovh')return !!window.NexeraNative;return !!window.NexeraNative&&window.NexeraNative.hasApiKey(provider)}
+function secretAvailable(provider,model){if(provider==='puter')return true;if(provider==='kilo'&&(model==='kilo-auto/free'||model.endsWith(':free')))return !!window.NexeraNative;if(provider==='llmfaucet'||provider==='ovh')return !!window.NexeraNative;return !!window.NexeraNative&&window.NexeraNative.hasApiKey(provider)}
 function nativeSearch(query){return new Promise((resolve,reject)=>{const id='s'+Date.now()+Math.random().toString(16).slice(2);const timer=setTimeout(()=>{delete window.__nexeraCallbacks[id];reject(new Error('Web search timed out.'))},25000);window.__nexeraCallbacks=window.__nexeraCallbacks||{};window.__nexeraCallbacks[id]=data=>{clearTimeout(timer);delete window.__nexeraCallbacks[id];if(data.error)reject(new Error(data.error));else resolve(data.content||'[]')};if(window.NexeraNative&&window.NexeraNative.searchWeb)window.NexeraNative.searchWeb(query,id);else{clearTimeout(timer);delete window.__nexeraCallbacks[id];reject(new Error('Web search is available in the installed Nexera app.'))}})}function renderSearchSources(results){if(!Array.isArray(results)||!results.length)return null;const wrap=document.createElement('div');wrap.className='search-sources';results.slice(0,6).forEach(item=>{const a=document.createElement('a');a.className='source-card';a.href=item.url||'#';a.target='_blank';a.rel='noopener noreferrer';const title=document.createElement('div');title.className='source-title';title.textContent=item.title||'Source';const url=document.createElement('div');url.className='source-url';url.textContent=item.url||'';a.append(title,url);wrap.appendChild(a)});return wrap}
 function normalizePuterResponse(response){
   if(typeof response==='string')return response;
@@ -121,8 +121,10 @@ function normalizePuterResponse(response){
   if(Array.isArray(content))return content.map(part=>typeof part==='string'?part:(part?.text||'')).filter(Boolean).join('\n');
   return content==null?JSON.stringify(response):String(content);
 }
+function waitForPuter(){if(window.puter?.ai?.chat)return Promise.resolve();const script=document.querySelector('script[src*="js.puter.com/v2"]');if(!script)return Promise.reject(new Error('Puter SDK loader is missing.'));return new Promise((resolve,reject)=>{let interval;let settled=false;const finish=error=>{if(settled)return;settled=true;clearInterval(interval);clearTimeout(timeout);error?reject(error):resolve()};const timeout=setTimeout(()=>finish(new Error('Puter SDK did not load within 15 seconds. Check your internet connection.')),15000);interval=setInterval(()=>{if(window.puter?.ai?.chat)finish()},100);script.addEventListener('error',()=>finish(new Error('Puter SDK failed to load. Check your internet connection.')),{once:true})})}
 async function nativeCall(provider,endpoint,model,msgs,options={}){
   if(provider==='puter'){
+    await waitForPuter();
     if(!window.puter?.ai?.chat)throw new Error('Puter could not load. Check your internet connection, or choose a free gateway route.');
     const settings={model:model||'openai/gpt-6-luna'};
     if(options.webSearch)settings.tools=[{type:'web_search'}];
