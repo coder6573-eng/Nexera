@@ -1,4 +1,4 @@
-# Nexera AI v10.4.1
+# Nexera AI v10.5.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
