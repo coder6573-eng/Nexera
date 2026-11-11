@@ -57,9 +57,11 @@ try {
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
   assert.equal(document.getElementById("provider").value, "kilo");
   assert.equal(document.getElementById("connectPuter").style.display, "none");
-  assert.ok(document.getElementById("kiloInfo").textContent.includes("GLM 5 Free"));
+  assert.ok(document.getElementById("kiloInfo").textContent.includes("three Kilo free models"));
   assert.ok(html.includes("-webkit-tap-highlight-color:transparent"));
   assert.ok(html.includes("KILO_FREE_BACKUPS"));
+  assert.ok(html.includes("renderAssistantContent"), "Assistant markdown renderer should be wired");
+  assert.ok(html.includes("copy-message"), "Assistant copy action should be present");
   document.getElementById("provider").value = "openrouter";
   change("provider");
   assert.equal(document.getElementById("endpoint").value, "https://openrouter.ai/api/v1/chat/completions");
@@ -99,6 +101,7 @@ try {
   assert.equal(document.getElementById("chatComposer").style.display, "block");
 
   click("newChatBtn");
+  assert.ok(document.getElementById("agentWorkbench").hidden, "Agent workbench should not remain visible in a normal chat");
   assert.equal(document.getElementById("homeMode").value, "chat");
   assert.equal(document.getElementById("home").style.display, "flex");
 
