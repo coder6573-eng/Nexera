@@ -36,6 +36,13 @@ for (const id of requiredIds) {
 if (!/<script\b(?=[^>]*\basync\b)(?=[^>]*src="https:\/\/js\.puter\.com\/v2\/")[^>]*>/i.test(html)) throw new Error("Asynchronous Puter SDK loader is missing.");
 if (!scripts[0].includes("window.puter.ai.chat(msgs,false,settings)") || !scripts[0].includes("window.NexeraNative.saveApiKey")) throw new Error("Puter message-array routing or secure BYOK provider routing is missing.");
 
+if (!scripts[0].includes('"kind":"question"') || !scripts[0].includes("parsed?.kind==='question'")) {
+  throw new Error("Vibecoding clarification-question flow is missing.");
+}
+if (!scripts[0].includes("mergeProjectFiles(activeProject?.files,parsed?.files)")) {
+  throw new Error("Iterative partial project merge flow is missing.");
+}
+
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
   throw new Error("Native result bridge callback is missing.");
 }
