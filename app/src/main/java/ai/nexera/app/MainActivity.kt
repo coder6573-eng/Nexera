@@ -40,6 +40,14 @@ class MainActivity : Activity() {
     private lateinit var assetLoader: WebViewAssetLoader
     private val networkExecutor = Executors.newSingleThreadExecutor()
 
+    private fun isSafeProjectPath(name: String): Boolean {
+        if (name.startsWith("/") || name.contains('\\\\')) return false
+        val parts = name.split("/")
+        return parts.size in 1..5 && parts.all {
+            it.matches(Regex("[A-Za-z0-9._-]{1,80}")) && it != "." && it != ".."
+        }
+    }
+
     private fun readLimited(stream: InputStream?, maxChars: Int): String {
         if (stream == null) return ""
         return stream.bufferedReader(Charsets.UTF_8).use { reader ->
@@ -310,7 +318,7 @@ class MainActivity : Activity() {
                     val bytes = ByteArrayOutputStream()
                     ZipOutputStream(bytes).use { zip ->
                         val names = files.keys().asSequence()
-                            .filter { it.matches(Regex("[A-Za-z0-9._-]{1,80}")) && !it.contains("..") }
+                            .filter { isSafeProjectPath(it) }
                             .toList()
                         require(names.isNotEmpty()) { "There are no exportable project files." }
                         var totalBytes = 0
