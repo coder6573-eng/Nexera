@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, openLocalFolder, isSafeProjectPath }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -59,6 +59,14 @@ try {
   assert.equal(document.getElementById("chatProvider").value, "ovh", "Provider selection should sync between composers");
   document.getElementById("homeProvider").value = "kilo";
   change("homeProvider");
+
+  assert.ok(document.getElementById("openLocalFolder"), "Local folder action should be present in the drawer");
+  assert.equal(document.getElementById("openLocalFolder").style.display, "none", "Local folder action should be hidden outside the desktop bridge");
+  assert.equal(window.__testHooks.isSafeProjectPath("src/app.js"), true, "Nested project paths should be supported");
+  assert.equal(window.__testHooks.isSafeProjectPath("../outside.js"), false, "Parent-directory traversal must be rejected");
+  assert.equal(window.__testHooks.isSafeProjectPath("src\\\\app.js"), false, "Windows path separators must be rejected");
+  window.__testHooks.openLocalFolder();
+  assert.ok(document.getElementById("toast").textContent.includes("Windows desktop app"), "Browser fallback should explain local-folder availability");
 
   assert.equal(document.getElementById("home").style.display, "flex");
 
