@@ -18,7 +18,8 @@ const seed = [{
     "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Test</h1><script src='script.js'></script></body></html>",
     "style.css": "body { color: #333; }",
     "script.js": "console.log('test');",
-    "notes.txt": "Nexera workspace terminal works."
+    "notes.txt": "Nexera workspace terminal works.",
+    "<img src=x onerror=alert(1)>": "must stay text"
   },
   archived: false,
   updated: 1
@@ -151,6 +152,8 @@ try {
   assert.ok(projectButton, "Project list should contain the seeded project");
   projectButton.click();
   assert.equal(document.getElementById("projectView").style.display, "flex");
+  assert.equal(document.querySelector("#projectContent img"), null, "Stored project filenames must not be parsed as HTML");
+  assert.ok([...document.querySelectorAll("#projectContent .file-row")].some(row => row.textContent.includes("<img src=x onerror=alert(1)>")));
   const notesButton = [...document.querySelectorAll(".file-row")].find(button => button.textContent.includes("notes.txt"));
   assert.ok(notesButton, "Files tab should list workspace files");
   notesButton.click();
