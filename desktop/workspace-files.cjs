@@ -58,6 +58,7 @@ function writeWorkspaceFiles(directory, files) {
   const root = fs.realpathSync(directory);
   if (!fs.statSync(root).isDirectory()) throw new Error("The selected workspace is not a folder.");
   let totalBytes = 0;
+  const rootPrefix = root.endsWith(path.sep) ? root : root + path.sep;
 
   const prepared = entries.map(([name, value]) => {
     if (!isSupportedTextFile(name)) throw new Error("Unsupported workspace file path or type: " + name);
@@ -67,7 +68,7 @@ function writeWorkspaceFiles(directory, files) {
     totalBytes += bytes;
     if (totalBytes > MAX_TOTAL_BYTES) throw new Error("The workspace update is too large.");
     const target = path.resolve(root, ...name.split("/"));
-    if (target === root || !target.startsWith(root + path.sep)) throw new Error("Invalid workspace path.");
+    if (target === root || !target.startsWith(rootPrefix)) throw new Error("Invalid workspace path.");
     return { name, value, target, parent: path.dirname(target) };
   });
 
@@ -75,7 +76,7 @@ function writeWorkspaceFiles(directory, files) {
   for (const item of prepared) {
     fs.mkdirSync(item.parent, { recursive: true });
     const realParent = fs.realpathSync(item.parent);
-    if (realParent !== root && !realParent.startsWith(root + path.sep)) {
+    if (realParent !== root && !realParent.startsWith(rootPrefix)) {
       throw new Error("Workspace path escapes the selected folder.");
     }
     if (fs.existsSync(item.target)) {
