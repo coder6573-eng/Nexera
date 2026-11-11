@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, openLocalFolder, isSafeProjectPath }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, openLocalFolder, saveLinkedFolder, isSafeProjectPath }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
