@@ -1,6 +1,6 @@
 {
   "name": "nexera-ai",
-  "version": "10.4.1",
+  "version": "10.5.0",
   "private": true,
   "description": "Nexera AI desktop app",
   "main": "desktop/main.cjs",
@@ -27,6 +27,7 @@
         "portable"
       ],
       "artifactName": "Nexera-AI-Setup-${version}.${ext}"
-    }
+    },
+    "artifactName": "Nexera-AI-${version}.${ext}"
   }
 }
