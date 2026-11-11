@@ -3,7 +3,9 @@ const fs = require("node:fs");
 const { JSDOM, VirtualConsole } = require("jsdom");
 
 const html = fs.readFileSync("index.html", "utf8");
-const instrumentedHtml = html.replace(/\}\)\(\);\s*<\\/script>/, "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent };})();</script>");
+const iifeEnd = html.lastIndexOf("})();");
+assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
