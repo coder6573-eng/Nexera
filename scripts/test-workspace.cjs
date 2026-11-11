@@ -63,6 +63,12 @@ try {
   }), /too large/);
   assert.equal(fs.readFileSync(path.join(root, "index.html"), "utf8"), "<html>updated</html>");
 
+  assert.throws(() => writeWorkspaceFiles(root, {
+    "index.html": "x".repeat(400_000),
+    "style.css": "y".repeat(300_001)
+  }), /workspace update is too large/);
+  assert.equal(fs.readFileSync(path.join(root, "index.html"), "utf8"), "<html>updated</html>");
+
   let symlinkCreated = false;
   try {
     fs.symlinkSync(outside, path.join(root, "outside-link"), "junction");
