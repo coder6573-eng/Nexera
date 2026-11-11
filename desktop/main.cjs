@@ -53,7 +53,7 @@ function writeWorkspaceFiles(filesJson) {
     const root = fs.realpathSync(linkedWorkspaceDirectory);
     let totalBytes = 0;
     for (const [name, value] of entries) {
-      if (!safeWorkspaceRelativePath(name) || !WORKSPACE_EXTENSIONS.has(path.extname(name).toLowerCase())) continue;
+      if (!safeWorkspaceRelativePath(name) || !WORKSPACE_EXTENSIONS.has(path.extname(name).toLowerCase())) throw new Error("Unsupported workspace file path or type: " + name);
       if (typeof value !== "string") throw new Error("Invalid content for " + name);
       const bytes = Buffer.byteLength(value, "utf8");
       if (bytes > 400_000) throw new Error("A workspace file is too large: " + name);
@@ -354,7 +354,7 @@ app.whenReady().then(async () => {
         filters: [{ name: "ZIP archive", extensions: ["zip"] }]
       });
       if (canceled || !filePath) return;
-      const names = Object.keys(files).filter(name => /^[A-Za-z0-9._-]{1,80}$/.test(name) && !name.includes(".."));
+      const names = Object.keys(files).filter(name => safeWorkspaceRelativePath(name));
       if (!names.length || names.length > 100) throw new Error("The project must contain between 1 and 100 exportable files.");
       let totalBytes = 0;
       tempDir = path.join(app.getPath("temp"), "nexera-export-" + Date.now());
@@ -365,7 +365,9 @@ app.whenReady().then(async () => {
         if (bytes > 2_000_000) throw new Error("A project file is too large to export: " + name);
         totalBytes += bytes;
         if (totalBytes > 10_000_000) throw new Error("The project is too large to export.");
-        fs.writeFileSync(path.join(tempDir, name), content, "utf8");
+        const target = path.join(tempDir, ...name.split("/"));
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, content, "utf8");
       }
       await new Promise((resolve, reject) => {
         const ps = [
