@@ -25,6 +25,7 @@ import android.provider.MediaStore
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
@@ -38,6 +39,21 @@ class MainActivity : Activity() {
     private lateinit var secureKeys: SecureKeyStore
     private lateinit var assetLoader: WebViewAssetLoader
     private val networkExecutor = Executors.newSingleThreadExecutor()
+
+    private fun readLimited(stream: InputStream?, maxChars: Int): String {
+        if (stream == null) return ""
+        return stream.bufferedReader(Charsets.UTF_8).use { reader ->
+            val output = StringBuilder()
+            val buffer = CharArray(8192)
+            while (true) {
+                val count = reader.read(buffer)
+                if (count < 0) break
+                require(output.length + count <= maxChars) { "The provider response was too large." }
+                output.append(buffer, 0, count)
+            }
+            output.toString()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -166,6 +182,9 @@ class MainActivity : Activity() {
                     require(provider.matches(Regex("[A-Za-z0-9_-]{1,40}"))) {
                         "Invalid provider identifier."
                     }
+                    require(messagesJson.length <= 1_000_000) { "The chat request was too large." }
+                    val messageArray = JSONArray(messagesJson)
+                    require(messageArray.length() in 1..80) { "Invalid chat message list." }
                     val apiKey = secureKeys.get(provider)
                     val kiloFreeModel = provider == "kilo" &&
                         (model == "kilo-auto/free" || model.endsWith(":free"))
@@ -188,7 +207,7 @@ class MainActivity : Activity() {
 
                     val payload = JSONObject()
                         .put("model", model)
-                        .put("messages", JSONArray(messagesJson))
+                        .put("messages", messageArray)
                         .put("temperature", 0.3)
 
                     connection.outputStream.use {
@@ -197,7 +216,7 @@ class MainActivity : Activity() {
 
                     val status = connection.responseCode
                     val stream = if (status in 200..299) connection.inputStream else connection.errorStream
-                    val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                    val body = readLimited(stream, 2_000_000)
                     connection.disconnect()
 
                     if (status !in 200..299) {
@@ -239,7 +258,7 @@ class MainActivity : Activity() {
                     }
                     val status = connection.responseCode
                     if (status !in 200..299) error("Web search returned HTTP $status.")
-                    val body = connection.inputStream.bufferedReader().use { it.readText() }
+                    val body = readLimited(connection.inputStream, 1_500_000)
                     connection.disconnect()
                     val anchors = Regex(
                         """(?is)<a\b[^>]*class=["'][^"']*result__a[^"']*["'][^>]*>.*?</a>"""
@@ -283,16 +302,23 @@ class MainActivity : Activity() {
         fun exportZip(projectName: String, filesJson: String) {
             networkExecutor.execute {
                 try {
+                    require(filesJson.length <= 5_000_000) { "The project is too large to export." }
                     val files = JSONObject(filesJson)
+                    require(files.length() in 1..100) { "The project must contain between 1 and 100 files." }
                     val bytes = ByteArrayOutputStream()
                     ZipOutputStream(bytes).use { zip ->
                         val names = files.keys().asSequence()
                             .filter { it.matches(Regex("[A-Za-z0-9._-]{1,80}")) && !it.contains("..") }
                             .toList()
                         require(names.isNotEmpty()) { "There are no exportable project files." }
+                        var totalBytes = 0
                         names.forEach { name ->
+                            val content = files.optString(name, "").toByteArray(Charsets.UTF_8)
+                            require(content.size <= 2_000_000) { "A project file is too large to export: $name" }
+                            totalBytes += content.size
+                            require(totalBytes <= 10_000_000) { "The project is too large to export." }
                             zip.putNextEntry(ZipEntry(name))
-                            zip.write(files.optString(name, "").toByteArray(Charsets.UTF_8))
+                            zip.write(content)
                             zip.closeEntry()
                         }
                     }
