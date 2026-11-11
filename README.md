@@ -19,7 +19,6 @@ Kilo Auto Free is the default. The chat composer also lets users switch directly
 | OVH AI Endpoints | `gpt-oss-120b` | No on anonymous path |
 | LLM7 | `gpt-oss:20b` | Free provider key |
 | Puter AI | `openai/gpt-6-luna` | Puter account |
-| OpenRouter | `openrouter/free` | Yes |
 | DeepSeek | `deepseek-chat` | Yes |
 | GLM / Zhipu | `glm-4.5-flash` | Yes |
 | Qwen / DashScope | `qwen-plus` | Yes |
