@@ -9,7 +9,9 @@ contextBridge.exposeInMainWorld("NexeraNative", {
   searchWeb: (query, requestId) => ipcRenderer.send("nexera:search", { query, requestId }),
   showPreview: (html) => ipcRenderer.send("nexera:preview", html),
   exportZip: (projectName, filesJson) =>
-    ipcRenderer.send("nexera:export-zip", { projectName, filesJson })
+    ipcRenderer.send("nexera:export-zip", { projectName, filesJson }),
+  openFolder: () => ipcRenderer.invoke("nexera:open-folder"),
+  saveFolder: (filesJson) => ipcRenderer.invoke("nexera:save-folder", filesJson)
 });
 
 ipcRenderer.on("nexera:result", (_event, payload) => {
