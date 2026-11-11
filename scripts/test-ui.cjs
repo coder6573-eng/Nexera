@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -223,6 +223,17 @@ try {
   assert.equal(formatted.querySelector("strong")?.textContent, "bold");
   assert.equal(formatted.querySelector("code")?.textContent, "code");
   assert.equal(formatted.querySelector("script"), null, "Assistant text must not execute embedded HTML");
+
+  // Deferred assistant responses must copy the final text, not their initially empty placeholder.
+  let copiedText = null;
+  Object.defineProperty(window.navigator, "clipboard", {
+    configurable: true,
+    value: { writeText: value => { copiedText = value; return Promise.resolve(); } }
+  });
+  const deferredContent = window.__testHooks.addMessage("", "assistant");
+  deferredContent.textContent = "Final generated response";
+  document.querySelector("#conversation .message.assistant:last-child .copy-message").click();
+  assert.equal(copiedText, "Final generated response", "Copy should use the final rendered assistant content");
   if (runtimeErrors.length) {
     throw new Error("Runtime errors: " + runtimeErrors.map(error => error.message).join("; "));
   }
