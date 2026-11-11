@@ -60,6 +60,19 @@ try {
   assert.equal(document.getElementById("chatProvider").value, "ovh", "Provider selection should sync between composers");
   document.getElementById("homeProvider").value = "kilo";
   change("homeProvider");
+  for (const [route, endpoint] of [
+    ["kilo", "https://ai-gateway.kilo.ai/api/v1/chat/completions"],
+    ["llmfaucet", "https://api.llmfaucet.dev/v1/chat/completions"],
+    ["ovh", "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions"],
+    ["llm7", "https://api.llm7.io/v1/chat/completions"],
+    ["openrouter", "https://openrouter.ai/api/v1/chat/completions"]
+  ]) {
+    document.getElementById("homeProvider").value = route;
+    change("homeProvider");
+    assert.equal(window.__testHooks.providerConfig().endpoint, endpoint, "Incorrect endpoint for route " + route);
+  }
+  document.getElementById("homeProvider").value = "kilo";
+  change("homeProvider");
 
   assert.ok(document.getElementById("openLocalFolder"), "Local folder action should be present in the drawer");
   assert.equal(document.getElementById("openLocalFolder").style.display, "none", "Local folder action should be hidden outside the desktop bridge");
