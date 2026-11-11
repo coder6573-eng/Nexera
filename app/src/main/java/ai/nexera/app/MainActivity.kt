@@ -170,8 +170,9 @@ class MainActivity : Activity() {
                     val kiloFreeModel = provider == "kilo" &&
                         (model == "kilo-auto/free" || model.endsWith(":free"))
                     val llmFaucetFree = provider == "llmfaucet"
-                    require(apiKey != null || kiloFreeModel || llmFaucetFree) {
-                        "No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free."
+                    val ovhAnonymousFree = provider == "ovh"
+                    require(apiKey != null || kiloFreeModel || llmFaucetFree || ovhAnonymousFree) {
+                        "No API key saved for this provider. Open Settings to add one, or choose a free route."
                     }
 
                     val connection = (URL(endpoint).openConnection() as HttpURLConnection).apply {
