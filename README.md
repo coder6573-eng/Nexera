@@ -51,6 +51,10 @@ The project workspace is stored locally by the app. The terminal is intentionall
 
 Web search results are snippets and links, not a guarantee of exhaustive research. Check important sources directly.
 
+## GitHub Pages prerequisite
+
+Before the first deployment, the repository owner must enable **Settings → Pages → Build and deployment → Source: GitHub Actions**. The current Actions token cannot create the repository's Pages site automatically.
+
 ## Build from source
 
 ### Android APK
