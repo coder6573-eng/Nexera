@@ -31,6 +31,7 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 ## Vibecoding
 
 - **Iterative editing** — after the first build, keep chatting in the same conversation. Nexera uses the current project files as context and merges partial file updates, preserving untouched files. If a request is materially unclear, it asks a clarification question before building.
+- **Linked local folder (Windows desktop)** — open an existing web project folder containing `index.html`; supported text files are loaded into the chat workspace and agent edits are written back to that selected folder. Reads and writes are bounded, paths are validated, and symbolic links are not followed. Android continues to use the private app workspace.
 - **Real live preview** — the build card contains a sandboxed iframe preview generated from the current project files. It refreshes after every completed build/edit, and the full preview can be opened separately. Returning from the project preview keeps the active project attached to the chat.
 - **Chat polish** — assistant responses render basic headings, lists, links, inline code, and fenced code blocks safely, with a one-tap copy action that copies the final response. The composer auto-grows with the message.
 
