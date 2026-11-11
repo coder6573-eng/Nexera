@@ -169,7 +169,8 @@ class MainActivity : Activity() {
                     val apiKey = secureKeys.get(provider)
                     val kiloFreeModel = provider == "kilo" &&
                         (model == "kilo-auto/free" || model.endsWith(":free"))
-                    require(apiKey != null || kiloFreeModel) {
+                    val llmFaucetFree = provider == "llmfaucet"
+                    require(apiKey != null || kiloFreeModel || llmFaucetFree) {
                         "No API key saved for this provider. Open Settings to add one, or choose Kilo Auto Free."
                     }
 
@@ -179,6 +180,7 @@ class MainActivity : Activity() {
                         readTimeout = 45000
                         doOutput = true
                         if (apiKey != null) setRequestProperty("Authorization", "Bearer $apiKey")
+                        else if (llmFaucetFree) setRequestProperty("Authorization", "Bearer free")
                         setRequestProperty("Content-Type", "application/json")
                         setRequestProperty("Accept", "application/json")
                     }
