@@ -24,7 +24,7 @@ function isSupportedTextFile(name) {
 function readWorkspaceFiles(directory) {
   const root = fs.realpathSync(directory);
   if (!fs.statSync(root).isDirectory()) throw new Error("The selected workspace is not a folder.");
-  const files = Object.create(null);
+  const files = {};
   let totalBytes = 0;
 
   function walk(current, depth) {
