@@ -216,7 +216,7 @@ try {
   const previewHtml = window.__testHooks.buildPreviewHtml({
     "index.html": "<!doctype html><html><head><link rel='stylesheet' href='style.css'></head><body><h1>Preview</h1><script src='script.js'></script></body></html>",
     "style.css": "body { color: rgb(1, 2, 3); }",
-    "script.js": "window.previewLoaded = true; const sample = '<\\/script>';",
+    "script.js": "window.previewLoaded = true; const sample = '</script>';",
     "extra.js": "window.extraLoaded = true;"
   });
   assert.ok(previewHtml.includes("<style>body { color: rgb(1, 2, 3); }</style>"), "Preview should inline CSS");
