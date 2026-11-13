@@ -404,6 +404,10 @@ async function testLinkedLocalFolder() {
   assert.equal(saved.ok, true);
   assert.equal(savedFiles["style.css"], "body { color: purple; }");
   assert.equal(savedFiles["src/app.js"], "window.app = true;");
+  nativeBridge.saveFolder = async () => ({ ok: false, error: "Permission denied" });
+  const failedSave = await folderWindow.__testHooks.saveLinkedFolder();
+  assert.equal(failedSave.ok, false, "Linked-folder save errors must be returned to the caller");
+  assert.ok(folderWindow.document.getElementById("toast").textContent.includes("Permission denied"), "Linked-folder save errors must be visible");
   folderDom.window.close();
 }
 testLinkedLocalFolder().then(() => {
