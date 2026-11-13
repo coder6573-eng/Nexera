@@ -5,7 +5,7 @@ const { JSDOM } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const document = new JSDOM(html).window.document;
 const scripts = [...document.querySelectorAll("script")]
-  .filter(script => !script.src && script.textContent.trim())
+  .filter(script => !script.src && script.textContent.includes("(()=>{'use strict';"))
   .map(script => script.textContent);
 
 if (scripts.length !== 1) {
