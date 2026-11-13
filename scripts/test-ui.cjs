@@ -65,7 +65,8 @@ try {
     ["llmfaucet", "https://api.llmfaucet.dev/v1/chat/completions"],
     ["ovh", "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions"],
     ["llm7", "https://api.llm7.io/v1/chat/completions"],
-    ["openrouter", "https://openrouter.ai/api/v1/chat/completions"]
+    ["openrouter", "https://openrouter.ai/api/v1/chat/completions"],
+    ["uncloseai", "https://hermes.ai.unturf.com/v1/chat/completions"]
   ]) {
     document.getElementById("homeProvider").value = route;
     change("homeProvider");
