@@ -9,11 +9,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: nexera-regression-${{ github.ref }}
+  group: nexera-regression-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: true
 
 jobs:
   test:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -28,6 +29,7 @@ jobs:
         run: npm test
 
   windows-package-check:
+    timeout-minutes: 25
     runs-on: windows-latest
     steps:
       - name: Check out source
@@ -44,6 +46,7 @@ jobs:
         run: npm run dist:win
 
   android-compile-check:
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
