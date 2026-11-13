@@ -83,6 +83,10 @@ if (!scripts[0].includes("typeof window.NexeraNative?.openFolder") ||
 if (!scripts[0].includes("const FREE_AUTO_ROUTES") || !scripts[0].includes("FREE_AUTO_ROUTES.slice()")) throw new Error("Free Auto route pool is missing.");
 if (!scripts[0].includes("function renderServedModel") || !scripts[0].includes("data.model")) throw new Error("Actual served-model metadata handling is missing.");
 if (!scripts[0].includes("function startAgentTask") || !scripts[0].includes("function updateAgentRoute")) throw new Error("Agent progress and route-attempt reporting are missing.");
+if (!scripts[0].includes("You are Nexera QA reviewer") ||
+    !scripts[0].includes("second-pass code review")) {
+  throw new Error("Agent mode must include an independent second-pass review stage.");
+}
 
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
   throw new Error("Native result bridge callback is missing.");
