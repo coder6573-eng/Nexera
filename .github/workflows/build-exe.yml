@@ -7,7 +7,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: nexera-v11-release-assets
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -30,10 +34,12 @@ jobs:
       - name: Build portable Windows EXE
         run: npm run dist:win
 
-      - name: Upload Windows EXE
-        uses: actions/upload-artifact@v4
+      - name: Publish Windows release asset
+        uses: softprops/action-gh-release@v2
         with:
-          name: nexera-windows-exe
-          path: dist/*.exe
-          if-no-files-found: error
-          retention-days: 14
+          tag_name: v11.0.0
+          name: Nexera AI v11.0.0
+          body: "Nexera AI v11.0.0 — HTML/CSS/JavaScript vibecoding workspace with live preview and free auto routing."
+          files: dist/*.exe
+          fail_on_unmatched_files: true
+          make_latest: false
