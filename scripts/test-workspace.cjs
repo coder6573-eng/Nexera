@@ -28,6 +28,7 @@ try {
   assert.equal(isSafeRelativePath("src/app.js"), true);
   assert.equal(isSafeRelativePath("../escape.js"), false);
   assert.equal(isSafeRelativePath("src/../../escape.js"), false);
+  assert.equal(isSafeRelativePath("src\\app.js"), false);
   assert.equal(isSafeRelativePath("C:/escape.js"), false);
   assert.equal(isSafeRelativePath("src\\\\app.js"), false);
   assert.equal(isSupportedTextFile("src/app.js"), true);
