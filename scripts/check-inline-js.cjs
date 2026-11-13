@@ -71,4 +71,23 @@ if (!scripts[0].includes("window.onNexeraNativeResult")) {
   throw new Error("Native result bridge callback is missing.");
 }
 
+const androidMain = fs.readFileSync("app/src/main/java/ai/nexera/app/MainActivity.kt", "utf8");
+for (const endpoint of [
+  "https://openrouter.ai/api/v1/chat/completions",
+  "https://api.deepseek.com/chat/completions",
+  "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "https://ai-gateway.kilo.ai/api/v1/chat/completions",
+  "https://api.llmfaucet.dev/v1/chat/completions",
+  "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
+  "https://api.llm7.io/v1/chat/completions",
+  "https://hermes.ai.unturf.com/v1/chat/completions"
+]) {
+  if (!androidMain.includes(endpoint)) throw new Error("Android provider endpoint allowlist is missing " + endpoint);
+}
+if (!androidMain.includes("require(isAllowedEndpoint(provider, endpoint))") ||
+    !androidMain.includes("provider in byokEndpoints")) {
+  throw new Error("Android native bridge must enforce provider-specific endpoint allowlists and restrict BYOK storage.");
+}
+
 console.log("Nexera UI script parses and required controls are wired.");
