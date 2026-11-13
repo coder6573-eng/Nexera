@@ -18,7 +18,7 @@ The same interface is packaged as an Android app (WebView) and a Windows portabl
 | LLM7 | 1 | Anonymous free OpenAI-compatible route; capacity and model availability can change. |
 | UncloseAI Hermes | 1 | Public no-key endpoint; currently serves Qwen3.8-27B and is rate-limited per IP. |
 
-The Kilo fallback IDs are read from the current free catalogue and may change. The stable `kilo-auto/free` route is tried first. Sources: [Kilo Gateway model documentation](https://kilo.ai/docs/gateway/models-and-providers), [LLMFaucet API and limits](https://github.com/llmfaucet/llmfaucet), [UncloseAI inference details](https://www.uncloseai.com/inference.html).
+The Kilo fallback IDs are a snapshot of the free catalogue and may change. The dynamic Kilo Auto Free route is always attempted first. The stable `kilo-auto/free` route is tried first. Sources: [Kilo Gateway model documentation](https://kilo.ai/docs/gateway/models-and-providers), [LLMFaucet API and limits](https://github.com/llmfaucet/llmfaucet), [UncloseAI inference details](https://www.uncloseai.com/inference.html).
 
 Other selectable routes include OVH (experimental/manual), Puter (your own account and User-Pays allowance), OpenRouter Free (requires your API key), DeepSeek, GLM, Qwen, and a custom OpenAI-compatible endpoint. Those routes are not part of Free Auto. Some free account tiers require an API key; they are not anonymous routes.
 
