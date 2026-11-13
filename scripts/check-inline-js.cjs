@@ -1,5 +1,6 @@
 const fs = require("node:fs");
 const vm = require("node:vm");
+const { JSDOM } = require("jsdom");
 
 const html = fs.readFileSync("index.html", "utf8");
 const scripts = [];
