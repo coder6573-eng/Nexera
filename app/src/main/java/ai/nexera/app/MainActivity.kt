@@ -195,10 +195,12 @@ class MainActivity : Activity() {
                     require(messageArray.length() in 1..80) { "Invalid chat message list." }
                     val apiKey = secureKeys.get(provider)
                     val kiloFreeModel = provider == "kilo" &&
-                        (model == "kilo-auto/free" || model.endsWith(":free"))
+                        (model == "kilo-auto/free" || model == "openrouter/free" || model.endsWith(":free"))
                     val llmFaucetFree = provider == "llmfaucet"
                     val ovhAnonymousFree = provider == "ovh"
-                    require(apiKey != null || kiloFreeModel || llmFaucetFree || ovhAnonymousFree) {
+                    val llm7AnonymousFree = provider == "llm7"
+                    val uncloseaiAnonymousFree = provider == "uncloseai"
+                    require(apiKey != null || kiloFreeModel || llmFaucetFree || ovhAnonymousFree || llm7AnonymousFree || uncloseaiAnonymousFree) {
                         "No API key saved for this provider. Open Settings to add one, or choose a free route."
                     }
 
@@ -244,7 +246,10 @@ class MainActivity : Activity() {
                         ?.takeIf { it.isNotBlank() }
                         ?: error("The model returned an empty response.")
 
-                    sendResult(requestId, JSONObject().put("content", content))
+                    val servedModel = try {
+                        JSONObject(body).optString("model").takeIf { it.isNotBlank() }
+                    } catch (_: Exception) { null }
+                    sendResult(requestId, JSONObject().put("content", content).put("model", servedModel ?: JSONObject.NULL))
                 } catch (e: Exception) {
                     sendResult(requestId, JSONObject().put("error", e.message ?: "Model request failed."))
                 }
