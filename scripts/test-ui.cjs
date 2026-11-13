@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -101,6 +101,14 @@ try {
   assert.equal(document.getElementById("connectPuter").style.display, "none");
   assert.ok(document.getElementById("kiloInfo").textContent.includes("dynamically routes"));
   assert.equal(window.__testHooks.freeAutoRouteCount(), 16, "Free Auto should contain 16 configured candidates");
+  const servedModelTarget = document.createElement("div");
+  window.__testHooks.setLastRouteInfo({ provider: "kilo", model: null });
+  window.__testHooks.renderServedModel(servedModelTarget);
+  assert.equal(servedModelTarget.childNodes.length, 0, "Kilo model badge must stay hidden without response metadata");
+  window.__testHooks.setLastRouteInfo({ provider: "kilo", model: "cohere/north-mini-code" });
+  window.__testHooks.renderServedModel(servedModelTarget);
+  assert.ok(servedModelTarget.textContent.includes("cohere/north-mini-code"), "Kilo model badge should show the actual returned model");
+
   assert.ok(html.includes("-webkit-tap-highlight-color:transparent"));
   assert.ok(html.includes("KILO_FREE_BACKUPS"));
   assert.ok(html.includes("renderAssistantContent"), "Assistant markdown renderer should be wired");
