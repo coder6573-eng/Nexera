@@ -26,3 +26,19 @@ jobs:
         run: npm install --ignore-scripts
       - name: Run regression suite
         run: npm test
+
+  windows-package-check:
+    runs-on: windows-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install desktop dependencies
+        run: npm install
+      - name: Run shared regression suite
+        run: npm test
+      - name: Build portable Windows package (not published)
+        run: npm run dist:win
