@@ -3,13 +3,10 @@ const vm = require("node:vm");
 const { JSDOM } = require("jsdom");
 
 const html = fs.readFileSync("index.html", "utf8");
-const scripts = [];
-const scriptTag = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
-let match;
-
-while ((match = scriptTag.exec(html)) !== null) {
-  if (match[1].trim()) scripts.push(match[1]);
-}
+const document = new JSDOM(html).window.document;
+const scripts = [...document.querySelectorAll("script")]
+  .filter(script => !script.src && script.textContent.trim())
+  .map(script => script.textContent);
 
 if (scripts.length !== 1) {
   throw new Error("Expected one inline application script, found " + scripts.length + ".");
