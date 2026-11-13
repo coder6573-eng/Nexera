@@ -75,7 +75,197 @@ button,select,input,textarea{transition:transform .16s ease,background .2s ease,
 @media(max-width:1050px){#main.vibe-active{grid-template-columns:170px minmax(0,1fr) minmax(270px,320px);gap:8px;padding:8px}.workspace-route{display:none}}
 @media(max-width:760px){#main.vibe-active{display:flex;flex-direction:column;gap:8px;padding:8px 10px}#main.vibe-active #workspaceToolbar{display:flex;flex:none;min-height:52px;padding:6px 8px}#main.vibe-active .workspace-tab{display:inline-flex}#main.vibe-active .workspace-editor-btn{display:none}#main.vibe-active #workspaceFiles,#main.vibe-active #agentWorkbench,#main.vibe-active #conversation,#main.vibe-active #chatComposer{display:none!important}#main.vibe-active.mobile-chat #conversation{display:block!important;flex:1;min-height:0;width:100%;padding:12px}#main.vibe-active.mobile-chat #chatComposer{display:block!important;flex:none;width:100%;padding-bottom:max(5px,env(safe-area-inset-bottom))}#main.vibe-active.mobile-preview #agentWorkbench{display:grid!important;flex:1;min-height:0;width:100%;grid-template-rows:auto minmax(0,1fr);overflow:auto}#main.vibe-active.mobile-preview .agent-timeline{max-height:38%;overflow:auto}#main.vibe-active.mobile-preview .live-canvas{min-height:220px}#main.vibe-active.mobile-files #workspaceFiles{display:flex!important;flex:1;min-height:0;width:100%}.workspace-toolbar-actions{gap:4px}.workspace-tab{padding:8px 9px;font-size:10px}.workspace-eyebrow{display:none}.workspace-project strong{font-size:11px;max-width:105px}}
 </style>
-</head>
+<style id="nexera-v12-redesign">
+/* Nexera v12 redesign: light, spacious, mobile-first, motion-safe. */
+:root{
+  --nx-bg:#f5f8f3; --nx-surface:#ffffff; --nx-surface-soft:#eef5e9;
+  --nx-ink:#203027; --nx-muted:#6b776b; --nx-line:#dfe8dc;
+  --nx-accent:#6fae4b; --nx-accent-strong:#3f7133; --nx-accent-soft:#e5f1dd;
+  --nx-shadow:0 18px 55px rgba(44,76,38,.09); --nx-radius:22px;
+}
+html,body{background:var(--nx-bg);color:var(--nx-ink)}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{min-width:0}
+button{transition:transform .16s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease}
+button:active{transform:scale(.97)}
+#app{background:
+  radial-gradient(circle at 12% 12%,rgba(164,207,133,.13),transparent 28%),
+  radial-gradient(circle at 88% 30%,rgba(202,231,181,.16),transparent 30%),
+  var(--nx-bg)}
+.topbar{
+  height:64px;padding:0 20px;border-bottom:1px solid rgba(223,232,220,.9);
+  background:rgba(250,252,248,.82);backdrop-filter:blur(22px) saturate(130%);
+  -webkit-backdrop-filter:blur(22px);position:relative
+}
+.brand{position:static;transform:none;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.6px}
+.brand-mark{width:34px;height:34px;border-radius:12px;background:var(--nx-accent-soft);color:var(--nx-accent-strong);box-shadow:none}
+.top-actions{margin-left:auto}
+.icon-btn{width:38px;height:38px;border-radius:12px;color:#61705f}
+.icon-btn:hover{background:#eaf2e5;transform:translateY(-1px)}
+#main{max-width:none;padding:0 22px;position:relative}
+.home{width:min(980px,100%);margin:0 auto;padding:0 0 20px;position:relative}
+.home-brand{
+  margin-top:clamp(52px,12vh,112px);font-size:clamp(34px,8vw,52px);font-weight:850;
+  letter-spacing:-2.5px;line-height:1.04;animation:nxEnter .5s cubic-bezier(.2,.8,.2,1)
+}
+.home-brand .brand-mark{width:58px;height:58px;border-radius:19px}
+.home-gap{min-height:clamp(38px,8vh,82px)}
+.home .hint{font-size:11px;margin:12px auto 0;color:var(--nx-muted)}
+.composer{
+  max-width:900px;margin:0 auto;border:1px solid var(--nx-line);border-radius:26px;
+  background:rgba(255,255,255,.96);box-shadow:var(--nx-shadow);padding:13px 14px 12px;
+  position:relative;overflow:visible
+}
+.composer:focus-within{border-color:#a8c897;box-shadow:0 24px 70px rgba(64,112,48,.12),0 0 0 5px rgba(121,176,92,.08)}
+.composer textarea{
+  min-height:58px;max-height:190px;padding:8px 7px;font-size:16px;line-height:1.6;
+  color:var(--nx-ink);overflow-y:auto;overflow-wrap:anywhere
+}
+.composer textarea::placeholder{color:#879187}
+.composer-row{
+  display:flex;align-items:center;gap:10px;padding-top:9px;min-width:0
+}
+.composer-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.composer-left::-webkit-scrollbar{display:none}
+.round-action,.mode-select{flex:0 0 auto}
+.round-action{height:36px;min-width:36px;border-radius:12px;background:#f0f5ed;border:1px solid #e5ece1;color:#566653}
+.round-action:hover{background:#e7f1e2;border-color:#cfdfc9}
+.mode-select{
+  height:36px;border:1px solid #e2e9df;border-radius:11px;background:#f7faf5;color:#50614d;
+  padding:0 9px;font-size:11px;max-width:128px
+}
+.mode-select:focus{border-color:#a8c897}
+.provider-select{max-width:128px}
+.mode-select.agent{max-width:100px}.mode-select.skill{max-width:110px}
+.send{
+  flex:0 0 auto;width:42px;height:42px;border-radius:15px;border:0;
+  background:linear-gradient(145deg,#dff0d5,#c8e4b9);color:#37642e;
+  box-shadow:0 8px 20px rgba(70,122,49,.12);font-size:19px
+}
+.send:hover{transform:translateY(-2px);box-shadow:0 12px 25px rgba(70,122,49,.17)}
+.send:disabled{opacity:.45;transform:none}
+#conversation{
+  width:min(920px,100%);margin:0 auto;padding:30px 8px 36px;overflow:auto;
+  scrollbar-width:thin
+}
+.message{
+  max-width:min(78%,760px);font-size:14px;line-height:1.78;margin-bottom:24px;
+  overflow-wrap:anywhere;word-break:normal;white-space:pre-wrap;animation:nxMessage .26s ease both
+}
+.message.user{
+  margin-left:auto;padding:13px 16px;background:#e9f3e4;border:1px solid #dce9d6;
+  border-radius:20px 20px 6px 20px;box-shadow:0 8px 24px rgba(53,85,45,.045)
+}
+.message.assistant{padding:5px 3px}
+.assistant-label{font-size:11px;margin-bottom:8px;color:var(--nx-accent-strong)}
+.task-card,.agent-workbench{
+  width:min(100%,900px);margin:8px auto 24px
+}
+.task-card{
+  border:1px solid var(--nx-line);border-radius:20px;background:rgba(255,255,255,.95);
+  box-shadow:0 15px 42px rgba(48,79,41,.06);padding:15px
+}
+.task-row{min-width:0}.task-row,.agent-step{overflow:hidden}
+.task-row>*{min-width:0}.task-row span:last-child{overflow-wrap:anywhere}
+.agent-workbench{
+  grid-template-columns:minmax(0,1fr) minmax(270px,34%);gap:14px
+}
+.agent-timeline,.agent-preview{
+  border:1px solid var(--nx-line);border-radius:22px;background:rgba(255,255,255,.96);
+  box-shadow:0 16px 48px rgba(48,79,41,.055);min-width:0
+}
+.agent-head{height:52px;padding:0 16px;display:flex;gap:10px;flex-wrap:wrap}
+.agent-head-title{font-size:12px}.agent-status{margin-left:auto}
+.agent-progress-detail,.agent-progress-meta,.preview-note{overflow-wrap:anywhere}
+.agent-steps{padding:8px 16px 14px}
+.agent-step{grid-template-columns:24px minmax(0,1fr) auto}
+.agent-file,.agent-detail{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.agent-detail{white-space:normal}
+.agent-preview{overflow:hidden}
+.preview-top{height:52px;padding:0 14px;display:flex;gap:7px}
+.preview-open{margin-left:auto;border:1px solid #dfe8dc;background:#f2f7ef;color:#486441;border-radius:10px;padding:7px 11px;font-size:10px;font-weight:750}
+.live-canvas{margin:14px;height:clamp(190px,30vw,250px);min-height:180px;border-radius:15px;overflow:hidden}
+.live-canvas iframe{width:100%;height:100%;border:0;display:block}
+.preview-note{padding:0 14px 14px;font-size:10px;line-height:1.5}
+.workspace-toolbar{
+  position:sticky;top:0;z-index:2;min-height:62px;padding:10px 12px;margin:0 -10px 10px;
+  border:1px solid var(--nx-line);border-radius:18px;background:rgba(255,255,255,.86);
+  backdrop-filter:blur(16px);display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(48,79,41,.045)
+}
+.workspace-brand{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+.workspace-project{min-width:0}.workspace-project strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-eyebrow{font-size:8px;letter-spacing:1.2px;color:#879187;font-weight:800}
+.workspace-route{font-size:9px;color:#70806d;white-space:nowrap}
+.workspace-toolbar-actions{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto}
+.workspace-tab,.workspace-editor-btn{
+  flex:0 0 auto;border:1px solid #e2e9df;background:#f7faf5;color:#5d6d58;border-radius:10px;
+  padding:8px 10px;font-size:10px;font-weight:750
+}
+.workspace-tab.active{background:#e6f1df;color:#3f7134;border-color:#cfe1c8}
+.workspace-editor-btn{background:#dff0d5;color:#3f7134;border-color:#c9dfc0}
+.workspace-files{
+  width:min(900px,100%);margin:0 auto 10px;border:1px solid var(--nx-line);border-radius:18px;
+  background:#fff;overflow:hidden
+}
+.workspace-files-head{padding:12px 14px;border-bottom:1px solid #edf2ea;display:flex;justify-content:space-between}
+.workspace-file-list{padding:10px}
+.workspace-file-list .file-row{margin-bottom:7px}
+#projectView{
+  inset:10px 18px 15px;background:rgba(247,250,245,.98);border:1px solid var(--nx-line);
+  border-radius:24px;box-shadow:0 24px 70px rgba(44,76,38,.12);padding:0 18px 15px
+}
+.project-head{min-height:58px}.project-tabs{border-bottom:1px solid var(--nx-line);overflow-x:auto}
+.project-tab{flex:0 0 auto}.project-content{padding:16px 0}
+.file-editor{min-height:280px;max-width:100%;overflow:auto;line-height:1.65;white-space:pre;overflow-wrap:normal}
+.preview-frame{min-height:400px}
+.terminal-output{overflow-wrap:anywhere}
+.drawer{
+  width:min(340px,88vw);background:rgba(255,255,255,.98);border-right:1px solid var(--nx-line);
+  box-shadow:25px 0 70px rgba(35,58,31,.14);padding:16px
+}
+.drawer-item{border-radius:13px}.drawer-item:hover,.drawer-item.selected{background:#eaf3e5}
+.modal{border:1px solid var(--nx-line);border-radius:22px;box-shadow:0 25px 80px rgba(35,58,31,.16)}
+.field{max-width:100%}.modal-actions{display:flex;flex-wrap:wrap}.modal-actions button{min-width:0}
+.toast{max-width:min(92vw,420px);text-align:center;line-height:1.4}
+@keyframes nxEnter{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes nxMessage{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes nxFloat{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-4px,0)}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+@media(max-width:760px){
+  #main{padding:0 12px}
+  .topbar{height:58px;padding:0 12px}
+  .home-brand{margin-top:clamp(42px,10vh,82px);font-size:34px}
+  .home-brand .brand-mark{width:50px;height:50px;border-radius:17px}
+  .home-gap{min-height:32px}
+  .composer{border-radius:22px;padding:11px}
+  .composer textarea{min-height:54px;font-size:15px}
+  .composer-row{align-items:center;gap:7px}
+  .composer-left{padding-bottom:2px}
+  .mode-select{max-width:110px;font-size:10px}
+  .provider-select{max-width:104px}
+  .mode-select.agent{max-width:82px}.mode-select.skill{max-width:94px}
+  .send{width:40px;height:40px}
+  .message{max-width:94%;font-size:13.5px}
+  #conversation{padding:22px 3px 28px}
+  .agent-workbench{grid-template-columns:1fr;gap:10px}
+  .agent-preview{min-height:250px}
+  .workspace-toolbar{margin:0 -3px 8px;padding:9px;display:block}
+  .workspace-toolbar-actions{margin-top:8px}
+  .workspace-route{display:none}
+  .workspace-files{width:100%}
+  #projectView{inset:6px 8px 10px;padding:0 12px 12px;border-radius:20px}
+}
+@media(max-width:430px){
+  .home-brand{font-size:30px;gap:8px}.home-brand .brand-mark{width:44px;height:44px}
+  .composer-row{align-items:flex-end}
+  .composer-left{gap:5px}
+  .round-action{height:34px;min-width:34px}.mode-select{height:34px}
+  .send{width:38px;height:38px}
+  .hint{font-size:10px}
+}
+</style></head>
 <body>
 <div id="app">
 <header class="topbar"><button class="icon-btn" id="menuBtn" aria-label="Open sidebar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button><div class="brand"><span class="brand-mark"><svg viewBox="0 0 48 48" fill="none"><rect x="9" y="13" width="30" height="26" rx="9" stroke="currentColor" stroke-width="2.8"/><path d="M24 7v6" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><circle cx="24" cy="5" r="2.5" fill="currentColor"/><circle cx="19" cy="25" r="2.5" fill="currentColor"/><circle cx="29" cy="25" r="2.5" fill="currentColor"/><path d="M19 32q5 4 10 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>Nexera AI</div><div class="top-actions"><button class="icon-btn" id="newChatBtn" aria-label="New chat">＋</button></div></header>
@@ -104,7 +294,15 @@ button,select,input,textarea{transition:transform .16s ease,background .2s ease,
 (()=>{'use strict';
 const $=id=>document.getElementById(id), STORE='nexera.projects.v1', SETTINGS='nexera.settings.v1';
 let projects=loadProjects(),activeProject=null,activeFile='index.html',activeTab='files',messages=[],busy=false,taskItems=[],workspaceMode='chat',executionMode='agent',activeSkill='frontend',webSearchEnabled=false,selectedProvider='auto',localFolderLinked=false,linkedFolderProjectId=null,activeTaskTimer=null,activeTaskStartedAt=0,activeTaskStage='idle',lastRouteInfo=null;
-const filesDefault=()=>({'index.html':'<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Project</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <main><h1>Hello, world!</h1><p>Your project starts here.</p></main>\n  <script src="script.js"><\\/script>\n</body>\n</html>','style.css':'* { box-sizing: border-box; }\nbody { margin: 0; font-family: system-ui, sans-serif; color: #243323; background: #f7faf4; }\nmain { max-width: 800px; margin: 10vh auto; padding: 24px; }\nh1 { color: #477b35; }','script.js':'console.log("Hello from Nexera!");'});
+const filesDefault=()=>({'index.html':'<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Project</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <main><h1>Hello, world!</h1><p>Your project starts here.</p></main>\n  <script src="script.js"><\\/script>\n<script id="nexera-v12-ux-patch">
+(()=>{const resize=el=>{if(!el)return;el.style.height='auto';el.style.height=Math.min(el.scrollHeight,190)+'px'};
+['homePrompt','chatPrompt'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>resize(el));resize(el)}});
+const refresh=()=>{try{if(typeof applyWorkspaceLayout==='function')applyWorkspaceLayout()}catch{}};
+window.addEventListener('resize',refresh,{passive:true});
+window.addEventListener('orientationchange',()=>setTimeout(refresh,80),{passive:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refresh()});
+})();
+</script></body>\n</html>','style.css':'* { box-sizing: border-box; }\nbody { margin: 0; font-family: system-ui, sans-serif; color: #243323; background: #f7faf4; }\nmain { max-width: 800px; margin: 10vh auto; padding: 24px; }\nh1 { color: #477b35; }','script.js':'console.log("Hello from Nexera!");'});
 function loadProjects(){try{const value=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(value)?value.filter(p=>p&&typeof p==='object'&&p.files&&typeof p.files==='object'):[]}catch{return []}}function saveProjects(){try{localStorage.setItem(STORE,JSON.stringify(projects));return true}catch(e){toast('Could not save this project. Device storage may be full.');return false}}
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function openDrawer(){ $('drawer').classList.add('open');$('scrim').classList.add('open');renderProjects()}function closeDrawer(){$('drawer').classList.remove('open');$('scrim').classList.remove('open')}
