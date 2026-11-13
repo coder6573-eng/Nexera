@@ -47,10 +47,12 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       if (!model || model.length > 160) throw new Error("Enter a valid model ID.");
       const apiKey = readKeys()[provider];
       const kiloFreeModel = provider === "kilo" &&
-        (model === "kilo-auto/free" || model.endsWith(":free"));
+        (model === "kilo-auto/free" || model === "openrouter/free" || model.endsWith(":free"));
       const llmFaucetFree = provider === "llmfaucet";
       const ovhAnonymousFree = provider === "ovh";
-      if (!apiKey && !kiloFreeModel && !llmFaucetFree && !ovhAnonymousFree) {
+      const llm7AnonymousFree = provider === "llm7";
+      const uncloseaiAnonymousFree = provider === "uncloseai";
+      if (!apiKey && !kiloFreeModel && !llmFaucetFree && !ovhAnonymousFree && !llm7AnonymousFree && !uncloseaiAnonymousFree) {
         throw new Error("No API key saved for this provider. Open Settings to add one, or choose a free route.");
       }
       if (typeof messagesJson !== "string" || messagesJson.length > 1_000_000) throw new Error("The chat request was too large.");
@@ -89,7 +91,7 @@ function postChat({ provider, endpoint, model, messagesJson, requestId }) {
       }
       const content = parsed?.choices?.[0]?.message?.content;
       if (typeof content !== "string" || !content.trim()) throw new Error("The model returned an empty response.");
-      sendResult(requestId, { content });
+      sendResult(requestId, { content, model: typeof parsed.model === "string" ? parsed.model : null });
     } catch (error) {
       sendResult(requestId, { error: error.message || "Model request failed." });
     }
