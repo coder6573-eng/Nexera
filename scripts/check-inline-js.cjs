@@ -49,6 +49,25 @@ if (!scripts[0].includes("mergeProjectFiles(activeProject?.files,parsed?.files)"
 
 const desktopMain = fs.readFileSync("desktop/main.cjs", "utf8");
 const desktopPreload = fs.readFileSync("desktop/preload.cjs", "utf8");
+
+for (const endpoint of [
+  "https://openrouter.ai/api/v1/chat/completions",
+  "https://api.deepseek.com/chat/completions",
+  "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+  "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+  "https://ai-gateway.kilo.ai/api/v1/chat/completions",
+  "https://api.llmfaucet.dev/v1/chat/completions",
+  "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
+  "https://api.llm7.io/v1/chat/completions",
+  "https://hermes.ai.unturf.com/v1/chat/completions"
+]) {
+  if (!desktopMain.includes(endpoint)) throw new Error("Desktop provider endpoint allowlist is missing " + endpoint);
+}
+if (!desktopMain.includes("isAllowedEndpoint(provider, endpoint)") ||
+    !desktopMain.includes("byokProviders.has(payload?.provider)")) {
+  throw new Error("Desktop native bridge must enforce exact provider endpoints and restrict BYOK storage.");
+}
+
 if (!desktopMain.includes('ipcMain.handle("nexera:open-folder"') ||
     !desktopMain.includes('ipcMain.handle("nexera:save-folder"') ||
     !desktopPreload.includes("openFolder:") ||
