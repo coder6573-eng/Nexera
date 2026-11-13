@@ -78,6 +78,7 @@ try {
   assert.equal(document.getElementById("openLocalFolder").style.display, "none", "Local folder action should be hidden outside the desktop bridge");
   assert.equal(window.__testHooks.isSafeProjectPath("src/app.js"), true, "Nested project paths should be supported");
   assert.equal(window.__testHooks.isSafeProjectPath("../outside.js"), false, "Parent-directory traversal must be rejected");
+  assert.equal(window.__testHooks.isSafeProjectPath("src\\app.js"), false, "A single Windows path separator must be rejected");
   assert.equal(window.__testHooks.isSafeProjectPath("src\\\\app.js"), false, "Windows path separators must be rejected");
   window.__testHooks.openLocalFolder();
   assert.ok(document.getElementById("toast").textContent.includes("Windows desktop app"), "Browser fallback should explain local-folder availability");
