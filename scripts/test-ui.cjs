@@ -314,7 +314,7 @@ try {
   workbench.hidden = false;
   window.__testHooks.renderAgentWorkbench(["index.html", "script.js"]);
   window.__testHooks.failAgentWorkbench();
-  assert.equal(document.getElementById("agentStatus").textContent, "needs attention");
+  assert.equal(document.getElementById("agentStatus").textContent, "Needs attention");
   assert.equal(document.querySelectorAll("#agentSteps .agent-step.failed").length, 2, "Failed builds should not remain marked as working");
   workbench.hidden = true;
 
