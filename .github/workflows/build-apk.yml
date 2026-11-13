@@ -1,13 +1,15 @@
 name: Build Nexera Android APK
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: nexera-v11-release-assets
+  group: nexera-v12-release-assets
   cancel-in-progress: false
 
 jobs:
@@ -50,9 +52,9 @@ jobs:
       - name: Publish APK release asset
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v11.0.0
-          name: Nexera AI v11.0.0
-          body: "Nexera AI v11.0.0 — HTML/CSS/JavaScript vibecoding workspace with live preview and free auto routing."
+          tag_name: v12.0.0
+          name: Nexera AI v12.0.0
+          body: "Nexera AI v12.0.0 — HTML/CSS/JavaScript vibecoding workspace with live preview and free auto routing."
           files: app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: true
           make_latest: true
