@@ -1,4 +1,4 @@
-# Nexera AI v12.0.0
+# Nexera AI v16.0.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -20,7 +20,7 @@ The same interface is packaged as an Android app (WebView) and a Windows portabl
 
 The Kilo fallback IDs are a snapshot of the free catalogue and may change. The dynamic Kilo Auto Free route is always attempted first. The stable `kilo-auto/free` route is tried first. Sources: [Kilo Gateway model documentation](https://kilo.ai/docs/gateway/models-and-providers), [LLMFaucet API and limits](https://github.com/llmfaucet/llmfaucet), [UncloseAI inference details](https://www.uncloseai.com/inference.html).
 
-Other selectable routes include OVH (experimental/manual), Puter (your own account and User-Pays allowance), OpenRouter Free (requires your API key), DeepSeek, GLM, Qwen, and a custom OpenAI-compatible endpoint. Those routes are not part of Free Auto. Some free account tiers require an API key; they are not anonymous routes.
+Other selectable routes include OVH (experimental/manual), Puter (your own account and User-Pays allowance), OpenRouter Free (requires your API key), DeepSeek, GLM, Qwen. Those routes are not part of Free Auto. Some free account tiers require an API key; they are not anonymous routes.
 
 API keys are not stored in browser localStorage. Android uses Android Keystore-backed encryption; Windows uses Electron safeStorage. Free gateways have their own data policies and may log prompts or use them to improve services. Do not send private or confidential information to public free routes.
 
@@ -44,23 +44,15 @@ The supported project output is browser-based **HTML, CSS, and JavaScript**. The
 
 Web search results are snippets and links, not a guarantee of exhaustive research. Check important sources directly.
 
-## GitHub Pages prerequisite
-
-Before the first deployment, the repository owner must enable **Settings → Pages → Build and deployment → Source: GitHub Actions**. The current Actions token cannot create the repository's Pages site automatically.
-
 ## Build from source
 
 ### Android APK
 
-The GitHub Actions workflow `.github/workflows/build-apk.yml`:
-1. Validates the shared UI and desktop JavaScript syntax.
-2. Copies `index.html` into Android WebView assets.
-3. Builds the debug APK with Gradle.
-4. Uploads `app-debug.apk` as the `nexera-debug-apk` artifact.
+The workflow `.github/workflows/build-apk.yml` is intentionally gated to the `v30.0.0` tag. Intermediate development commits do not produce APKs. The final workflow runs the regression suite, copies the shared UI into Android WebView assets, builds the debug APK, and attaches it to the v30.0.0 GitHub release.
 
 ### Windows portable app
 
-The GitHub Actions workflow `.github/workflows/build-exe.yml` validates JavaScript, installs dependencies, builds the portable Electron app, and uploads the EXE artifact.
+The workflow `.github/workflows/build-exe.yml` is also gated to the `v30.0.0` tag. It runs the regression suite, builds the portable Electron app, and publishes the EXE to the same final release.
 
 ## Development checks
 
