@@ -198,6 +198,12 @@ try {
   document.querySelector(".file-editor").value = "Updated from the editor.";
   document.querySelector(".file-editor").dispatchEvent(new window.Event("input", { bubbles: true }));
   assert.ok(JSON.parse(window.localStorage.getItem("nexera.projects.v1"))[0].files["notes.txt"].includes("Updated"));
+  const editorStatus = document.querySelector("#projectContent .project-actions span");
+  const saveFileButton = [...document.querySelectorAll("#projectContent button")].find(button => button.textContent === "Save file");
+  assert.equal(editorStatus.textContent, "Unsaved changes", "Editing a file should visibly mark it unsaved");
+  assert.ok(saveFileButton, "The file editor should expose an explicit save action");
+  saveFileButton.click();
+  assert.equal(editorStatus.textContent, "Saved", "Saving a file should clear the unsaved state");
 
   document.querySelector('[data-tab="terminal"]').click();
   const terminalInput = document.getElementById("terminalInput");
