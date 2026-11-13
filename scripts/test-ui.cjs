@@ -116,7 +116,7 @@ try {
     "index.html": "<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width\"></head><body></body></html>",
     "script.js": "window.ready = true;"
   };
-  assert.deepEqual(window.__testHooks.validateProjectFiles(validProjectFiles), [], "Valid project structure should pass static checks");
+  assert.equal(window.__testHooks.validateProjectFiles(validProjectFiles).length, 0, "Valid project structure should pass static checks");
   const invalidProjectIssues = window.__testHooks.validateProjectFiles({
     "index.html": "<html><body>missing viewport and doctype</body></html>",
     "broken.js": "const example = '</script>';"
