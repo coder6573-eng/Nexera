@@ -11,7 +11,7 @@ const MAX_TOTAL_BYTES = 700_000;
 const MAX_DEPTH = 4;
 
 function isSafeRelativePath(value) {
-  if (typeof value !== "string" || value.length > 400 || value.startsWith("/") || value.includes("\\\\")) return false;
+  if (typeof value !== "string" || value.length > 400 || value.startsWith("/") || value.includes("\\")) return false;
   const parts = value.split("/");
   return parts.length >= 1 && parts.length <= 5 &&
     parts.every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..");
