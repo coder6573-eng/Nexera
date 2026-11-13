@@ -1,13 +1,14 @@
 name: Build Nexera Windows EXE
 
 on:
-  workflow_dispatch::
+  push:
+    tags: [v30.0.0]
 
 permissions:
   contents: write
 
 concurrency:
-  group: nexera-v11-release-assets
+  group: nexera-v30-release-assets
   cancel-in-progress: false
 
 jobs:
@@ -34,9 +35,9 @@ jobs:
       - name: Publish Windows release asset
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v11.0.0
-          name: Nexera AI v11.0.0
-          body: "Nexera AI v11.0.0 — HTML/CSS/JavaScript vibecoding workspace with live preview and free auto routing."
+          tag_name: v30.0.0
+          name: Nexera AI v30.0.0
+          body: "Nexera AI v30.0.0 — HTML/CSS/JavaScript vibecoding workspace with live preview and free auto routing."
           files: dist/*.exe
           fail_on_unmatched_files: true
           make_latest: false
