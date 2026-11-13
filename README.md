@@ -1,4 +1,4 @@
-# Nexera AI v10.5.0
+# Nexera AI v11.0.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -7,42 +7,34 @@ Nexera is a light, mobile-first AI workspace with two separate experiences:
 
 The same interface is packaged as an Android app (WebView) and a Windows portable desktop app (Electron).
 
-## AI providers
+## AI routes
 
-Kilo Auto Free is the default. The chat composer also lets users switch directly between Kilo Auto, LLMFaucet, OVH Free, LLM7 Free, Puter, and OpenRouter Free. Kilo Auto automatically tries its free model pool and then keyless fallback gateways when capacity is unavailable. Open **Settings** to configure BYOK routes.
+**Free Auto** is the default. It tries 16 no-key candidates across four gateways and only advances after retryable errors, rate limits, timeouts, or unavailable models. It never silently switches to a paid route.
 
-| Provider | Default model | Key required |
-| --- | --- | --- |
-| OpenRouter | `openrouter/free` | Yes |
-| Kilo AI Gateway (default) | `kilo-auto/free` → free Kilo fallbacks | No for free routes |
-| LLMFaucet | `auto:coding` | No |
-| OVH AI Endpoints | `gpt-oss-120b` | No on anonymous path |
-| LLM7 | `gpt-oss:20b` | Free provider key |
-| Puter AI | `openai/gpt-6-luna` | Puter account |
-| DeepSeek | `deepseek-chat` | Yes |
-| GLM / Zhipu | `glm-4.5-flash` | Yes |
-| Qwen / DashScope | `qwen-plus` | Yes |
-| Custom | User supplied | Depends on provider |
+| Gateway | Candidate routes | Access and limits |
+| --- | ---: | --- |
+| Kilo Gateway | 10 | Anonymous free-model access; Kilo documents 200 requests/hour/IP. The Auto Free pool changes over time. |
+| LLMFaucet | 4 | Anonymous selectors: `auto:coding`, `auto:smart`, `auto:fast`, and `auto`. Anonymous use is limited to 20 requests/day. |
+| LLM7 | 1 | Anonymous free OpenAI-compatible route; capacity and model availability can change. |
+| UncloseAI Hermes | 1 | Public no-key endpoint; currently serves Qwen3.8-27B and is rate-limited per IP. |
 
-Kilo free routes are subject to availability and provider rate limits. Kilo documents anonymous access for free models, with a gateway rate limit of 200 requests per hour per IP. The free model catalog can change. Kilo Auto Free may route requests to providers with different data-handling practices; do not send private or confidential information when using it.
+The Kilo fallback IDs are read from the current free catalogue and may change. The stable `kilo-auto/free` route is tried first. Sources: [Kilo Gateway model documentation](https://kilo.ai/docs/gateway/models-and-providers), [LLMFaucet API and limits](https://github.com/llmfaucet/llmfaucet), [UncloseAI inference details](https://www.uncloseai.com/inference.html).
 
-API keys are not stored in browser localStorage. Android uses Android Keystore-backed encryption; Windows uses Electron safeStorage.
+Other selectable routes include OVH (experimental/manual), Puter (your own account and User-Pays allowance), OpenRouter Free (requires your API key), DeepSeek, GLM, Qwen, and a custom OpenAI-compatible endpoint. Those routes are not part of Free Auto. Some free account tiers require an API key; they are not anonymous routes.
+
+API keys are not stored in browser localStorage. Android uses Android Keystore-backed encryption; Windows uses Electron safeStorage. Free gateways have their own data policies and may log prompts or use them to improve services. Do not send private or confidential information to public free routes.
 
 ## Vibecoding
 
-- **Iterative editing** — after the first build, keep chatting in the same conversation. Nexera uses the current project files as context and merges partial file updates, preserving untouched files. If a request is materially unclear, it asks a clarification question before building.
-- **Linked local folder (Windows desktop)** — open an existing web project folder containing `index.html`; supported text files are loaded into the chat workspace and agent edits are written back to that selected folder. Reads and writes are bounded, paths are validated, and symbolic links are not followed. Android continues to use the private app workspace.
-- **Real live preview** — the build card contains a sandboxed iframe preview generated from the current project files. It refreshes after every completed build/edit, and the full preview can be opened separately. Returning from the project preview keeps the active project attached to the chat.
-- **Chat polish** — assistant responses render basic headings, lists, links, inline code, and fenced code blocks safely, with a one-tap copy action that copies the final response. The composer auto-grows with the message.
+- **Replit-inspired workspace** — desktop shows the project file list, live preview, and AI chat together. On mobile, Chat, Preview, and Files become switchable panels.
+- **Iterative editing** — ask for changes in the same conversation. The current project files are supplied as context and partial file updates preserve untouched files.
+- **Planning and clarification** — Agent mode creates a visible implementation plan and asks a concise question when a missing detail would materially change the result. Build mode skips the separate planning call.
+- **Live preview** — the sandboxed preview refreshes after a completed build or edit. Keep chatting to refine the page.
+- **Visible progress** — stages, route attempts, elapsed time, and the current waiting state are shown instead of leaving a blank spinner. Actual model names are shown only when returned by provider metadata.
+- **Background behavior** — Windows model requests run in the Electron main process and continue while the window is minimized. Android requests use a native worker thread and can continue while the app process remains alive; Android may stop work if it kills the app, so this is not a guarantee of surviving force-stop or process death.
+- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is intentionally limited to the current project workspace.
 
-
-- **Build** — one-pass generation with an embedded quality checklist to reduce wait time.
-- **Agent** — a concise planning pass followed by building and a built-in quality review.
-- **Skills** — Frontend, UI/UX, Debugging, Accessibility, and Performance guidance.
-- **Workspace terminal** — restricted commands that operate only on the current app workspace. It is not an operating-system shell and does not run arbitrary commands.
-- **Files / Preview / Terminal / Export** — edit project files, preview in an isolated surface, run safe workspace commands, and export a ZIP.
-
-The project workspace is stored locally by the app. The terminal is intentionally limited to workspace file operations; it cannot access arbitrary device or computer paths.
+The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
 ## Normal Chat
 
