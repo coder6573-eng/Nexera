@@ -28,11 +28,11 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 
 - **Replit-inspired workspace** — desktop shows the project file list, live preview, and AI chat together. On mobile, Chat, Preview, and Files become switchable panels.
 - **Iterative editing** — ask for changes in the same conversation. The current project files are supplied as context and partial file updates preserve untouched files.
-- **Planning and clarification** — Agent mode creates a visible implementation plan and asks a concise question when a missing detail would materially change the result. Build mode skips the separate planning call.
+- **Planning and second-pass QA** — Agent mode creates a visible implementation plan, builds the project, then runs an independent model review/repair pass plus local structural checks before applying the result. It asks a concise question when a missing detail would materially change the result. Build mode skips the separate planning and review calls.
 - **Live preview** — the sandboxed preview refreshes after a completed build or edit. Keep chatting to refine the page.
 - **Visible progress** — stages, route attempts, elapsed time, and the current waiting state are shown instead of leaving a blank spinner. Actual model names are shown only when returned by provider metadata.
 - **Background behavior** — Windows model requests run in the Electron main process and continue while the window is minimized. Android requests use a native worker thread and can continue while the app process remains alive; Android may stop work if it kills the app, so this is not a guarantee of surviving force-stop or process death.
-- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is intentionally limited to the current project workspace.
+- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is a restricted workspace command panel (`ls`, `cat`, `touch`, `grep`, `wc`, and related file commands); it is not a general operating-system shell or an npm/build runner.
 
 The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
@@ -64,4 +64,4 @@ npm test
 
 This parses the shared UI and desktop bridge scripts, then runs jsdom interaction checks for the drawer, settings, mode selectors, web-search toggle, project navigation, terminal commands, archive/restore, export surface, and send flow.
 
-A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine.
+The regression suite verifies UI interactions, project validation, file handling, preview assembly, and native bridge policy. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
