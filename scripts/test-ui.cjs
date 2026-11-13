@@ -113,7 +113,7 @@ try {
   assert.ok(document.getElementById("kiloInfo").textContent.includes("dynamically routes"));
   assert.equal(window.__testHooks.freeAutoRouteCount(), 16, "Free Auto should contain 16 configured candidates");
   const validProjectFiles = {
-    "index.html": "<!doctype html><html><head><meta name=\\"viewport\\" content=\\"width=device-width\\"></head><body></body></html>",
+    "index.html": "<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width\"></head><body></body></html>",
     "script.js": "window.ready = true;"
   };
   assert.deepEqual(window.__testHooks.validateProjectFiles(validProjectFiles), [], "Valid project structure should pass static checks");
