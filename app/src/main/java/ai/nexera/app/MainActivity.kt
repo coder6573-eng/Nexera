@@ -40,6 +40,23 @@ class MainActivity : Activity() {
     private lateinit var assetLoader: WebViewAssetLoader
     private val networkExecutor = Executors.newSingleThreadExecutor()
 
+    // Never let a WebView frame redirect a stored BYOK credential to an arbitrary HTTPS host.
+    private val byokEndpoints = mapOf(
+        "openrouter" to "https://openrouter.ai/api/v1/chat/completions",
+        "deepseek" to "https://api.deepseek.com/chat/completions",
+        "glm" to "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+        "qwen" to "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
+    )
+    private val freeEndpoints = mapOf(
+        "kilo" to "https://ai-gateway.kilo.ai/api/v1/chat/completions",
+        "llmfaucet" to "https://api.llmfaucet.dev/v1/chat/completions",
+        "ovh" to "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
+        "llm7" to "https://api.llm7.io/v1/chat/completions",
+        "uncloseai" to "https://hermes.ai.unturf.com/v1/chat/completions"
+    )
+    private fun isAllowedEndpoint(provider: String, endpoint: String): Boolean =
+        byokEndpoints[provider] == endpoint || freeEndpoints[provider] == endpoint
+
     private fun isSafeProjectPath(name: String): Boolean {
         if (name.startsWith("/") || name.contains('\\')) return false
         val parts = name.split("/")
@@ -158,13 +175,14 @@ class MainActivity : Activity() {
     private inner class NexeraBridge {
         @JavascriptInterface
         fun hasApiKey(provider: String): Boolean = try {
-            secureKeys.get(provider) != null
+            provider in byokEndpoints && secureKeys.get(provider) != null
         } catch (_: Exception) {
             false
         }
 
         @JavascriptInterface
         fun saveApiKey(provider: String, value: String): Boolean = try {
+            require(provider in byokEndpoints) { "This provider cannot store a credential in the Android app." }
             secureKeys.put(provider, value)
             true
         } catch (_: Exception) {
@@ -173,6 +191,7 @@ class MainActivity : Activity() {
 
         @JavascriptInterface
         fun deleteApiKey(provider: String): Boolean = try {
+            require(provider in byokEndpoints) { "This provider cannot store a credential in the Android app." }
             secureKeys.delete(provider)
             true
         } catch (_: Exception) {
@@ -186,6 +205,9 @@ class MainActivity : Activity() {
                     require(endpoint.startsWith("https://", ignoreCase = true)) {
                         "Only HTTPS model endpoints are allowed."
                     }
+                    require(isAllowedEndpoint(provider, endpoint)) {
+                        "This endpoint is not approved for the selected Android provider."
+                    }
                     require(model.isNotBlank() && model.length <= 160) { "Enter a valid model ID." }
                     require(provider.matches(Regex("[A-Za-z0-9_-]{1,40}"))) {
                         "Invalid provider identifier."
@@ -193,7 +215,7 @@ class MainActivity : Activity() {
                     require(messagesJson.length <= 1_000_000) { "The chat request was too large." }
                     val messageArray = JSONArray(messagesJson)
                     require(messageArray.length() in 1..80) { "Invalid chat message list." }
-                    val apiKey = secureKeys.get(provider)
+                    val apiKey = if (provider in byokEndpoints) secureKeys.get(provider) else null
                     val kiloFreeModel = provider == "kilo" &&
                         (model == "kilo-auto/free" || model == "openrouter/free" || model.endsWith(":free"))
                     val llmFaucetFree = provider == "llmfaucet"
