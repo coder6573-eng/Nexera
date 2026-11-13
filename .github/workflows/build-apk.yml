@@ -3,7 +3,6 @@ name: Build Nexera Android APK
 on:
   push:
     tags: [v30.0.0]
-  workflow_dispatch:
 
 permissions:
   contents: write
