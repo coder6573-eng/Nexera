@@ -24,7 +24,10 @@ const requiredIds = [
   "menuBtn", "closeDrawer", "scrim", "newChatBtn", "newProject", "openLocalFolder",
   "showArchives", "settingsBtn", "chatSettings", "drawerSettings",
   "homeSend", "chatSend", "backChat", "projectMore", "homeMode", "chatMode",
-  "homeAgentMode", "chatAgentMode", "homeSkill", "chatSkill", "homeWebSearch", "chatWebSearch"
+  "homeAgentMode", "chatAgentMode", "homeSkill", "chatSkill", "homeWebSearch", "chatWebSearch",
+  "workspaceToolbar", "workspaceFiles", "workspaceFileList", "workspaceTitle", "workspaceFileCount",
+  "workspaceChatTab", "workspacePreviewTab", "workspaceFilesTab", "workspaceOpenProject",
+  "agentElapsed", "agentStatusDetail", "agentRoute", "agentPlan"
 ];
 
 for (const id of requiredIds) {
@@ -59,6 +62,10 @@ if (!scripts[0].includes("typeof window.NexeraNative?.openFolder") ||
     !scripts[0].includes("await saveLinkedFolder()")) {
   throw new Error("Local-folder UI import or save wiring is incomplete.");
 }
+
+if (!scripts[0].includes("const FREE_AUTO_ROUTES") || !scripts[0].includes("FREE_AUTO_ROUTES.slice()")) throw new Error("Free Auto route pool is missing.");
+if (!scripts[0].includes("function renderServedModel") || !scripts[0].includes("data.model")) throw new Error("Actual served-model metadata handling is missing.");
+if (!scripts[0].includes("function startAgentTask") || !scripts[0].includes("function updateAgentRoute")) throw new Error("Agent progress and route-attempt reporting are missing.");
 
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
   throw new Error("Native result bridge callback is missing.");
