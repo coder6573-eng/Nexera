@@ -23,6 +23,23 @@ function writeWorkspaceFiles(filesJson) {
 }
 const keyFile = () => path.join(app.getPath("userData"), "credentials.enc");
 const allowedProvider = /^[a-z0-9_-]{1,40}$/i;
+const providerEndpoints = Object.freeze({
+  openrouter: "https://openrouter.ai/api/v1/chat/completions",
+  deepseek: "https://api.deepseek.com/chat/completions",
+  glm: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+  qwen: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions",
+  kilo: "https://ai-gateway.kilo.ai/api/v1/chat/completions",
+  llmfaucet: "https://api.llmfaucet.dev/v1/chat/completions",
+  ovh: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions",
+  llm7: "https://api.llm7.io/v1/chat/completions",
+  uncloseai: "https://hermes.ai.unturf.com/v1/chat/completions"
+});
+const byokProviders = new Set(["openrouter", "deepseek", "glm", "qwen"]);
+function isAllowedEndpoint(provider, endpoint) {
+  return typeof provider === "string" &&
+    Object.prototype.hasOwnProperty.call(providerEndpoints, provider) &&
+    endpoint === providerEndpoints[provider];
+}
 
 function readKeys() {
   try {
@@ -41,11 +58,11 @@ function sendResult(requestId, data) {
 function postChat({ provider, endpoint, model, messagesJson, requestId }) {
   (async () => {
     try {
-      if (!allowedProvider.test(provider || "")) throw new Error("Invalid provider.");
+      if (!allowedProvider.test(provider || "") || !isAllowedEndpoint(provider, endpoint)) throw new Error("Provider endpoint is not allowed.");
       const target = new URL(endpoint);
       if (target.protocol !== "https:") throw new Error("Only HTTPS model endpoints are allowed.");
       if (!model || model.length > 160) throw new Error("Enter a valid model ID.");
-      const apiKey = readKeys()[provider];
+      const apiKey = byokProviders.has(provider) ? readKeys()[provider] : null;
       const kiloFreeModel = provider === "kilo" &&
         (model === "kilo-auto/free" || model === "openrouter/free" || model.endsWith(":free"));
       const llmFaucetFree = provider === "llmfaucet";
@@ -270,16 +287,17 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle("nexera:save-folder", async (_event, filesJson) => writeWorkspaceFiles(filesJson));
   ipcMain.on("nexera:has-key", (event, provider) => {
-    event.returnValue = allowedProvider.test(provider || "") && typeof readKeys()[provider] === "string";
+    event.returnValue = byokProviders.has(provider) && typeof readKeys()[provider] === "string";
   });
   ipcMain.on("nexera:save-key", (event, payload) => {
     try {
-      if (!allowedProvider.test(payload?.provider || "") || !payload?.value || payload.value.length > 4096) throw new Error();
+      if (!byokProviders.has(payload?.provider) || typeof payload?.value !== "string" || !payload.value.trim() || payload.value.length > 4096) throw new Error();
       const keys = readKeys(); keys[payload.provider] = payload.value; writeKeys(keys); event.returnValue = true;
     } catch { event.returnValue = false; }
   });
   ipcMain.on("nexera:delete-key", (event, provider) => {
     try {
+      if (!byokProviders.has(provider)) throw new Error();
       const keys = readKeys(); delete keys[provider]; writeKeys(keys); event.returnValue = true;
     } catch { event.returnValue = false; }
   });
