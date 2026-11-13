@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -52,7 +52,7 @@ const change = id => {
 
 try {
   const routeValues = [...document.getElementById("homeProvider").options].map(option => option.value);
-  for (const route of ["kilo", "llmfaucet", "ovh", "llm7", "puter", "openrouter"]) {
+  for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter"]) {
     assert.ok(routeValues.includes(route), "Missing chat route: " + route);
   }
   document.getElementById("homeProvider").value = "ovh";
@@ -97,9 +97,10 @@ try {
   for (const button of document.querySelectorAll("button")) {
     assert.ok(button.textContent.trim() || button.getAttribute("aria-label") || button.title, "Every button needs an accessible name");
   }
-  assert.equal(document.getElementById("provider").value, "kilo");
+  assert.equal(document.getElementById("provider").value, "auto");
   assert.equal(document.getElementById("connectPuter").style.display, "none");
-  assert.ok(document.getElementById("kiloInfo").textContent.includes("three Kilo free models"));
+  assert.ok(document.getElementById("kiloInfo").textContent.includes("dynamically routes"));
+  assert.equal(window.__testHooks.freeAutoRouteCount(), 16, "Free Auto should contain 16 configured candidates");
   assert.ok(html.includes("-webkit-tap-highlight-color:transparent"));
   assert.ok(html.includes("KILO_FREE_BACKUPS"));
   assert.ok(html.includes("renderAssistantContent"), "Assistant markdown renderer should be wired");
@@ -153,6 +154,10 @@ try {
   click("menuBtn");
   click("newProject");
   assert.equal(document.getElementById("chatMode").value, "vibe");
+  assert.ok(document.getElementById("main").classList.contains("vibe-active"), "Vibecoding should open the three-panel workspace");
+  assert.equal(document.getElementById("workspaceToolbar").hidden, false);
+  assert.equal(document.getElementById("workspaceFiles").hidden, false);
+  assert.equal(document.getElementById("agentWorkbench").hidden, false);
   assert.equal(document.getElementById("chatComposer").style.display, "block");
 
   click("newChatBtn");
