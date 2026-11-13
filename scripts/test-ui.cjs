@@ -52,7 +52,7 @@ const change = id => {
 
 try {
   const routeValues = [...document.getElementById("homeProvider").options].map(option => option.value);
-  for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter"]) {
+  for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter", "deepseek", "glm", "qwen"]) {
     assert.ok(routeValues.includes(route), "Missing chat route: " + route);
   }
   document.getElementById("homeProvider").value = "ovh";
@@ -109,6 +109,8 @@ try {
     assert.ok(button.textContent.trim() || button.getAttribute("aria-label") || button.title, "Every button needs an accessible name");
   }
   assert.equal(document.getElementById("provider").value, "auto");
+  assert.ok(![...document.getElementById("provider").options].some(option => option.value === "custom"), "Unrestricted custom endpoints must not be offered");
+  assert.equal(document.getElementById("endpoint").disabled, true, "Provider endpoints must stay locked to the native allowlist");
   assert.equal(document.getElementById("connectPuter").style.display, "none");
   assert.ok(document.getElementById("kiloInfo").textContent.includes("dynamically routes"));
   assert.equal(window.__testHooks.freeAutoRouteCount(), 16, "Free Auto should contain 16 configured candidates");
