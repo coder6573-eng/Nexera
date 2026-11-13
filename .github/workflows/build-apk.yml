@@ -1,7 +1,7 @@
 name: Build Nexera Android APK
 
 on:
-  workflow_dispatch::
+  workflow_dispatch:
 
 permissions:
   contents: write
