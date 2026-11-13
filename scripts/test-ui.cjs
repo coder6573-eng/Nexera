@@ -143,6 +143,11 @@ try {
   document.getElementById("provider").value = "openrouter";
   change("provider");
   assert.equal(document.getElementById("endpoint").value, "https://openrouter.ai/api/v1/chat/completions");
+  document.getElementById("provider").value = "uncloseai";
+  change("provider");
+  assert.equal(document.getElementById("endpoint").value, "https://hermes.ai.unturf.com/v1/chat/completions", "UncloseAI settings must use the endpoint approved by the native bridge");
+  document.getElementById("provider").value = "openrouter";
+  change("provider");
   assert.equal(document.getElementById("apiKeyWrap").style.display, "block");
   document.getElementById("provider").value = "puter";
   change("provider");
