@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, validateProjectFiles, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -112,6 +112,18 @@ try {
   assert.equal(document.getElementById("connectPuter").style.display, "none");
   assert.ok(document.getElementById("kiloInfo").textContent.includes("dynamically routes"));
   assert.equal(window.__testHooks.freeAutoRouteCount(), 16, "Free Auto should contain 16 configured candidates");
+  const validProjectFiles = {
+    "index.html": "<!doctype html><html><head><meta name=\\"viewport\\" content=\\"width=device-width\\"></head><body></body></html>",
+    "script.js": "window.ready = true;"
+  };
+  assert.deepEqual(window.__testHooks.validateProjectFiles(validProjectFiles), [], "Valid project structure should pass static checks");
+  const invalidProjectIssues = window.__testHooks.validateProjectFiles({
+    "index.html": "<html><body>missing viewport and doctype</body></html>",
+    "broken.js": "const example = '</script>';"
+  });
+  assert.ok(invalidProjectIssues.some(issue => issue.includes("DOCTYPE")), "Static review should detect missing DOCTYPE");
+  assert.ok(invalidProjectIssues.some(issue => issue.includes("viewport")), "Static review should detect missing viewport metadata");
+  assert.ok(invalidProjectIssues.some(issue => issue.includes("raw </script>")), "Static review should reject script-closing sequences in generated JS");
   const servedModelTarget = document.createElement("div");
   window.__testHooks.setLastRouteInfo({ provider: "kilo", model: null });
   window.__testHooks.renderServedModel(servedModelTarget);
