@@ -265,7 +265,7 @@ try {
   homePrompt.value = "Hello Nexera";
   click("homeSend");
   assert.equal(document.getElementById("conversation").style.display, "block");
-  assert.ok(document.getElementById("conversation").textContent.includes("add an API key") || document.getElementById("conversation").textContent.includes("Kilo"));
+  assert.ok(document.getElementById("conversation").textContent.includes("installed Nexera") || document.getElementById("conversation").textContent.includes("Kilo"));
   document.getElementById("chatPrompt").value = "Follow-up question";
   click("chatSend");
   assert.ok(document.getElementById("conversation").textContent.includes("Follow-up question"));
