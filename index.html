@@ -360,6 +360,69 @@ function isSafeProjectPath(name){if(typeof name!=='string'||name.includes('\\'))
 function mergeProjectFiles(existing,incoming){if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))return null;const accepted=Object.fromEntries(Object.entries(incoming).filter(([name,value])=>isSafeProjectPath(name)&&typeof value==='string'&&value.length<=400000));if(!Object.keys(accepted).length)return null;const merged={...(existing||{}),...accepted};const total=Object.values(merged).reduce((size,value)=>size+String(value).length,0);if(total>700000||typeof merged['index.html']!=='string')return null;if(!existing&&!['index.html','style.css','script.js'].every(key=>typeof merged[key]==='string'))return null;return merged}
 function validateProjectFiles(files){const issues=[];const html=String(files?.['index.html']||'');if(!html.trim())issues.push('index.html is empty');if(!/^\s*<!doctype html>/i.test(html))issues.push('index.html is missing a DOCTYPE');if(!/<html[\s>]/i.test(html)||!/<\/html>/i.test(html))issues.push('index.html has an incomplete html root');if(!/<meta[^>]+name=["']viewport["']/i.test(html))issues.push('viewport meta tag is missing');for(const [name,value] of Object.entries(files||{})){if(typeof value!=='string')issues.push(name+' is not text');if(/\.js$/i.test(name)&&/<\/script/i.test(String(value)))issues.push(name+' contains a raw <\/script> sequence')}return issues}
 function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function buildPreviewHtml(files){const source=String(files?.['index.html']||'');if(!source)return '';let html=source;const css=Object.keys(files||{}).filter(k=>k.toLowerCase().endsWith('.css')).map(k=>String(files[k])).join('\n');const js=Object.keys(files||{}).filter(k=>k.toLowerCase().endsWith('.js')).map(k=>String(files[k]).replace(/<\/script/gi,'<\\/script')).join('\n');let stylesInserted=false;html=html.replace(/<link[^>]+href=["'][^"']+\.css["'][^>]*>/gi,()=>{if(!css||stylesInserted)return '';stylesInserted=true;return '<style>'+css+'</style>'});let scriptsInserted=false;html=html.replace(/<script[^>]+src=["'][^"']+\.js["'][^>]*><\/script>/gi,()=>{if(!js||scriptsInserted)return '';scriptsInserted=true;return '<script>'+js+'<\\/script>'});if(!/<style[\s>]/i.test(html)&&css)html=html.replace(/<\/head>/i,'<style>'+css+'.agent-progress-message{max-width:min(92%,760px);margin-bottom:18px}.agent-progress-message .assistant-content p{margin:0}.agent-progress-message .assistant-label{margin-bottom:5px}.agent-progress-message .assistant-content{color:#3f5140}.agent-progress-message+.agent-progress-message{margin-top:-5px}
+
+/* V18 — refined file editor, project explorer and preview workspace */
+.editor-workspace{display:grid;grid-template-columns:238px minmax(0,1fr);gap:14px;min-height:100%;align-items:stretch}
+.editor-sidebar,.editor-main{min-width:0;border:1px solid #e4ebe0;border-radius:17px;background:rgba(255,255,255,.94);box-shadow:0 12px 36px rgba(44,75,37,.045);overflow:hidden}
+.editor-sidebar{display:flex;flex-direction:column;max-height:calc(100dvh - 190px)}
+.editor-sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 13px 12px;border-bottom:1px solid #edf1e9}
+.editor-sidebar-head>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.editor-sidebar-head strong,.editor-breadcrumb strong,.preview-workspace-head strong{font-size:12px;color:#344632}
+.editor-muted{font-size:10px;color:#879383}
+.editor-tool-button{border:1px solid #e6ede2;background:#fbfdf9;color:#53664e;border-radius:9px;padding:7px 10px;font-size:10px;font-weight:700;white-space:nowrap}
+.editor-tool-button:hover{background:#eef6e9;border-color:#d6e5cf}
+.editor-add-file{background:#edf6e8;color:#3f7132;border-color:#dfecd7}
+.editor-search-wrap{display:flex;align-items:center;gap:8px;margin:11px 10px 7px;padding:0 10px;border:1px solid #e8eee4;background:#f9fbf7;border-radius:9px;color:#84917f}
+.editor-search{width:100%;min-width:0;border:0;outline:0;background:transparent;padding:8px 0;font-size:11px;color:#344632}
+.editor-file-list{overflow:auto;min-height:90px;padding:4px 8px 10px}
+.editor-file-item{width:100%;display:flex;align-items:center;gap:9px;border:0;border-radius:9px;padding:9px 8px;background:transparent;text-align:left;color:#61705d;font-size:11px}
+.editor-file-item:hover{background:#f5f8f2}
+.editor-file-item.active{background:#edf5e8;color:#365e2f;font-weight:700}
+.editor-file-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.editor-file-icon{width:23px;height:23px;border-radius:7px;background:#f0f4ed;display:grid;place-items:center;font-size:10px;font-weight:800;color:#687a62;flex:none}
+.editor-file-icon.html{background:#fff1e8;color:#c47746}.editor-file-icon.css{background:#edf2ff;color:#647fc1}.editor-file-icon.js{background:#fff8d9;color:#9a8533}.editor-file-icon.json{background:#f3edff;color:#8064ad}
+.editor-current-dot{width:6px;height:6px;border-radius:50%;background:#75b84d;flex:none}
+.editor-main{display:flex;flex-direction:column;min-height:440px}
+.editor-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:8px 12px;border-bottom:1px solid #edf1e9}
+.editor-breadcrumb{display:flex;align-items:center;gap:8px;min-width:0;color:#8a9585;font-size:10px}
+.editor-breadcrumb strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.editor-crumb-sep{color:#c2cbbd}
+.editor-toolbar-actions{display:flex;gap:6px;flex:none}
+.editor-danger{color:#a35b52}.editor-danger:disabled{opacity:.35;cursor:not-allowed}
+.editor-surface{display:grid;grid-template-columns:43px minmax(0,1fr);flex:1;min-height:310px;max-height:calc(100dvh - 340px);overflow:hidden;background:#fff}
+.editor-line-numbers{overflow:hidden;white-space:pre;text-align:right;padding:14px 10px 14px 4px;background:#fafcf9;border-right:1px solid #eef2eb;color:#a1ac9c;font:11px/1.72 ui-monospace,SFMono-Regular,Consolas,monospace;user-select:none}
+.file-editor{width:100%;height:100%;min-height:310px;max-height:none;resize:none;border:0;border-radius:0;padding:14px 16px;background:#fff;color:#344632;font:12px/1.72 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto;outline:none}
+.file-editor:focus{box-shadow:inset 0 0 0 2px rgba(125,178,96,.14)}
+.editor-statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 12px;border-top:1px solid #edf1e9;background:#fbfdf9;color:#83907f;font-size:9px}
+.editor-save-state{font-weight:700;color:#568148}
+.editor-bottom-actions{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid #edf1e9;background:#fff}
+.editor-save-button:disabled{opacity:.5;cursor:default}
+.editor-empty{padding:16px 10px;color:#8a9685;font-size:10px;text-align:center}
+.preview-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 13px}
+.preview-workspace-head>div{display:flex;flex-direction:column;gap:4px}
+.preview-workspace-head span{font-size:10px;color:#879383}
+.preview-frame{height:calc(100dvh - 260px);min-height:360px;background:#fff;border:1px solid #e4ebe0;border-radius:15px;box-shadow:0 12px 36px rgba(44,75,37,.05)}
+.preview-native-notice,.export-workspace-card{padding:18px;border:1px solid #e4ebe0;border-radius:16px;background:#fff;color:#687665;font-size:12px;line-height:1.6}
+.preview-native-notice+.primary-btn{margin-top:12px}
+.export-workspace-card{max-width:560px;padding:24px}
+.export-workspace-card strong{font-size:15px;color:#344632}
+.export-workspace-card p{font-size:12px;color:#778372;line-height:1.65}
+@media(max-width:680px){
+ .editor-workspace{grid-template-columns:1fr;gap:9px}
+ .editor-sidebar{max-height:180px}
+ .editor-sidebar-head{padding:10px 11px}
+ .editor-file-list{display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;min-height:0;padding:5px 8px 9px}
+ .editor-file-item{width:auto;max-width:210px;flex:none;padding:8px 9px}
+ .editor-search-wrap{margin:7px 9px 3px}
+ .editor-main{min-height:50dvh}
+ .editor-surface{min-height:42dvh;max-height:56dvh}
+ .file-editor{min-height:42dvh;font-size:11px;padding:12px}
+ .editor-line-numbers{font-size:10px;padding:12px 8px}
+ .editor-toolbar{min-height:44px;padding:7px 9px}
+ .editor-bottom-actions{position:sticky;bottom:0;z-index:2}
+ .preview-frame{height:62dvh;min-height:320px}
+}
+@media(prefers-reduced-motion:reduce){.editor-tool-button,.editor-file-item,.editor-main{transition:none!important}}
 </style></head>');if(!/<script[\s>]/i.test(html)&&js)html=html.replace(/<\/body>/i,'<script>'+js+'<\\/script></body>');return html}
 function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',window.NexeraNative?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
 function failAgentWorkbench(){const w=$('agentWorkbench');if(!w||w.hidden)return;w.querySelectorAll('.agent-step').forEach(row=>{row.classList.remove('active');row.classList.add('failed');const icon=row.querySelector('.agent-icon');if(icon)icon.textContent='!';const detail=row.querySelector('.agent-detail');if(detail)detail.textContent='not completed';const time=row.querySelector('.agent-time');if(time)time.textContent='stopped'});$('agentStatus').textContent='Needs attention';$('agentStatusDetail').textContent='The task stopped before the project was updated.'}
@@ -508,7 +571,325 @@ waiting.textContent='I could not complete that request.';const err=document.crea
 function submitHome() {const t=$('homePrompt').value; $('homePrompt').value='';send(t,true)}function submitChat(){const t=$('chatPrompt').value;$('chatPrompt').value='';send(t,false)}
 function renderProjects(){const list=$('projectList');list.innerHTML='';const visible=projects.filter(p=>!p.archived);if(!visible.length){list.innerHTML='<div class="empty">Your projects will appear here.</div>';return}visible.forEach(p=>{const row=document.createElement('div');row.className='project-entry';const b=document.createElement('button');b.className='drawer-item open-project';b.textContent='▧　'+p.name;b.onclick=()=>{closeDrawer();openProject(p.id,'files')};const a=document.createElement('button');a.className='archive-one';a.textContent='⋯';a.title='Archive project';a.onclick=()=>{p.archived=true;saveProjects();renderProjects();toast('Project archived')};row.append(b,a);list.appendChild(row)})}
 function openProject(id,tab){activeProject=projects.find(p=>p.id===id);if(!activeProject)return;localFolderLinked=activeProject.id===linkedFolderProjectId;activeTab=tab||'files';$('projectTitle').textContent=activeProject.name;$('home').style.display='none';$('conversation').style.display='none';$('chatComposer').style.display='none';hideAgentWorkbench();$('projectView').style.display='flex';applyWorkspaceLayout();document.querySelectorAll('.project-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===activeTab));renderProjectContent()}
-function renderProjectContent(){const c=$('projectContent');c.innerHTML='';if(activeTab==='files'){Object.keys(activeProject.files).forEach(file=>{const b=document.createElement('button');b.className='file-row '+(file===activeFile?'active':'');b.textContent='▤　'+file;b.onclick=()=>{activeFile=file;renderProjectContent()};c.appendChild(b)});const editor=document.createElement('textarea');editor.className='file-editor';editor.spellcheck=false;editor.value=activeProject.files[activeFile]||'';let editorDirty=false,status=null;const saveNow=async()=>{activeProject.files[activeFile]=editor.value;activeProject.updated=Date.now();saveProjects();if(localFolderLinked){const result=await saveLinkedFolder();if(!result.ok){if(status)status.textContent='Local save failed';return}}editorDirty=false;if(status)status.textContent='Saved';toast('Saved '+activeFile)};editor.addEventListener('input',()=>{activeProject.files[activeFile]=editor.value;activeProject.updated=Date.now();editorDirty=true;if(status)status.textContent='Unsaved changes';saveProjects()});editor.addEventListener('blur',()=>{if(localFolderLinked)saveLinkedFolder()});c.appendChild(editor);const actions=document.createElement('div');actions.className='project-actions';const save=document.createElement('button');save.className='primary-btn';save.textContent='Save file';save.onclick=saveNow;const preview=document.createElement('button');preview.className='secondary-btn';preview.textContent='Preview project';preview.onclick=()=>switchTab('preview');status=document.createElement('span');status.textContent='Saved';status.style.cssText='font-size:10px;color:#6b776b;align-self:center';actions.append(save,preview,status);c.append(actions)}else if(activeTab==='preview'){const html=buildPreviewHtml(activeProject.files);if(window.NexeraNative){const frame=document.createElement('div');frame.className='empty';frame.textContent='Open the secure isolated preview on your device.';const b=document.createElement('button');b.className='primary-btn';b.textContent='Open preview';b.onclick=()=>window.NexeraNative.showPreview(html);c.append(frame,b)}else{const frame=document.createElement('iframe');frame.className='preview-frame';frame.setAttribute('sandbox','allow-scripts');frame.srcdoc=html;c.append(frame)}}else if(activeTab==='terminal'){const shell=document.createElement('div');shell.className='terminal-shell';const output=document.createElement('div');output.className='terminal-output';output.id='terminalOutput';output.textContent='Nexera workspace terminal\\nType help to see safe commands.\\n';const row=document.createElement('div');row.className='terminal-row';const input=document.createElement('input');input.className='terminal-input';input.id='terminalInput';input.placeholder='Enter a workspace command...';input.autocomplete='off';const run=document.createElement('button');run.id='terminalRun';run.className='terminal-run';run.textContent='Run';run.onclick=()=>{runTerminalCommand(input.value);input.value='';input.focus()};input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();run.click()}};row.append(input,run);const note=document.createElement('div');note.className='terminal-note';note.textContent='Sandboxed workspace commands only. No access to your phone or computer system shell.';shell.append(output,row,note);c.append(shell)}else{const p=document.createElement('p');p.textContent='Export your complete project workspace, including any extra files Nexera created such as nav.js or functions.js.';p.style.color='#7f8b7a';p.style.fontSize='13px';c.append(p);const b=document.createElement('button');b.className='primary-btn';b.textContent='Download project ZIP';b.onclick=()=>{if(window.NexeraNative)window.NexeraNative.exportZip(activeProject.name,JSON.stringify(activeProject.files));else downloadZipFallback(activeProject)};c.append(b)}}
+function renderProjectContent(){
+  const container=$('projectContent');
+  container.textContent='';
+  if(!activeProject)return;
+  const files=activeProject.files||{};
+  const fileNames=Object.keys(files).sort((a,b)=>a.localeCompare(b));
+  if(activeTab==='files'){
+    const shell=document.createElement('div');
+    shell.className='editor-workspace';
+    const sidebar=document.createElement('aside');
+    sidebar.className='editor-sidebar';
+    const sidebarHead=document.createElement('div');
+    sidebarHead.className='editor-sidebar-head';
+    const sidebarTitle=document.createElement('div');
+    sidebarTitle.innerHTML='<strong>Explorer</strong><span class="editor-muted">'+fileNames.length+' files</span>';
+    const addFile=document.createElement('button');
+    addFile.className='editor-tool-button editor-add-file';
+    addFile.type='button';
+    addFile.textContent='+ New file';
+    addFile.addEventListener('click',()=>createWorkspaceFile());
+    sidebarHead.append(sidebarTitle,addFile);
+    const searchWrap=document.createElement('label');
+    searchWrap.className='editor-search-wrap';
+    searchWrap.innerHTML='<span aria-hidden="true">⌕</span>';
+    const search=document.createElement('input');
+    search.className='editor-search';
+    search.type='search';
+    search.placeholder='Find a file…';
+    search.setAttribute('aria-label','Find a project file');
+    searchWrap.appendChild(search);
+    const list=document.createElement('div');
+    list.className='editor-file-list';
+    const renderList=(query='')=>{
+      list.textContent='';
+      const filtered=fileNames.filter(name=>name.toLowerCase().includes(query.toLowerCase()));
+      if(!filtered.length){
+        const empty=document.createElement('div');
+        empty.className='editor-empty';
+        empty.textContent='No matching files';
+        list.appendChild(empty);
+        return;
+      }
+      filtered.forEach(name=>{
+        const row=document.createElement('button');
+        row.type='button';
+        row.className='editor-file-item'+(name===activeFile?' active':'');
+        const ext=name.split('.').pop().toLowerCase();
+        const glyph=({html:'◈',css:'▧',js:'⌘',json:'{}',md:'≡',svg:'◇'})[ext]||'▤';
+        const icon=document.createElement('span');
+        icon.className='editor-file-icon '+ext;
+        icon.textContent=glyph;
+        const label=document.createElement('span');
+        label.className='editor-file-name';
+        label.textContent=name;
+        label.title=name;
+        row.append(icon,label);
+        if(name===activeFile){
+          const current=document.createElement('span');
+          current.className='editor-current-dot';
+          current.setAttribute('aria-label','Selected file');
+          row.appendChild(current);
+        }
+        row.addEventListener('click',()=>{
+          if(editorState.dirty&&!confirm('Discard unsaved changes to '+activeFile+'?'))return;
+          activeFile=name;
+          renderProjectContent();
+        });
+        list.appendChild(row);
+      });
+    };
+    search.addEventListener('input',()=>renderList(search.value));
+    renderList();
+    sidebar.append(sidebarHead,searchWrap,list);
+    const main=document.createElement('section');
+    main.className='editor-main';
+    const toolbar=document.createElement('div');
+    toolbar.className='editor-toolbar';
+    const pathLabel=document.createElement('div');
+    pathLabel.className='editor-breadcrumb';
+    pathLabel.innerHTML='<span>workspace</span><span class="editor-crumb-sep">/</span>';
+    const currentName=document.createElement('strong');
+    currentName.textContent=activeFile||'No file selected';
+    pathLabel.appendChild(currentName);
+    const tools=document.createElement('div');
+    tools.className='editor-toolbar-actions';
+    const copy=document.createElement('button');
+    copy.className='editor-tool-button';
+    copy.type='button';
+    copy.textContent='Copy';
+    copy.addEventListener('click',async()=>{
+      try{await navigator.clipboard.writeText(editor.value);toast('Copied '+activeFile)}
+      catch{editor.focus();editor.select();toast('Select and copy the file contents')}
+    });
+    const deleteButton=document.createElement('button');
+    deleteButton.className='editor-tool-button editor-danger';
+    deleteButton.type='button';
+    deleteButton.textContent='Delete';
+    deleteButton.disabled=['index.html','style.css','script.js'].includes(activeFile);
+    deleteButton.title=deleteButton.disabled?'Core project files are protected':'Delete this file';
+    deleteButton.addEventListener('click',()=>deleteWorkspaceFile(activeFile));
+    tools.append(copy,deleteButton);
+    toolbar.append(pathLabel,tools);
+    const editorWrap=document.createElement('div');
+    editorWrap.className='editor-surface';
+    const lineNumbers=document.createElement('div');
+    lineNumbers.className='editor-line-numbers';
+    lineNumbers.setAttribute('aria-hidden','true');
+    const editor=document.createElement('textarea');
+    editor.className='file-editor';
+    editor.spellcheck=false;
+    editor.autocapitalize='off';
+    editor.autocomplete='off';
+    editor.autocorrect='off';
+    editor.wrap='off';
+    editor.setAttribute('aria-label','Edit '+activeFile);
+    editor.value=files[activeFile]||'';
+    editor.placeholder='This file is empty. Start writing…';
+    const syncLines=()=>{
+      const count=Math.max(1,editor.value.split('\n').length);
+      lineNumbers.textContent=Array.from({length:count},(_,i)=>String(i+1)).join('\n');
+      lineNumbers.scrollTop=editor.scrollTop;
+      editor.style.setProperty('--editor-lines',count);
+    };
+    syncLines();
+    editor.addEventListener('scroll',()=>{lineNumbers.scrollTop=editor.scrollTop});
+    const statusbar=document.createElement('div');
+    statusbar.className='editor-statusbar';
+    const saveState=document.createElement('span');
+    saveState.className='editor-save-state';
+    saveState.textContent='✓ Saved';
+    const stats=document.createElement('span');
+    const updateStats=()=>{
+      const lines=Math.max(1,editor.value.split('\n').length);
+      stats.textContent=lines+' lines · '+editor.value.length+' characters';
+    };
+    updateStats();
+    const saveButton=document.createElement('button');
+    saveButton.className='primary-btn editor-save-button';
+    saveButton.type='button';
+    saveButton.textContent='Save changes';
+    const saveNow=async()=>{
+      files[activeFile]=editor.value;
+      activeProject.updated=Date.now();
+      if(!saveProjects()){
+        saveState.textContent='Save failed';
+        return;
+      }
+      if(localFolderLinked){
+        saveState.textContent='Saving to folder…';
+        const result=await saveLinkedFolder();
+        if(!result.ok){
+          saveState.textContent='Local folder save failed';
+          toast(result.error||'Could not save linked folder');
+          return;
+        }
+      }
+      editorState.dirty=false;
+      saveState.textContent='✓ Saved';
+      saveButton.disabled=true;
+      renderWorkspaceFiles();
+      toast('Saved '+activeFile);
+    };
+    saveButton.addEventListener('click',saveNow);
+    editor.addEventListener('input',()=>{
+      editorState.dirty=true;
+      saveState.textContent='● Unsaved changes';
+      saveButton.disabled=false;
+      files[activeFile]=editor.value;
+      activeProject.updated=Date.now();
+      saveProjects();
+      syncLines();
+      updateStats();
+    });
+    editor.addEventListener('keydown',event=>{
+      if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+        event.preventDefault();
+        saveNow();
+      }
+      if(event.key==='Tab'){
+        event.preventDefault();
+        const from=editor.selectionStart,to=editor.selectionEnd;
+        editor.setRangeText('  ',from,to,'end');
+        editor.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    });
+    editorWrap.append(lineNumbers,editor);
+    statusbar.append(saveState,stats);
+    const actions=document.createElement('div');
+    actions.className='editor-bottom-actions';
+    const preview=document.createElement('button');
+    preview.className='secondary-btn';
+    preview.type='button';
+    preview.textContent='Open preview';
+    preview.addEventListener('click',async()=>{
+      if(editorState.dirty)await saveNow();
+      switchTab('preview');
+    });
+    actions.append(saveButton,preview);
+    main.append(toolbar,editorWrap,statusbar,actions);
+    shell.append(sidebar,main);
+    container.appendChild(shell);
+    if(!files[activeFile]&&fileNames.length)activeFile=fileNames[0];
+    if(!fileNames.length){
+      const empty=document.createElement('div');
+      empty.className='editor-empty';
+      empty.textContent='No project files yet. Create a file to get started.';
+      list.appendChild(empty);
+    }
+  }else if(activeTab==='preview'){
+    const head=document.createElement('div');
+    head.className='preview-workspace-head';
+    const label=document.createElement('div');
+    label.innerHTML='<strong>Live preview</strong><span>Your current project, rendered in an isolated frame.</span>';
+    const refresh=document.createElement('button');
+    refresh.className='secondary-btn';
+    refresh.type='button';
+    refresh.textContent='Refresh preview';
+    refresh.addEventListener('click',()=>renderProjectContent());
+    head.append(label,refresh);
+    container.appendChild(head);
+    const html=buildPreviewHtml(files);
+    if(window.NexeraNative){
+      const notice=document.createElement('div');
+      notice.className='preview-native-notice';
+      notice.textContent='For security, the native app opens interactive previews in a separate isolated window.';
+      const open=document.createElement('button');
+      open.className='primary-btn';
+      open.type='button';
+      open.textContent='Open interactive preview';
+      open.addEventListener('click',()=>window.NexeraNative.showPreview(html));
+      container.append(notice,open);
+    }else{
+      const frame=document.createElement('iframe');
+      frame.className='preview-frame';
+      frame.title='Project preview';
+      frame.setAttribute('sandbox','allow-scripts allow-forms');
+      frame.srcdoc=html;
+      container.appendChild(frame);
+    }
+  }else if(activeTab==='terminal'){
+    const shell=document.createElement('div');
+    shell.className='terminal-shell';
+    const output=document.createElement('div');
+    output.className='terminal-output';
+    output.id='terminalOutput';
+    output.textContent='Nexera workspace terminal\nType help to see safe commands.\n';
+    const row=document.createElement('div');
+    row.className='terminal-row';
+    const input=document.createElement('input');
+    input.className='terminal-input';
+    input.id='terminalInput';
+    input.placeholder='Enter a workspace command…';
+    input.autocomplete='off';
+    const run=document.createElement('button');
+    run.id='terminalRun';
+    run.className='terminal-run';
+    run.textContent='Run';
+    run.addEventListener('click',()=>{runTerminalCommand(input.value);input.value='';input.focus()});
+    input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();run.click()}});
+    row.append(input,run);
+    const note=document.createElement('div');
+    note.className='terminal-note';
+    note.textContent='Sandboxed workspace commands only. This terminal does not access your phone or computer system shell.';
+    shell.append(output,row,note);
+    container.appendChild(shell);
+  }else{
+    const card=document.createElement('div');
+    card.className='export-workspace-card';
+    const title=document.createElement('strong');
+    title.textContent='Export your project';
+    const description=document.createElement('p');
+    description.textContent='Package all HTML, CSS, JavaScript, and supporting files into one ZIP archive.';
+    const button=document.createElement('button');
+    button.className='primary-btn';
+    button.type='button';
+    button.textContent='Download project ZIP';
+    button.addEventListener('click',()=>{if(window.NexeraNative)window.NexeraNative.exportZip(activeProject.name,JSON.stringify(files));else downloadZipFallback(activeProject)});
+    card.append(title,description,button);
+    container.appendChild(card);
+  }
+}
+let editorState={dirty:false};
+function createWorkspaceFile(){
+  showModal('<h2>Create a file</h2><p>Add a file to this project workspace. Supported formats include HTML, CSS, JavaScript, JSON, Markdown, SVG, and text.</p><label class="field-label" for="newWorkspaceFileName">File name</label><input class="field" id="newWorkspaceFileName" placeholder="components/header.js" maxlength="160"><div class="modal-actions"><button class="secondary-btn" id="cancelCreateFile" type="button">Cancel</button><button class="primary-btn" id="confirmCreateFile" type="button">Create file</button></div>');
+  $('cancelCreateFile').addEventListener('click',hideModal);
+  $('confirmCreateFile').addEventListener('click',()=>{
+    const name=$('newWorkspaceFileName').value.trim();
+    if(!isSafeProjectPath(name)||! /\.(html|css|js|json|txt|md|svg|xml|webmanifest)$/i.test(name)){
+      toast('Enter a valid supported relative file path');
+      return;
+    }
+    if(Object.prototype.hasOwnProperty.call(activeProject.files,name)){
+      toast('That file already exists');
+      return;
+    }
+    activeProject.files[name]='';
+    activeProject.updated=Date.now();
+    activeFile=name;
+    editorState.dirty=false;
+    saveProjects();
+    if(localFolderLinked)saveLinkedFolder();
+    hideModal();
+    renderProjectContent();
+    toast('Created '+name);
+  });
+}
+function deleteWorkspaceFile(name){
+  if(!activeProject||['index.html','style.css','script.js'].includes(name))return;
+  if(!confirm('Delete '+name+' from this project?'))return;
+  delete activeProject.files[name];
+  activeFile=Object.keys(activeProject.files)[0]||'index.html';
+  editorState.dirty=false;
+  activeProject.updated=Date.now();
+  saveProjects();
+  if(localFolderLinked)saveLinkedFolder();
+  renderProjectContent();
+  renderWorkspaceFiles();
+  toast('Deleted '+name);
+}
 function renderChart(target, chart){const labels=Array.isArray(chart.labels)?chart.labels.slice(0,12):[];const values=Array.isArray(chart.values)?chart.values.slice(0,12).map(Number):[];if(!labels.length||labels.length!==values.length||values.some(v=>!Number.isFinite(v)||v<0)){target.textContent='The model returned chart data that could not be displayed.';return}const max=Math.max(1,...values);target.textContent='';const card=document.createElement('div');card.className='chart-card';const title=document.createElement('div');title.className='chart-title';title.textContent=chart.title||'Data visualization';card.appendChild(title);labels.forEach((label,i)=>{const row=document.createElement('div');row.className='chart-row';const name=document.createElement('div');name.textContent=String(label);name.title=String(label);const track=document.createElement('div');track.className='chart-track';const fill=document.createElement('div');fill.className='chart-fill';fill.style.width=(values[i]/max*100)+'%';track.appendChild(fill);const value=document.createElement('div');value.className='chart-value';value.textContent=String(values[i]);row.append(name,track,value);card.appendChild(row)});if(chart.summary){const summary=document.createElement('div');summary.className='chart-summary';summary.textContent=chart.summary;card.appendChild(summary)}target.appendChild(card)}function runTerminalCommand(raw){const out=$('terminalOutput');if(!out||!activeProject)return;const command=raw.trim();if(!command)return;const line=document.createElement('div');line.textContent='$ '+command;out.appendChild(line);const parts=command.match(/^([a-z]+)(?:\s+(.*))?$/i);const cmd=(parts?.[1]||'').toLowerCase(),arg=(parts?.[2]||'').trim();const files=activeProject.files;let result='';const safeName=name=>/^[A-Za-z0-9._-]{1,80}$/.test(name)&&!name.includes('..');if(cmd==='help')result='Available commands:\nhelp, pwd, ls, cat <file>, touch <file>, rm <file>, wc <file>, grep <text> <file>, clear, run\nCommands are restricted to this project workspace.';else if(cmd==='pwd')result='/workspace/'+activeProject.name.replace(/[^A-Za-z0-9_-]/g,'-');else if(cmd==='ls')result=Object.keys(files).join('\n')||'(empty workspace)';else if(cmd==='cat')result=Object.prototype.hasOwnProperty.call(files,arg)?String(files[arg]):'File not found: '+arg;else if(cmd==='touch'){if(!safeName(arg))result='Use a simple file name without folders.';else if(Object.prototype.hasOwnProperty.call(files,arg))result='File already exists: '+arg;else{files[arg]='';saveProjects();if(localFolderLinked)saveLinkedFolder();result='Created '+arg}}else if(cmd==='rm'){if(localFolderLinked)result='Deleting files from a linked local folder is disabled to protect your originals. Use your file manager.';else if(['index.html','style.css','script.js'].includes(arg))result='Core project files are protected.';else if(!Object.prototype.hasOwnProperty.call(files,arg))result='File not found: '+arg;else{delete files[arg];saveProjects();if(localFolderLinked)saveLinkedFolder();result='Deleted '+arg}}else if(cmd==='wc'){if(!Object.prototype.hasOwnProperty.call(files,arg))result='File not found: '+arg;else{const v=String(files[arg]);result=v.split('\n').length+' lines, '+v.length+' characters'}}else if(cmd==='grep'){const p=arg.split(/\s+/);const file=p.pop();const term=p.join(' ');if(!Object.prototype.hasOwnProperty.call(files,file))result='Usage: grep <text> <file>';else result=String(files[file]).split('\n').map((v,i)=>v.includes(term)?(i+1)+': '+v:null).filter(Boolean).join('\n')||'No matches'}else if(cmd==='clear'){out.textContent='Nexera workspace terminal\nType help to see safe commands.\n';return}else if(cmd==='run'){switchTab('preview');return}else result='Unknown command. Type help.';const response=document.createElement('div');response.textContent=result;response.style.color='#6c7d65';out.appendChild(response);out.scrollTop=out.scrollHeight}function switchTab(tab){activeTab=tab;document.querySelectorAll('.project-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));renderProjectContent()}
 function downloadZipFallback(project){toast('ZIP export is available in the installed Android and Windows apps.')}
 function showArchives(){closeDrawer();const archived=projects.filter(p=>p.archived);showModal('');const modal=$('modal');const heading=document.createElement('h2');heading.textContent='Archived projects';const description=document.createElement('p');description.textContent='Restore a project to bring it back to your project list.';modal.append(heading,description);if(archived.length){archived.forEach(project=>{const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf0e9';const name=document.createElement('span');name.className='archive-name';name.textContent=String(project.name||'Untitled project');const restore=document.createElement('button');restore.className='secondary-btn restore-btn';restore.type='button';restore.textContent='Restore';restore.onclick=()=>{const current=projects.find(item=>item.id===project.id);if(!current)return;current.archived=false;saveProjects();hideModal();renderProjects();toast('Project restored')};row.append(name,restore);modal.appendChild(row)})}else{const empty=document.createElement('div');empty.className='empty';empty.textContent='No archived projects.';modal.appendChild(empty)}const actions=document.createElement('div');actions.className='modal-actions';const close=document.createElement('button');close.className='secondary-btn';close.id='modalClose';close.type='button';close.textContent='Close';close.onclick=hideModal;actions.appendChild(close);modal.appendChild(actions)}function showModal(html){$('modal').innerHTML=html;$('modalBackdrop').classList.add('open')}function hideModal(){$('modalBackdrop').classList.remove('open')}
