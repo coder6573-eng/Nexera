@@ -1,7 +1,7 @@
 "use strict";
 
 const VIEWPORTS = Object.freeze([360, 768, 1280]);
-const MAX_HTML_BYTES = 2_000_000;
+const MAX_HTML_BYTES = 1_400_000;
 const LOAD_TIMEOUT_MS = 12_000;
 const EXECUTION_TIMEOUT_MS = 4_000;
 
