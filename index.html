@@ -733,14 +733,26 @@ function validateProjectFiles(files){
   return [...new Set(issues)].slice(0,15);
 }
 
-function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function buildPreviewHtml(files){
+function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function buildPreviewHtml(files,diagnosticId=''){
   const source=String(files?.['index.html']||'');
   if(!source)return '';
   let html=source;
   const entries=Object.entries(files||{});
-  const css=entries.filter(([name])=>name.toLowerCase().endsWith('.css')).map(([,value])=>String(value)).join('\n');
-  const js=entries.filter(([name])=>name.toLowerCase().endsWith('.js')).map(([,value])=>String(value).replace(/<\/script/gi,'<\\/script')).join('\n');
   const external=ref=>/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(String(ref||'').trim());
+  const orderedCss=[];
+  html.replace(/<link\b[^>]*href=["']([^"']+\.css(?:[?#][^"']*)?)["'][^>]*>/gi,(tag,href)=>{
+    if(!external(href)){const ref=resolveProjectReference(href);if(ref.path&&typeof files[ref.path]==='string'&&!orderedCss.includes(ref.path))orderedCss.push(ref.path)}
+    return tag;
+  });
+  for(const [name] of entries)if(name.toLowerCase().endsWith('.css')&&!orderedCss.includes(name))orderedCss.push(name);
+  const css=orderedCss.map(name=>String(files[name])).join('\n');
+  const orderedJs=[];
+  html.replace(/<script\b[^>]*src=["']([^"']+\.js(?:[?#][^"']*)?)["'][^>]*>\s*<\/script>/gi,(tag,src)=>{
+    if(!external(src)){const ref=resolveProjectReference(src);if(ref.path&&typeof files[ref.path]==='string'&&!orderedJs.includes(ref.path))orderedJs.push(ref.path)}
+    return tag;
+  });
+  for(const [name] of entries)if(name.toLowerCase().endsWith('.js')&&!orderedJs.includes(name))orderedJs.push(name);
+  const js=orderedJs.map(name=>String(files[name]).replace(/<\/script/gi,'<\\/script')).join('\n');
   let stylesInserted=false;
   html=html.replace(/<link\b[^>]*href=["']([^"']+\.css(?:[?#][^"']*)?)["'][^>]*>/gi,(tag,href)=>{
     if(external(href))return tag;
@@ -753,18 +765,35 @@ function renderChangeSummary(target,before,after){if(!target)return;const oldKey
     if(/<\/head>/i.test(html))html=html.replace(/<\/head>/i,styleTag+'</head>');
     else html=styleTag+html;
   }
-  let localScriptFound=false;
-  html=html.replace(/<script\b[^>]*src=["']([^"']+\.js(?:[?#][^"']*)?)["'][^>]*>\s*<\/script>/gi,(tag,src)=>{
-    if(external(src))return tag;
-    localScriptFound=true;
-    return '';
-  });
+  html=html.replace(/<script\b[^>]*src=["']([^"']+\.js(?:[?#][^"']*)?)["'][^>]*>\s*<\/script>/gi,(tag,src)=>external(src)?tag:'');
   if(js){
     const scriptTag='<script>'+js+'<\\/script>';
     if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,scriptTag+'</body>');
     else html+=scriptTag;
   }
+  if(diagnosticId){
+    const harness='<script>(()=>{const id='+JSON.stringify(diagnosticId)+',issues=[];let sent=false;const add=value=>{const text=String(value||"").trim();if(text&&!issues.includes(text)&&issues.length<20)issues.push(text)};window.addEventListener("error",event=>{if(event.error||event.message)add("Runtime error: "+(event.message||event.error.message||"unknown error"))});window.addEventListener("unhandledrejection",event=>add("Unhandled promise rejection: "+String(event.reason?.message||event.reason||"unknown rejection")));const report=()=>{if(sent)return;sent=true;const root=document.documentElement,body=document.body,width=window.innerWidth||root.clientWidth||0,scroll=Math.max(root.scrollWidth,body?.scrollWidth||0);if(width&&scroll>width+2)add("Horizontal overflow: content is "+scroll+"px wide in a "+width+"px preview");document.querySelectorAll("button,[role=button]").forEach((el,index)=>{if(!String(el.innerText||el.textContent||"").trim()&&!el.getAttribute("aria-label")&&!el.getAttribute("title"))add("Control "+(index+1)+" has no accessible name")});document.querySelectorAll("img").forEach((el,index)=>{if(!el.hasAttribute("alt"))add("Image "+(index+1)+" is missing alternative text")});parent.postMessage({type:"nexera-preview-diagnostics",id,issues,width,scroll},"*")};window.addEventListener("load",()=>setTimeout(report,180));setTimeout(report,4500)})();<\\/script>';
+    if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,harness+'</body>');else html+=harness;
+  }
   return html;
+}
+function runPreviewDiagnostics(files){
+  if(window.NexeraNative)return Promise.resolve({supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'});
+  const frame=$('livePreviewFrame');
+  if(!frame||!frame.contentWindow)return Promise.resolve({supported:false,issues:[],detail:'A browser preview is not available in this environment.'});
+  const id='pv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+  return new Promise(resolve=>{
+    let finished=false;
+    const done=result=>{if(finished)return;finished=true;clearTimeout(timer);window.removeEventListener('message',receive);resolve(result)};
+    const receive=event=>{
+      if(event.source!==frame.contentWindow||event.data?.type!=='nexera-preview-diagnostics'||event.data?.id!==id)return;
+      done({supported:true,issues:Array.isArray(event.data.issues)?event.data.issues:[],width:Number(event.data.width)||0,scroll:Number(event.data.scroll)||0,detail:'The project ran inside the isolated preview.'});
+    };
+    const timer=setTimeout(()=>done({supported:false,issues:[],detail:'The isolated preview did not return diagnostics in time; runtime checks were inconclusive.'}),6000);
+    window.addEventListener('message',receive);
+    frame.setAttribute('sandbox','allow-scripts allow-forms');
+    frame.srcdoc=buildPreviewHtml(files,id);
+  });
 }
 function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',window.NexeraNative?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
 function failAgentWorkbench(){const w=$('agentWorkbench');if(!w||w.hidden)return;w.querySelectorAll('.agent-step').forEach(row=>{row.classList.remove('active');row.classList.add('failed');const icon=row.querySelector('.agent-icon');if(icon)icon.textContent='!';const detail=row.querySelector('.agent-detail');if(detail)detail.textContent='not completed';const time=row.querySelector('.agent-time');if(time)time.textContent='stopped'});$('agentStatus').textContent='Needs attention';$('agentStatusDetail').textContent='The task stopped before the project was updated.'}
