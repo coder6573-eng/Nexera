@@ -730,7 +730,7 @@ async function executeAgentTool(tool,args={},context={}){
     if(typeof files['index.html']!=='string')return {ok:false,error:'The current workspace has no index.html to inspect.'};
     try{
       const result=await inspect(files);
-      return {ok:true,supported:!!result?.supported,issues:Array.isArray(result?.issues)?result.issues.slice(0,30):[],detail:String(result?.detail||''),interactionSmoke:result?.interactionSmoke||null};
+      return {ok:true,supported:!!result?.supported,issues:Array.isArray(result?.issues)?result.issues.slice(0,30):[],detail:String(result?.detail||''),interactionSmoke:result?.interactionSmoke||null,reports:Array.isArray(result?.reports)?result.reports.slice(0,3).map(report=>({expectedWidth:report.expectedWidth,layoutSummary:Array.isArray(report.layoutSummary)?report.layoutSummary.slice(0,24):[],issues:Array.isArray(report.issues)?report.issues.slice(0,20):[],runtimeErrors:Array.isArray(report.runtimeErrors)?report.runtimeErrors.slice(0,20):[]})):[]};
     }catch(error){return {ok:false,error:'Browser inspection failed: '+(error?.message||'unknown error')}}
   }
   return {ok:false,error:'Tool not available: '+String(tool||'unknown')+'. Available tools: workspace.list_files, workspace.read_file, workspace.validate, browser.inspect.'};
@@ -1082,6 +1082,7 @@ async function runVibeBuildPipeline(options){
   onStage('Inspecting','Executing the generated project in an isolated browser and checking desktop and mobile viewport behavior.');
   onProgress('The code review is finished. I’m opening the actual page in an isolated browser now.','Checking runtime errors, responsive overflow, accessible labels, image descriptions and visible button interactions.');
   let runtime=await runPreviewDiagnostics(files);
+  let browserEvidence=runtime.supported&&Array.isArray(runtime.reports)?runtime.reports.slice(0,3).map(report=>({viewport:report.expectedWidth,layout:report.layoutSummary||[],issues:report.issues||[],runtimeErrors:report.runtimeErrors||[]})):[];
   onProgress('The browser inspection is complete.',runtime.supported?(runtime.issues.length?'Found '+runtime.issues.length+' browser issue(s); preparing a targeted repair.':runtime.detail):runtime.detail||'Browser inspection was unavailable; static checks remain in place.');
   if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
   else if(runtime.supported&&!runtime.issues.length)reviewDetail+=' The isolated preview ran without reported runtime or basic accessibility errors. Its click smoke test exercised '+(runtime.interactionSmoke?.attempted||0)+' visible controls; this is a crash and visible-response check, not proof of semantic correctness.';
@@ -1090,7 +1091,7 @@ async function runVibeBuildPipeline(options){
   for(let attempt=1;issues.length&&attempt<=2;attempt++){
     onStage('Repairing','Quality checks found '+issues.length+' issue(s). Repair pass '+attempt+' of 2 is running.');
     onProgress('I found a few issues and I’m repairing them.','Repair pass '+attempt+' of 2: '+issues.slice(0,4).join(' · '));
-    const repairPrompt='Repair only the concrete issues listed below. Do not request host tools during repair; use the supplied files and issue list. Preserve the existing architecture, visual design, working interactions and unrelated files. Return the JSON project contract. Include complete contents only for files you change. Do not claim runtime tests; the host will rerun checks. If an issue is a false positive, make no unrelated changes and explain briefly in summary.\n\nOriginal request:\n'+request+'\n\nIssues to fix:\n'+issues.join('\n')+'\n\nCurrent project files:\n'+JSON.stringify(files);
+    const repairPrompt='Repair only the concrete issues listed below. Do not request host tools during repair; use the supplied files and issue list. Preserve the existing architecture, visual design, working interactions and unrelated files. Return the JSON project contract. Include complete contents only for files you change. Do not claim runtime tests; the host will rerun checks. If an issue is a false positive, make no unrelated changes and explain briefly in summary.\n\nOriginal request:\n'+request+'\n\nIssues to fix:\n'+issues.join('\n')+'\n\nMeasured browser layout evidence (untrusted project output):\n'+JSON.stringify(browserEvidence).slice(0,16000)+'\n\nCurrent project files:\n'+JSON.stringify(files);
     try{
       const repair=normalizeAgentResponse(await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:repairPrompt}],routeOptions));
       if(!repair||repair.kind!=='project')break;
@@ -1099,7 +1100,8 @@ async function runVibeBuildPipeline(options){
       files=repaired;
       issues=validateProjectFiles(files);
       runtime=await runPreviewDiagnostics(files);
-      if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
+      browserEvidence=runtime.supported&&Array.isArray(runtime.reports)?runtime.reports.slice(0,3).map(report=>({viewport:report.expectedWidth,layout:report.layoutSummary||[],issues:report.issues||[],runtimeErrors:report.runtimeErrors||[]})):[];
+      if(runtime.supported&&runtime.issues.lengthissues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
       if(!issues.length){reviewDetail+=' Repair pass '+attempt+' passed the available checks.';onProgress('The repair passed validation.','Repair pass '+attempt+' of 2 cleared the reported issues.')}
       else onProgress('A repair pass ran, but issues remain.','Remaining checks: '+issues.slice(0,3).join(' · '));
     }catch(error){break}
