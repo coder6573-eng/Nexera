@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, validateProjectFiles, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, validateProjectFiles, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, addAgentProgress, setAgentStage, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -202,6 +202,16 @@ try {
 
   click("newChatBtn");
   assert.ok(document.getElementById("agentWorkbench").hidden, "Agent workbench should not remain visible in a normal chat");
+
+  // Vibecoding progress should be conversational, not only a static task checklist.
+  document.getElementById("homeMode").value = "vibe";
+  document.getElementById("chatMode").value = "vibe";
+  window.__testHooks.addAgentProgress("Okay, I’m working on it.");
+  window.__testHooks.setAgentStage("Building", "Building the homepage.");
+  const progressMessages = [...document.querySelectorAll("#conversation .agent-progress-message")].map(el => el.textContent);
+  assert.ok(progressMessages.some(text => text.includes("Okay, I’m working on it.")), "Agent should speak in chat when work begins");
+  assert.ok(progressMessages.some(text => text.includes("Building the project now.")), "Agent should speak in chat when building starts");
+
   assert.equal(document.getElementById("homeMode").value, "chat");
   assert.equal(document.getElementById("home").style.display, "flex");
 
