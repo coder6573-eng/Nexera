@@ -43,7 +43,7 @@ if (!scripts[0].includes("function waitForPuter()") || !scripts[0].includes("awa
 if (!scripts[0].includes('"kind":"question"') || !scripts[0].includes("parsed?.kind==='question'")) {
   throw new Error("Vibecoding clarification-question flow is missing.");
 }
-if (!scripts[0].includes("mergeProjectFiles(activeProject?.files,parsed?.files)")) {
+if (!scripts[0].includes("mergeProjectFiles(activeProject?.files,parsed?.files,parsed?.deletedFiles)")) {
   throw new Error("Iterative partial project merge flow is missing.");
 }
 
@@ -68,6 +68,7 @@ if (!desktopMain.includes("isAllowedEndpoint(provider, endpoint)") ||
   throw new Error("Desktop native bridge must enforce exact provider endpoints and restrict BYOK storage.");
 }
 
+if (!desktopPreload.includes('platform: "windows"')) throw new Error("Windows native bridge must identify its preview platform.");
 if (!desktopMain.includes('ipcMain.handle("nexera:open-folder"') ||
     !desktopMain.includes('ipcMain.handle("nexera:save-folder"') ||
     !desktopPreload.includes("openFolder:") ||
@@ -83,9 +84,15 @@ if (!scripts[0].includes("typeof window.NexeraNative?.openFolder") ||
 if (!scripts[0].includes("const FREE_AUTO_ROUTES") || !scripts[0].includes("FREE_AUTO_ROUTES.slice()")) throw new Error("Free Auto route pool is missing.");
 if (!scripts[0].includes("function renderServedModel") || !scripts[0].includes("data.model")) throw new Error("Actual served-model metadata handling is missing.");
 if (!scripts[0].includes("function startAgentTask") || !scripts[0].includes("function updateAgentRoute")) throw new Error("Agent progress and route-attempt reporting are missing.");
-if (!scripts[0].includes("You are the Nexera independent QA reviewer") ||
-    !scripts[0].includes("second-pass code review")) {
-  throw new Error("Agent mode must include an independent second-pass review stage.");
+for (const required of [
+  "async function runVibeBuildPipeline",
+  "Act as a strict software QA reviewer",
+  "Repair only the concrete issues listed below",
+  "function parseAgentResponse",
+  "function runPreviewDiagnostics",
+  "function isAndroidNative"
+]) {
+  if (!scripts[0].includes(required)) throw new Error("Model-agnostic agent pipeline is missing " + required);
 }
 
 if (!scripts[0].includes("window.onNexeraNativeResult")) {
@@ -106,6 +113,7 @@ for (const endpoint of [
 ]) {
   if (!androidMain.includes(endpoint)) throw new Error("Android provider endpoint allowlist is missing " + endpoint);
 }
+if (!androidMain.includes('fun platform(): String = "android"')) throw new Error("Android bridge must identify its preview platform.");
 if (!androidMain.includes("require(isAllowedEndpoint(provider, endpoint))") ||
     !androidMain.includes("provider in byokEndpoints")) {
   throw new Error("Android native bridge must enforce provider-specific endpoint allowlists and restrict BYOK storage.");
