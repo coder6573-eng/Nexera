@@ -555,7 +555,7 @@ button:active{transform:scale(.97)}
 }
 </style>
 </head>
-<body data-nexera-version="19.2.0">
+<body data-nexera-version="19.3.0">
 <div id="app">
 <header class="topbar"><button class="icon-btn" id="menuBtn" aria-label="Open sidebar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button><div class="brand"><span class="brand-mark"><svg viewBox="0 0 48 48" fill="none"><rect x="9" y="13" width="30" height="26" rx="9" stroke="currentColor" stroke-width="2.8"/><path d="M24 7v6" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><circle cx="24" cy="5" r="2.5" fill="currentColor"/><circle cx="19" cy="25" r="2.5" fill="currentColor"/><circle cx="29" cy="25" r="2.5" fill="currentColor"/><path d="M19 32q5 4 10 0" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></span>Nexera AI</div><div class="top-actions"><button class="icon-btn" id="newChatBtn" aria-label="New chat">＋</button></div></header>
 <main id="main">
@@ -716,14 +716,14 @@ function validateProjectFiles(files){
     if(/\.css$/i.test(name)){
       for(const match of value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)){
         const ref=resolveProjectReference(match[1],name);
-        if(!ref.external&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push(name+' references a missing local asset: '+match[1]);
+        if(!ref.external&&(/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push(name+' references a missing local asset: '+match[1]);
       }
     }
   }
   const refs=[...html.matchAll(/<(?:script|link|img|source|video|audio|iframe)\b[^>]*?(?:src|href|poster)\s*=\s*["']([^"']+)["'][^>]*>/gi)];
   for(const match of refs){
     const ref=resolveProjectReference(match[1]);
-    if(!ref.external&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
+    if(!ref.external&&(/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
   }
   for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
     const attrs=match[1]||'',code=match[2]||'';
