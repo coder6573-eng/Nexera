@@ -679,6 +679,7 @@ function mergeProjectFiles(existing,incoming,deletedFiles=[]){
   const deletions=[];
   for(const name of deletedFiles){if(typeof name!=='string'||!isSafeProjectPath(name)||['index.html','style.css','script.js'].includes(name))return null;deletions.push(name)}
   if(!Object.keys(accepted).length&&!deletions.length)return null;
+  if(typeof localFolderLinked!=='undefined'&&localFolderLinked&&deletions.length)return null;
   const merged={...(existing||{}),...accepted};
   for(const name of deletions)delete merged[name];
   const total=Object.values(merged).reduce((size,value)=>size+String(value).length,0);
@@ -916,7 +917,7 @@ async function runVibeBuildPipeline(options){
     onProgress('The plan is ready. I’m building the project now.','The implementation will be checked before it replaces the current project.');
   }
   const projectContext=existingFiles?'\n\nCurrent project files (source of truth):\n'+JSON.stringify(existingFiles):'\n\nNo existing project files. Create a complete starter project.';
-  const buildPrompt='USER REQUEST:\n'+request+'\n\nSKILL FOCUS:\n'+skillGuide+'\n\nIMPLEMENTATION PLAN:\n'+plan+projectContext+'\n\nBuild or update this browser project. Return only the JSON project contract from the system message. Preserve existing files and behavior unless the request requires a change. Include complete contents for changed files only. Make the interface intentionally designed, coherent and responsive, not a generic template. Every visible control must have a real action. Use semantic HTML, keyboard support, accessible names, useful focus states, readable contrast, and polished loading/empty/error states. Check local HTML and CSS asset references, classic JavaScript syntax, event wiring and safe paths. Avoid unnecessary dependencies and fake backend behavior. Prioritize working functionality over decorative complexity.';
+  const buildPrompt='USER REQUEST:\n'+request+'\n\nSKILL FOCUS:\n'+skillGuide+'\n\nIMPLEMENTATION PLAN:\n'+plan+projectContext+'\n\nIf a local folder is linked, do not request file deletions; linked-folder deletion is disabled to protect original files.\n\nBuild or update this browser project. Return only the JSON project contract from the system message. Preserve existing files and behavior unless the request requires a change. Include complete contents for changed files only. Make the interface intentionally designed, coherent and responsive, not a generic template. Every visible control must have a real action. Use semantic HTML, keyboard support, accessible names, useful focus states, readable contrast, and polished loading/empty/error states. Check local HTML and CSS asset references, classic JavaScript syntax, event wiring and safe paths. Avoid unnecessary dependencies and fake backend behavior. Prioritize working functionality over decorative complexity.';
   onStage('Building','The selected model is implementing the planned changes in the project files.');
   onProgress('Building the project now…','Creating the interface, wiring interactions and preserving existing files.');
   const buildRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:buildPrompt}],routeOptions);
@@ -993,6 +994,8 @@ async function send(text,fromHome){
   try{
     let raw='';
     if(isVibe){
+      $('agentPlan').hidden=executionMode!=='agent';
+      if(executionMode!=='agent')$('agentPlan').textContent='';
       const result=await runVibeBuildPipeline({
         request:value,
         cfg,
