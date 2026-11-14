@@ -711,7 +711,7 @@ async function executeAgentTool(tool,args={},context={}){
     const matches=[];
     let truncated=false;
     for(const path of Object.keys(files).filter(name=>isSafeProjectPath(name)&&typeof files[name]==='string').sort()){
-      const lines=files[path].split('\\n');
+      const lines=files[path].split('\n');
       for(let index=0;index<lines.length;index++){
         if(lines[index].toLowerCase().includes(needle)){
           if(matches.length>=30){truncated=true;break}
