@@ -70,4 +70,4 @@ assert.equal(nestedReference.path, "shared.css");
 assert.equal(nestedReference.unsafe, false);
 assert.equal(sandbox.resolveProjectReference("../../outside.css", "index.html").unsafe, true);
 
-process.stdout.write("Agent quality tests passed: tolerant parsing, safe partial updates, bounded deletion, nested assets, safe deletions, tolerant parsing, and HTML validation.\\n");
+process.stdout.write("Agent quality tests passed: tolerant parsing, safe partial updates, safe deletions, nested asset resolution, and HTML validation.\\n");
