@@ -27,9 +27,9 @@ function addRuntimeHarness(html) {
     '    window.addEventListener("unhandledrejection", event => add(event.reason?.message || event.reason || "Unhandled promise rejection"));',
     '  })();',
     '</script>'
-  ].join("\\n");
-  if (/<head\\b[^>]*>/i.test(html)) return html.replace(/<head\\b[^>]*>/i, opening => opening + harness);
-  if (/<html\\b[^>]*>/i.test(html)) return html.replace(/<html\\b[^>]*>/i, opening => opening + "<head>" + harness + "</head>");
+  ].join("\n");
+  if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, opening => opening + harness);
+  if (/<html\b[^>]*>/i.test(html)) return html.replace(/<html\b[^>]*>/i, opening => opening + "<head>" + harness + "</head>");
   return "<head>" + harness + "</head>" + html;
 }
 function inspectScript() {
