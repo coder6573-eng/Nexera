@@ -1,4 +1,4 @@
-# Nexera AI v19.9.0
+# Nexera AI v19.10.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -32,7 +32,7 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 - **Live preview** — the sandboxed preview refreshes after a completed build or edit. Keep chatting to refine the page.
 - **Visible progress** — stages, route attempts, elapsed time, and the current waiting state are shown instead of leaving a blank spinner. Actual model names are shown only when returned by provider metadata.
 - **Background behavior** — Windows model requests run in the Electron main process and continue while the window is minimized. Android requests use a native worker thread and can continue while the app process remains alive; Android may stop work if it kills the app, so this is not a guarantee of surviving force-stop or process death.
-- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is currently a restricted workspace command panel (`ls`, `cat`, `touch`, `grep`, `wc`, and related file commands); it is not a general operating-system shell or an npm/build runner. Windows browser diagnostics execute generated project code in a separate hidden Chromium window with Node integration disabled, context isolation, sandboxing, and navigation/pop-up restrictions. Android inline preview continues to disable generated JavaScript; static structure and asset checks are used there, and generated JavaScript runtime behavior is not certified on Android.
+- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is currently a restricted workspace command panel (`ls`, `cat`, `touch`, `grep`, `wc`, and related file commands); it is not a general operating-system shell or an npm/build runner. Windows browser diagnostics execute generated project code in a separate hidden Chromium window with Node integration disabled, context isolation, sandboxing, and navigation/pop-up restrictions. Android inline preview runs bundled JavaScript in a WebView without a native bridge. File access, external network requests, form submissions, and top-level navigation are blocked by the preview policy and WebView client. Automated browser diagnostics are unavailable on Android, so static checks are used there and generated JavaScript runtime behavior is not certified on Android.
 
 The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
@@ -64,4 +64,4 @@ npm test
 
 This parses the shared UI and desktop bridge scripts, then runs jsdom interaction checks for the drawer, settings, mode selectors, web-search toggle, project navigation, terminal commands, archive/restore, export surface, and send flow.
 
-The regression suite verifies UI interactions, project validation, file handling, preview assembly, native bridge policy, malformed-output recovery, safe preservation, planner/build/reviewer sequencing, read-only agent tool contracts and budgets, bounded repair, and the isolated Chromium runner's viewport/error/interaction-smoke/cleanup behavior. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
+The regression suite verifies UI interactions, project validation, file handling, preview assembly, native bridge policy, malformed-output recovery, safe preservation, planner/build/reviewer sequencing, read-only agent tool contracts and budgets, bounded repair, Android preview network-isolation policy, and the isolated Chromium runner's viewport/error/interaction-smoke/cleanup behavior. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
