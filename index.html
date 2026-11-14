@@ -818,8 +818,16 @@ function buildPreviewHtml(files,diagnosticId=''){
   }
   return html;
 }
-function runPreviewDiagnostics(files){
-  if(isAndroidNative())return Promise.resolve({supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'});
+async function runPreviewDiagnostics(files){
+  if(isAndroidNative())return {supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'};
+  let nativeDetail='';
+  if(typeof window.NexeraNative?.runPreviewDiagnostics==='function'){
+    try{
+      const nativeResult=await window.NexeraNative.runPreviewDiagnostics(buildPreviewHtml(files));
+      if(nativeResult?.supported)return nativeResult;
+      nativeDetail=nativeResult?.detail||'The desktop browser inspector was unavailable.';
+    }catch(error){nativeDetail='The desktop browser inspector failed: '+(error?.message||'unknown error')}
+  }
   const frame=document.createElement('iframe');
   const id='pv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
   const widths=[360,768,1280];
@@ -843,7 +851,7 @@ function runPreviewDiagnostics(files){
       const width=Number(event.data.width)||widths[index];
       for(const issue of Array.isArray(event.data.issues)?event.data.issues:[])collected.push(issue.startsWith('Horizontal overflow')?width+'px preview: '+issue:issue);
       index++;
-      if(index>=widths.length){done({supported:true,issues:[...new Set(collected)],detail:'The isolated project preview was checked at 360px, 768px and 1280px.'});return}
+      if(index>=widths.length){done({supported:true,issues:[...new Set(collected)],detail:(nativeDetail?nativeDetail+' ':'')+'The isolated iframe fallback was checked at 360px, 768px and 1280px.'});return}
       frame.style.width=widths[index]+'px';
       setTimeout(()=>frame.contentWindow?.postMessage({type:'nexera-preview-audit',id},'*'),160);
     };
