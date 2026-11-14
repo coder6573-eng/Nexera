@@ -723,7 +723,7 @@ function validateProjectFiles(files){
   const refs=[...html.matchAll(/<(?:script|link|img|source|video|audio|iframe)\b[^>]*?(?:src|href|poster)\s*=\s*["']([^"']+)["'][^>]*>/gi)];
   for(const match of refs){
     const ref=resolveProjectReference(match[1]);
-    if(!ref.external&&(/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
+    if(!ref.external&&(ref.unsafe||/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
   }
   return [...new Set(issues)].slice(0,15);
 }
