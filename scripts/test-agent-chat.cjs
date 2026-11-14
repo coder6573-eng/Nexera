@@ -22,6 +22,8 @@ for (const required of [
   "function runPreviewDiagnostics",
   "The isolated iframe fallback was checked at 360px, 768px and 1280px",
   "window.NexeraNative?.runPreviewDiagnostics",
+  "onStage('Inspecting'",
+  "The browser inspection is complete.",
   "async function runVibeBuildPipeline",
   "async function send(",
   "Act as the planning stage of a software engineering agent",
