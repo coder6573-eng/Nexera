@@ -3,13 +3,20 @@ name: Nexera regression tests
 on:
   push:
     branches: [main]
+    paths:
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "desktop/**"
+      - "app/**"
+      - "scripts/**"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: nexera-regression-${{ github.ref }}-${{ github.run_id }}
+  group: nexera-regression-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,6 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
       - name: Install dependencies
         run: npm install --ignore-scripts
       - name: Run regression suite
@@ -38,6 +46,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
       - name: Install desktop dependencies
         run: npm install
       - name: Run shared regression suite
