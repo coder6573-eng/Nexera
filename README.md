@@ -1,4 +1,4 @@
-# Nexera AI v19.6.0
+# Nexera AI v19.7.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -64,4 +64,4 @@ npm test
 
 This parses the shared UI and desktop bridge scripts, then runs jsdom interaction checks for the drawer, settings, mode selectors, web-search toggle, project navigation, terminal commands, archive/restore, export surface, and send flow.
 
-The regression suite verifies UI interactions, project validation, file handling, preview assembly, native bridge policy, malformed-output recovery, safe preservation, planner/build/reviewer sequencing, bounded repair, and the isolated Chromium runner's viewport/error/cleanup behavior. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
+The regression suite verifies UI interactions, project validation, file handling, preview assembly, native bridge policy, malformed-output recovery, safe preservation, planner/build/reviewer sequencing, read-only agent tool contracts and budgets, bounded repair, and the isolated Chromium runner's viewport/error/interaction-smoke/cleanup behavior. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
