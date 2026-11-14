@@ -111,6 +111,23 @@ async function testModelIndependentHostToolLoop() {
   assert.match(result.reviewDetail, /2 host tool calls/i);
 }
 
+async function testHostToolBudgetIsBounded() {
+  let calls = 0;
+  const existing = { ...validFiles };
+  const snapshot = JSON.stringify(existing);
+  const { result, stages } = await runPipeline(async () => {
+    calls++;
+    return calls === 1
+      ? "Plan: inspect the workspace."
+      : JSON.stringify({ kind: "tool_call", tool: "workspace.list_files", args: {} });
+  }, { agentMode: true, existingFiles: existing });
+  assert.equal(calls, 8, "Agent mode must stop after six host tool calls plus the planner and initial build requests.");
+  assert.equal(stages.filter(stage => stage === "Using tools").length, 6);
+  assert.equal(result.response.kind, "error");
+  assert.equal(JSON.stringify(existing), snapshot, "Exhausting the tool budget must preserve the existing project.");
+  assert.match(result.reviewDetail, /tool limit/i);
+}
+
 async function testBoundedRepairPass() {
   let calls = 0;
   let validations = 0;
@@ -129,8 +146,9 @@ async function testBoundedRepairPass() {
   await testRecoveryFailurePreservesExistingProject();
   await testPlannerBuildReviewerLifecycle();
   await testModelIndependentHostToolLoop();
+  await testHostToolBudgetIsBounded();
   await testBoundedRepairPass();
-  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, bounded model-independent host tools, and bounded repair.\n");
+  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, bounded model-independent host tools, tool-budget exhaustion, and bounded repair.\n");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
