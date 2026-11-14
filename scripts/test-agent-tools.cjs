@@ -59,6 +59,12 @@ const files = {
   assert.equal(missing.ok, false);
   assert.match(missing.error, /not found/i);
 
+  const searched = await sandbox.executeAgentTool("workspace.search_files", { query: "ready" }, { files });
+  assert.equal(searched.ok, true);
+  assert.ok(searched.matches.some(match => match.path === "index.html" && match.line === 1));
+  const invalidSearch = await sandbox.executeAgentTool("workspace.search_files", { query: " " }, { files });
+  assert.equal(invalidSearch.ok, false);
+
   const validation = await sandbox.executeAgentTool("workspace.validate", {}, { files });
   assert.deepEqual(Array.from(validation.issues), []);
 
