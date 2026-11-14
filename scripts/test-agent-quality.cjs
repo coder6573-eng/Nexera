@@ -11,7 +11,7 @@ assert.notEqual(start, -1, "Agent response helpers should exist.");
 assert.notEqual(end, -1, "Agent quality helpers should end before change summary.");
 
 const source = html.slice(start, end) + "\nthis.parseAgentResponse=parseAgentResponse;this.normalizeAgentResponse=normalizeAgentResponse;this.mergeProjectFiles=mergeProjectFiles;this.resolveProjectReference=resolveProjectReference;this.validateProjectFiles=validateProjectFiles;";
-const sandbox = { isSafeProjectPath: name => typeof name === "string" && !name.includes("\\") && name.split("/").length <= 5 && name.split("/").every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..") };
+const sandbox = { localFolderLinked: false, isSafeProjectPath: name => typeof name === "string" && !name.includes("\\") && name.split("/").length <= 5 && name.split("/").every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..") };
 vm.runInNewContext(source, sandbox, { filename: "agent-quality-helpers" });
 
 const valid = {
@@ -60,6 +60,9 @@ assert.equal(updated["script.js"], "window.ready = true;");
 const deleted = sandbox.mergeProjectFiles(valid, {}, ["notes.txt"]);
 assert.ok(deleted, "A safe optional file deletion should apply.");
 assert.equal(sandbox.mergeProjectFiles(valid, {}, ["index.html"]), null, "Core files must not be deletable.");
+sandbox.localFolderLinked = true;
+assert.equal(sandbox.mergeProjectFiles(valid, {}, ["notes.txt"]), null, "Linked local folders must never accept agent-driven deletion.");
+sandbox.localFolderLinked = false;
 assert.equal(sandbox.mergeProjectFiles(valid, { "../outside.js": "bad" }), null, "Unsafe file paths must be rejected.");
 
 assert.deepEqual(sandbox.resolveProjectReference("../shared.css", "pages/index.html"), { external: false, unsafe: false, path: "shared.css" });
