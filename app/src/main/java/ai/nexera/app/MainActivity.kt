@@ -174,6 +174,9 @@ class MainActivity : Activity() {
 
     private inner class NexeraBridge {
         @JavascriptInterface
+        fun platform(): String = "android"
+
+        @JavascriptInterface
         fun hasApiKey(provider: String): Boolean = try {
             provider in byokEndpoints && secureKeys.get(provider) != null
         } catch (_: Exception) {
