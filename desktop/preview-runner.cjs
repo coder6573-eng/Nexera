@@ -17,7 +17,7 @@ function addRuntimeHarness(html) {
     })();
   <\/script>`;
   if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, harness + "</head>");
-  if (/<body\\b[^>]*>/i.test(html)) return html.replace(/<body\\b[^>]*>/i, opening => opening + harness);
+  if (/<body\b[^>]*>/i.test(html)) return html.replace(/<body\\b[^>]*>/i, opening => opening + harness);
   return harness + html;
 }
 
