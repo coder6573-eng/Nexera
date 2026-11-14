@@ -21,7 +21,7 @@ class FakeWebContents extends EventEmitter {
         scrollWidth: this.owner.width,
         readyState: "complete",
         title: "Fixture",
-        issues: [],
+        issues: FakeBrowserWindow.nextScenario.issues || [],
         runtimeErrors: this.owner.runtimeErrors
       };
     }
@@ -89,6 +89,11 @@ async function main() {
   const rejected = await inspect(source);
   assert.ok(rejected.issues.includes("Unhandled promise rejection: fixture"));
 
+  FakeBrowserWindow.nextScenario = { issues: ["Horizontal overflow: content is 400px wide in a 360px preview", "Image 1 is missing alternative text"] };
+  const layoutIssues = await inspect(source);
+  assert.ok(layoutIssues.issues.some(issue => issue.includes("360px preview: Horizontal overflow")));
+  assert.ok(layoutIssues.issues.some(issue => issue.includes("Image 1 is missing alternative text")));
+
   FakeBrowserWindow.nextScenario = { failLoad: true };
   const loadFailure = await inspect(source);
   assert.equal(loadFailure.supported, false);
@@ -106,6 +111,9 @@ async function main() {
   const invalid = await inspect(" ");
   assert.equal(invalid.supported, false);
   assert.equal(FakeBrowserWindow.instances.length, beforeInvalid);
+  const oversized = await inspect("x".repeat(1_400_001));
+  assert.equal(oversized.supported, false);
+  assert.equal(FakeBrowserWindow.instances.length, beforeInvalid, "Oversized previews must be rejected before creating a browser window.");
 
   process.stdout.write("Preview runner tests passed: isolated Chromium configuration, three viewport inspections, runtime error capture, cleanup, and failure handling.\n");
 }
