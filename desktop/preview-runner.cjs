@@ -64,6 +64,25 @@ function inspectScript(options = {}) {
     document.querySelectorAll("img").forEach((element, index) => {
       if (!element.hasAttribute("alt")) issues.push("Image " + (index + 1) + " is missing alternative text");
     });
+    const layoutSummary = Array.from(document.querySelectorAll("header,nav,main,section,footer,h1,h2,button,[role='button'],form"))
+      .filter(element => element.getClientRects().length > 0)
+      .slice(0, 24)
+      .map(element => {
+        const rect = element.getBoundingClientRect();
+        const style = window.getComputedStyle(element);
+        return {
+          tag: element.tagName.toLowerCase(),
+          role: element.getAttribute("role") || "",
+          text: String(element.innerText || element.textContent || "").trim().slice(0, 90),
+          x: Math.round(rect.left),
+          y: Math.round(rect.top),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+          fontSize: style.fontSize,
+          color: style.color,
+          backgroundColor: style.backgroundColor
+        };
+      });
     const interactionSmoke = { attempted: 0, changed: 0, noVisibleChange: 0, skipped: 0 };
     if (${probeInteractions}) {
       const controls = Array.from(document.querySelectorAll('button,[role="button"]'))
@@ -92,6 +111,7 @@ function inspectScript(options = {}) {
       readyState: document.readyState,
       title: document.title || "",
       issues,
+      layoutSummary,
       interactionSmoke,
       runtimeErrors: Array.isArray(window.__NEXERA_RUNTIME_ERRORS__) ? window.__NEXERA_RUNTIME_ERRORS__.slice(0, 30) : []
     };
