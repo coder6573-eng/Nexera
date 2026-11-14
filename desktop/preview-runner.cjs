@@ -158,6 +158,7 @@ function createPreviewRunner(BrowserWindow, options = {}) {
       );
 
       const reports = [];
+      let interactionSmoke = { attempted: 0, changed: 0, noVisibleChange: 0, skipped: 0 };
       for (const width of VIEWPORTS) {
         preview.setContentSize(width, 820);
         await new Promise(resolve => setTimeout(resolve, 100));
