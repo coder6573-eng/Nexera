@@ -1,6 +1,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const { EventEmitter } = require("node:events");
 const { VIEWPORTS, addRuntimeHarness, createPreviewRunner } = require("../desktop/preview-runner.cjs");
 
@@ -55,6 +56,11 @@ class FakeBrowserWindow extends EventEmitter {
 }
 
 async function main() {
+  const mainProcess = fs.readFileSync("desktop/main.cjs", "utf8");
+  const preload = fs.readFileSync("desktop/preload.cjs", "utf8");
+  assert.ok(mainProcess.includes('require("./preview-runner.cjs")'), "Electron main process must load the isolated preview runner.");
+  assert.ok(mainProcess.includes('ipcMain.handle("nexera:preview-diagnostics"'), "The browser inspector must be reachable through a controlled IPC handler.");
+  assert.ok(preload.includes('runPreviewDiagnostics: (html) => ipcRenderer.invoke("nexera:preview-diagnostics", html)'), "The preload bridge must expose only the diagnostics action.");
   assert.deepEqual(VIEWPORTS, [360, 768, 1280]);
   const source = "<!doctype html><html><head><title>Fixture</title></head><body><main>hello</main></body></html>";
   const instrumented = addRuntimeHarness(source);
