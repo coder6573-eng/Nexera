@@ -35,7 +35,7 @@ for (const required of [
   "Android preview keeps generated JavaScript disabled for safety",
   "platform()==='android'",
   "changedFiles",
-  "careful, iterative software engineering agent",
+  "model-agnostic software engineering agent",
   "I could not safely apply this update"
 ]) {
   assert.ok(source.includes(required), "Missing engineering pipeline behavior: " + required);
