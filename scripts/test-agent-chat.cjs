@@ -32,8 +32,8 @@ for (const required of [
   assert.ok(source.includes(required), "Missing agent chat behavior: " + required);
 }
 
-assert.ok(html.includes("class="agent-chat-update"), "Agent progress messages need dedicated chat styling");
-assert.ok(html.includes("class="agent-chat-text"), "Agent progress messages need readable chat text");
+assert.ok(html.includes('class="agent-chat-update'), "Agent progress messages need dedicated chat styling");
+assert.ok(html.includes('class="agent-chat-text'), "Agent progress messages need readable chat text");
 assert.ok(!source.includes("addAgentProgress(agentProgressForStage(stage))"), "Stage transitions should not duplicate progress messages");
 
 new vm.Script(source, { filename: "index.html:inline-script" });
