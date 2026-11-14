@@ -54,5 +54,5 @@ assert.ok(html.includes("AGENT SESSION"), "Workspace header should identify the 
 assert.ok(html.includes(">EXPLORER</span>"), "The left panel should be clearly identified as the file explorer.");
 assert.ok(html.includes("Agent session</span>"), "The right panel should identify agent activity.");
 assert.ok(html.includes("window.innerWidth<=900"), "Android/tablet widths should use tab navigation instead of the cramped desktop sidebar.");
-assert.ok(html.includes('data-nexera-version="19.2.0"'), "The app should identify itself as v19.2.");
+assert.ok(html.includes('data-nexera-version="19.3.0"'), "The app should identify itself as v19.2.");
 console.log("Responsive workspace checks passed: desktop columns, Android tabs, readable agent panel, and phone-safe layout.");
