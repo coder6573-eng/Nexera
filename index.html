@@ -711,7 +711,7 @@ function validateProjectFiles(files){
   for(const [name,value] of Object.entries(project)){
     if(!isSafeProjectPath(name)){issues.push('unsafe project path: '+name);continue}
     if(typeof value!=='string'){issues.push(name+' is not text');continue}
-    if(/\.js$/i.test(name)&&/<\/script/i.test(value))issues.push(name+' contains a raw </script> sequence');
+    if(/\.js$/i.test(name)&&/<\/script/i.test(value))issues.push(name+' contains a raw <\/script> sequence');
     if(/\.js$/i.test(name)&&!(/^\s*(?:import|export)\s/m.test(value))){try{new Function(value)}catch(error){issues.push(name+' has a JavaScript syntax error: '+String(error.message||error).slice(0,140))}}
     if(/\.css$/i.test(name)){
       for(const match of value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)){
