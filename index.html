@@ -767,29 +767,46 @@ function buildPreviewHtml(files,diagnosticId=''){
     else html+=scriptTag;
   }
   if(diagnosticId){
-    const harness='<script>(()=>{const id='+JSON.stringify(diagnosticId)+',issues=[];let sent=false;const add=value=>{const text=String(value||"").trim();if(text&&!issues.includes(text)&&issues.length<20)issues.push(text)};window.addEventListener("error",event=>{if(event.error||event.message)add("Runtime error: "+(event.message||event.error.message||"unknown error"))});window.addEventListener("unhandledrejection",event=>add("Unhandled promise rejection: "+String(event.reason?.message||event.reason||"unknown rejection")));const report=()=>{if(sent)return;sent=true;const root=document.documentElement,body=document.body,width=window.innerWidth||root.clientWidth||0,scroll=Math.max(root.scrollWidth,body?.scrollWidth||0);if(width&&scroll>width+2)add("Horizontal overflow: content is "+scroll+"px wide in a "+width+"px preview");document.querySelectorAll("button,[role=button]").forEach((el,index)=>{if(!String(el.innerText||el.textContent||"").trim()&&!el.getAttribute("aria-label")&&!el.getAttribute("title"))add("Control "+(index+1)+" has no accessible name")});document.querySelectorAll("img").forEach((el,index)=>{if(!el.hasAttribute("alt"))add("Image "+(index+1)+" is missing alternative text")});parent.postMessage({type:"nexera-preview-diagnostics",id,issues,width,scroll},"*")};window.addEventListener("load",()=>setTimeout(report,180));setTimeout(report,4500)})();<\\/script>';
+    const harness='<script>(()=>{const id='+JSON.stringify(diagnosticId)+',runtime=[];const add=value=>{const text=String(value||"").trim();if(text&&!runtime.includes(text)&&runtime.length<20)runtime.push(text)};window.addEventListener("error",event=>{if(event.error||event.message)add("Runtime error: "+(event.message||event.error.message||"unknown error"))});window.addEventListener("unhandledrejection",event=>add("Unhandled promise rejection: "+String(event.reason?.message||event.reason||"unknown rejection")));const audit=()=>{const issues=runtime.slice(),root=document.documentElement,body=document.body,width=window.innerWidth||root.clientWidth||0,scroll=Math.max(root.scrollWidth,body?.scrollWidth||0);if(width&&scroll>width+2)issues.push("Horizontal overflow: content is "+scroll+"px wide in a "+width+"px preview");document.querySelectorAll("button,[role=button]").forEach((el,index)=>{if(!String(el.innerText||el.textContent||"").trim()&&!el.getAttribute("aria-label")&&!el.getAttribute("title"))issues.push("Control "+(index+1)+" has no accessible name")});document.querySelectorAll("img").forEach((el,index)=>{if(!el.hasAttribute("alt"))issues.push("Image "+(index+1)+" is missing alternative text")});parent.postMessage({type:"nexera-preview-diagnostics",id,issues,width,scroll},"*")};window.addEventListener("load",()=>setTimeout(audit,180));window.addEventListener("message",event=>{if(event.data?.type==="nexera-preview-audit"&&event.data?.id===id)setTimeout(audit,100)});setTimeout(audit,4500)})();<\\/script>';
     if(/<\/body>/i.test(html))html=html.replace(/<\/body>/i,harness+'</body>');else html+=harness;
   }
   return html;
 }
 function runPreviewDiagnostics(files){
   if(isAndroidNative())return Promise.resolve({supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'});
-  const frame=$('livePreviewFrame');
-  if(!frame||!frame.contentWindow)return Promise.resolve({supported:false,issues:[],detail:'A browser preview is not available in this environment.'});
+  const frame=document.createElement('iframe');
   const id='pv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
+  const widths=[360,768,1280];
+  frame.setAttribute('sandbox','allow-scripts allow-forms');
+  frame.setAttribute('aria-hidden','true');
+  frame.style.cssText='position:fixed;left:-12000px;top:0;width:360px;height:800px;display:block;visibility:hidden;pointer-events:none;border:0';
+  document.body.appendChild(frame);
   return new Promise(resolve=>{
-    let finished=false;
-    const done=result=>{if(finished)return;finished=true;clearTimeout(timer);window.removeEventListener('message',receive);resolve(result)};
+    let index=0,finished=false;
+    const collected=[];
+    const done=result=>{
+      if(finished)return;
+      finished=true;
+      clearTimeout(timer);
+      window.removeEventListener('message',receive);
+      frame.remove();
+      resolve(result);
+    };
     const receive=event=>{
       if(event.source!==frame.contentWindow||event.data?.type!=='nexera-preview-diagnostics'||event.data?.id!==id)return;
-      done({supported:true,issues:Array.isArray(event.data.issues)?event.data.issues:[],width:Number(event.data.width)||0,scroll:Number(event.data.scroll)||0,detail:'The project ran inside the isolated preview.'});
+      const width=Number(event.data.width)||widths[index];
+      for(const issue of Array.isArray(event.data.issues)?event.data.issues:[])collected.push(width+'px preview: '+issue);
+      index++;
+      if(index>=widths.length){done({supported:true,issues:[...new Set(collected)],detail:'The isolated project preview was checked at 360px, 768px and 1280px.'});return}
+      frame.style.width=widths[index]+'px';
+      setTimeout(()=>frame.contentWindow?.postMessage({type:'nexera-preview-audit',id},'*'),160);
     };
-    const timer=setTimeout(()=>done({supported:false,issues:[],detail:'The isolated preview did not return diagnostics in time; runtime checks were inconclusive.'}),6000);
+    const timer=setTimeout(()=>done({supported:false,issues:[],detail:'The isolated preview did not return diagnostics in time; runtime checks were inconclusive.'}),9000);
     window.addEventListener('message',receive);
-    frame.setAttribute('sandbox','allow-scripts allow-forms');
     frame.srcdoc=buildPreviewHtml(files,id);
   });
 }
+
 function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',isAndroidNative()?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
 function failAgentWorkbench(){const w=$('agentWorkbench');if(!w||w.hidden)return;w.querySelectorAll('.agent-step').forEach(row=>{row.classList.remove('active');row.classList.add('failed');const icon=row.querySelector('.agent-icon');if(icon)icon.textContent='!';const detail=row.querySelector('.agent-detail');if(detail)detail.textContent='not completed';const time=row.querySelector('.agent-time');if(time)time.textContent='stopped'});$('agentStatus').textContent='Needs attention';$('agentStatusDetail').textContent='The task stopped before the project was updated.'}
 function hideAgentWorkbench(){const w=$('agentWorkbench');if(w)w.hidden=true}
