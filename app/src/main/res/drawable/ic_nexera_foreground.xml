@@ -6,5 +6,7 @@
     <path
         android:fillColor="#477B35"
         android:pathData="M27,76V32c0,-3.3 2.7,-6 6,-6h2.5c1.6,0 3.1,0.6 4.2,1.8L69,58V32c0,-3.3 2.7,-6 6,-6h0c3.3,0 6,2.7 6,6v44c0,3.3 -2.7,6 -6,6h-2.5c-1.6,0 -3.1,-0.6 -4.2,-1.8L39,52v24c0,3.3 -2.7,6 -6,6h0c-3.3,0 -6,-2.7 -6,-6z" />
-    <path android:fillColor="#79B94D" android:pathData="M75,20a5,5 0,1 0,0.1 0z" />
+    <path
+        android:fillColor="#79B94D"
+        android:pathData="M80,20a5,5 0,1 1,-10 0a5,5 0,1 1,10 0z" />
 </vector>
