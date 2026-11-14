@@ -24,7 +24,8 @@ class FakeWebContents extends EventEmitter {
         title: "Fixture",
         issues: FakeBrowserWindow.nextScenario.issues || [],
         runtimeErrors: this.owner.runtimeErrors,
-        interactionSmoke: FakeBrowserWindow.nextScenario.interactionSmoke || { attempted: 2, changed: 1, noVisibleChange: 1 }
+        interactionSmoke: FakeBrowserWindow.nextScenario.interactionSmoke || { attempted: 2, changed: 1, noVisibleChange: 1 },
+        layoutSummary: FakeBrowserWindow.nextScenario.layoutSummary || [{ tag: "main", text: "Fixture", x: 0, y: 0, width: this.owner.width, height: 100, fontSize: "16px" }]
       };
     }
     return true;
@@ -67,6 +68,8 @@ async function main() {
   assert.ok(interactionProbe.includes("MutationObserver"), "The interaction smoke test should observe real DOM changes.");
   assert.ok(interactionProbe.includes("element.click()"), "The interaction smoke test should dispatch clicks to visible controls.");
   assert.ok(interactionProbe.includes("interactionSmoke"), "The browser report should expose interaction smoke-test counts.");
+  assert.ok(interactionProbe.includes("getBoundingClientRect"), "The browser report should collect real element geometry.");
+  assert.ok(interactionProbe.includes("layoutSummary"), "The browser report should expose a compact layout summary.");
   assert.doesNotThrow(() => new Function("return " + interactionProbe), "The generated browser inspection script must be valid JavaScript.");
   const source = "<!doctype html><html><head><title>Fixture</title></head><body><main>hello</main></body></html>";
   const instrumented = addRuntimeHarness(source);
@@ -89,6 +92,7 @@ async function main() {
   assert.deepEqual(result.reports.map(report => report.expectedWidth), [360, 768, 1280]);
   assert.equal(result.issues.length, 0);
   assert.deepEqual(result.interactionSmoke, { attempted: 2, changed: 1, noVisibleChange: 1 }, "The preview result should report the first viewport interaction smoke test.");
+  assert.equal(result.reports[0].layoutSummary[0].tag, "main", "The preview should retain measured layout evidence for the agent.");
   const first = FakeBrowserWindow.instances.at(-1);
   assert.equal(first.closed, true, "The hidden browser window must always be closed.");
   assert.equal(first.options.show, false);
