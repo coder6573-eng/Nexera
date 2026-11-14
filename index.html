@@ -712,7 +712,6 @@ function validateProjectFiles(files){
     if(!isSafeProjectPath(name)){issues.push('unsafe project path: '+name);continue}
     if(typeof value!=='string'){issues.push(name+' is not text');continue}
     if(/\.js$/i.test(name)&&/<\/script/i.test(value))issues.push(name+' contains a raw <\/script> sequence');
-    if(/\.js$/i.test(name)&&!(/^\s*(?:import|export)\s/m.test(value))){try{new Function(value)}catch(error){issues.push(name+' has a JavaScript syntax error: '+String(error.message||error).slice(0,140))}}
     if(/\.css$/i.test(name)){
       for(const match of value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)){
         const ref=resolveProjectReference(match[1],name);
@@ -724,11 +723,6 @@ function validateProjectFiles(files){
   for(const match of refs){
     const ref=resolveProjectReference(match[1]);
     if(!ref.external&&(/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
-  }
-  for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
-    const attrs=match[1]||'',code=match[2]||'';
-    if(/\bsrc\s*=/.test(attrs)||/\btype\s*=\s*["'](?:application\/json|application\/ld\+json|module)["']/i.test(attrs)||!code.trim())continue;
-    try{new Function(code)}catch(error){issues.push('inline JavaScript has a syntax error: '+String(error.message||error).slice(0,140))}
   }
   return [...new Set(issues)].slice(0,15);
 }
