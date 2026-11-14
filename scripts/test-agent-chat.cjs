@@ -37,7 +37,13 @@ for (const required of [
   "platform()==='android'",
   "changedFiles",
   "model-agnostic software engineering agent",
-  "I could not safely apply this update"
+  "I could not safely apply this update",
+  "Recovering",
+  "Your previous response could not be parsed as the required project JSON contract",
+  "after one bounded recovery attempt",
+  "The independent review is complete",
+  "The first validation pass is complete",
+  "The repair passed validation"
 ]) {
   assert.ok(source.includes(required), "Missing engineering pipeline behavior: " + required);
 }
