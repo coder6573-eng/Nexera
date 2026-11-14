@@ -64,4 +64,4 @@ npm test
 
 This parses the shared UI and desktop bridge scripts, then runs jsdom interaction checks for the drawer, settings, mode selectors, web-search toggle, project navigation, terminal commands, archive/restore, export surface, and send flow.
 
-The regression suite verifies UI interactions, project validation, file handling, preview assembly, and native bridge policy. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
+The regression suite verifies UI interactions, project validation, file handling, preview assembly, native bridge policy, malformed-output recovery, safe preservation, planner/build/reviewer sequencing, and bounded repair. A successful package build verifies compilation and packaging; it does not replace testing on a real Android device or Windows machine. The model-assisted QA pass cannot claim runtime execution of generated code.
