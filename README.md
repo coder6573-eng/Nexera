@@ -1,4 +1,4 @@
-# Nexera AI v19.11.0
+# Nexera AI v20.0.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -48,11 +48,11 @@ Web search results are snippets and links, not a guarantee of exhaustive researc
 
 ### Android APK
 
-The workflow `.github/workflows/build-apk.yml` is intentionally gated to the `v30.0.0` tag. Intermediate development commits do not produce APKs. The final workflow runs the regression suite, copies the shared UI into Android WebView assets, builds the debug APK, and attaches it to the v30.0.0 GitHub release.
+The workflow `.github/workflows/build-apk.yml` builds the v20.0.0 Android APK from the final release commit (or by manual workflow dispatch). It runs the regression suite, copies the shared UI into Android WebView assets, builds the debug APK, and attaches it to the v20.0.0 GitHub release. The Android launcher icon and in-app brand mark use the same Nexera N symbol.
 
 ### Windows portable app
 
-The workflow `.github/workflows/build-exe.yml` is also gated to the `v30.0.0` tag. It runs the regression suite, builds the portable Electron app, and publishes the EXE to the same final release.
+The Windows portable workflow remains a separate release task; the v20.0.0 milestone here publishes the Android APK.
 
 ## Development checks
 

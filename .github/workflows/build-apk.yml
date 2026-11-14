@@ -1,59 +1,63 @@
-name: Build Nexera Android APK
+name: Build Nexera v20 Android APK
 
 on:
   push:
-    tags: [v30.0.0]
+    branches: [main]
+    paths:
+      - "index.html"
+      - "package.json"
+      - "app/**"
+      - ".github/workflows/build-apk.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: nexera-v30-release-assets
+  group: nexera-v20-android-release
   cancel-in-progress: false
 
 jobs:
   build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release-apk-v20]')
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: Install test dependencies
+      - name: Install regression dependencies
         run: npm install --ignore-scripts
-
-      - name: Run UI regression tests
+      - name: Run full regression suite
         run: npm test
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-
       - name: Prepare WebView assets
         run: |
           mkdir -p app/src/main/assets/www
           cp index.html app/src/main/assets/www/index.html
-
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
-
-      - name: Publish APK release asset
+      - name: Build Android APK
+        run: gradle --no-daemon clean assembleDebug
+      - name: Publish v20.0.0 APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v30.0.0
-          name: Nexera AI v30.0.0
-          body: "Nexera AI v30.0.0 — agentic vibecoding workspace with visible file edits, local checks, live preview, and free auto routing."
+          tag_name: v20.0.0
+          target_commitish: main
+          name: Nexera AI v20.0.0
+          body: |
+            Nexera AI v20.0.0 for Android.
+
+            Includes the refreshed Nexera N brand mark and Android launcher icon, current shared chat/vibecoding UI, and the tested native WebView bridge.
           files: app/build/outputs/apk/debug/app-debug.apk
           fail_on_unmatched_files: true
           make_latest: true
