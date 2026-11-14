@@ -6,6 +6,8 @@ const http = require("node:http");
 const { URL } = require("node:url");
 const { execFile } = require("node:child_process");
 const { isSafeRelativePath, readWorkspaceFiles, writeWorkspaceFiles: persistWorkspaceFiles } = require("./workspace-files.cjs");
+const { createPreviewRunner } = require("./preview-runner.cjs");
+const inspectGeneratedPreview = createPreviewRunner(BrowserWindow);
 
 let mainWindow;
 let localServer;
@@ -286,6 +288,7 @@ app.whenReady().then(async () => {
     }
   });
   ipcMain.handle("nexera:save-folder", async (_event, filesJson) => writeWorkspaceFiles(filesJson));
+  ipcMain.handle("nexera:preview-diagnostics", async (_event, html) => inspectGeneratedPreview(html));
   ipcMain.on("nexera:has-key", (event, provider) => {
     event.returnValue = byokProviders.has(provider) && typeof readKeys()[provider] === "string";
   });
