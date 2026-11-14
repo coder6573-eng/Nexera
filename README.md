@@ -1,4 +1,4 @@
-# Nexera AI v16.0.0
+# Nexera AI v19.3.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -32,7 +32,7 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 - **Live preview** — the sandboxed preview refreshes after a completed build or edit. Keep chatting to refine the page.
 - **Visible progress** — stages, route attempts, elapsed time, and the current waiting state are shown instead of leaving a blank spinner. Actual model names are shown only when returned by provider metadata.
 - **Background behavior** — Windows model requests run in the Electron main process and continue while the window is minimized. Android requests use a native worker thread and can continue while the app process remains alive; Android may stop work if it kills the app, so this is not a guarantee of surviving force-stop or process death.
-- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is a restricted workspace command panel (`ls`, `cat`, `touch`, `grep`, `wc`, and related file commands); it is not a general operating-system shell or an npm/build runner.
+- **Workspace** — project files, editor, preview, restricted terminal, ZIP export, and linked local folder support remain available. The terminal is currently a restricted workspace command panel (`ls`, `cat`, `touch`, `grep`, `wc`, and related file commands); it is not a general operating-system shell or an npm/build runner. Windows preview diagnostics run generated project code in an isolated iframe without access to the Nexera native bridge. Android inline preview continues to disable generated JavaScript; static checks are used there.
 
 The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
