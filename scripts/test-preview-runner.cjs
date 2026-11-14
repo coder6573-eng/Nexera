@@ -64,6 +64,11 @@ async function main() {
   assert.deepEqual(VIEWPORTS, [360, 768, 1280]);
   const source = "<!doctype html><html><head><title>Fixture</title></head><body><main>hello</main></body></html>";
   const instrumented = addRuntimeHarness(source);
+  assert.ok(instrumented.includes("default-src \'none\'"), "Generated inspection pages must deny all resources by default.");
+  assert.ok(instrumented.includes("connect-src \'none\'"), "Generated inspection pages must not make outbound network connections.");
+  assert.ok(instrumented.includes("form-action \'none\'"), "Generated inspection pages must not submit forms to external services.");
+  assert.ok(instrumented.includes("script-src \'unsafe-inline\' data:"), "Inline generated project scripts must still execute during inspection.");
+  assert.ok(instrumented.indexOf("Content-Security-Policy") < instrumented.indexOf("<title>Fixture</title>"), "The policy must be installed before project markup can load resources.");
   assert.ok(instrumented.includes("__NEXERA_RUNTIME_ERRORS__"));
   assert.ok(instrumented.indexOf("__NEXERA_RUNTIME_ERRORS__") < instrumented.indexOf("<title>Fixture</title>"));
   assert.ok(addRuntimeHarness("<html><body>body only</body></html>").includes("<body><script>"), "The runtime harness should also be inserted when no head element exists.");
