@@ -119,7 +119,7 @@ function createPreviewRunner(BrowserWindow, options = {}) {
       });
 
       const inspectedHtml = addRuntimeHarness(html);
-      const dataUrl = "data:text/html;charset=utf-8," + encodeURIComponent(inspectedHtml);
+      const dataUrl = "data:text/html;base64," + Buffer.from(inspectedHtml, "utf8").toString("base64");
       await withTimeout(
         () => preview.loadURL(dataUrl),
         loadTimeoutMs,
@@ -146,7 +146,11 @@ function createPreviewRunner(BrowserWindow, options = {}) {
         } else {
           record(width + "px preview: the browser inspector returned an invalid result");
         }
-        await contents.executeJavaScript("new Promise(resolve => setTimeout(resolve, 120))", true);
+        await withTimeout(
+          () => contents.executeJavaScript("new Promise(resolve => setTimeout(resolve, 120))", true),
+          executionTimeoutMs,
+          "The generated project blocked the browser event loop during inspection."
+        );
       }
 
       return {
