@@ -1,12 +1,12 @@
 {
   "name": "nexera-ai",
-  "version": "16.0.0",
+  "version": "17.0.0",
   "private": true,
   "description": "Nexera AI desktop app",
   "main": "desktop/main.cjs",
   "scripts": {
     "dist:win": "electron-builder --win portable",
-    "test": "node scripts/check-inline-js.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs"
+    "test": "node scripts/check-inline-js.cjs && node scripts/test-agent-chat.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs"
   },
   "devDependencies": {
     "electron": "^45.3.0",
