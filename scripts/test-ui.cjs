@@ -110,6 +110,8 @@ try {
   assert.ok(bundledPreview.indexOf("window.firstLoaded = true;") < bundledPreview.indexOf("window.secondLoaded = true;"), "Referenced scripts should preserve document order.");
   assert.ok(bundledPreview.includes("window.extraLoaded = true;"), "Unreferenced project scripts should still be included.");
   assert.ok(bundledPreview.includes("nexera-preview-diagnostics"), "The preview should include its isolated runtime diagnostic harness.");
+  assert.ok(bundledPreview.includes("</script>"), "Generated preview scripts must receive real closing tags.");
+  assert.ok(!bundledPreview.includes("<\\/script>"), "Generated preview HTML must not leave script tags escaped and unclosed.");
 
   click("menuBtn");
   assert.ok(document.getElementById("drawer").classList.contains("open"));
