@@ -66,11 +66,11 @@ sandbox.localFolderLinked = false;
 assert.equal(sandbox.mergeProjectFiles(valid, { "../outside.js": "bad" }), null, "Unsafe file paths must be rejected.");
 
 const previewStart = html.indexOf("function buildPreviewHtml(files,diagnosticId=''){");
-const previewEnd = html.indexOf("\\nfunction runPreviewDiagnostics", previewStart);
+const previewEnd = html.indexOf("\nfunction runPreviewDiagnostics", previewStart);
 assert.notEqual(previewStart, -1, "Preview bundler should exist.");
 assert.notEqual(previewEnd, -1, "Preview diagnostics boundary should exist.");
 vm.runInNewContext(
-  html.slice(previewStart, previewEnd) + "\\nthis.buildPreviewHtml=buildPreviewHtml;",
+  html.slice(previewStart, previewEnd) + "\nthis.buildPreviewHtml=buildPreviewHtml;",
   sandbox,
   { filename: "preview-bundler" }
 );
