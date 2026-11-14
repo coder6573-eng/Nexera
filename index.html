@@ -796,7 +796,7 @@ function runPreviewDiagnostics(files){
     const receive=event=>{
       if(event.source!==frame.contentWindow||event.data?.type!=='nexera-preview-diagnostics'||event.data?.id!==id)return;
       const width=Number(event.data.width)||widths[index];
-      for(const issue of Array.isArray(event.data.issues)?event.data.issues:[])collected.push(width+'px preview: '+issue);
+      for(const issue of Array.isArray(event.data.issues)?event.data.issues:[])collected.push(issue.startsWith('Horizontal overflow')?width+'px preview: '+issue:issue);
       index++;
       if(index>=widths.length){done({supported:true,issues:[...new Set(collected)],detail:'The isolated project preview was checked at 360px, 768px and 1280px.'});return}
       frame.style.width=widths[index]+'px';
