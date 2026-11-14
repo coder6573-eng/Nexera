@@ -102,7 +102,7 @@ async function testBoundedRepairPass() {
   await testRecoveryFailurePreservesExistingProject();
   await testPlannerBuildReviewerLifecycle();
   await testBoundedRepairPass();
-  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, and bounded repair.\\n");
+  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, and bounded repair.\n");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
