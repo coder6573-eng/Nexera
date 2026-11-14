@@ -692,8 +692,8 @@ function isSafeProjectPath(name){if(typeof name!=='string'||name.includes('\\'))
 async function executeAgentTool(tool,args={},context={}){
   if(!args||typeof args!=='object'||Array.isArray(args))return {ok:false,error:'Tool arguments must be a JSON object.'};
   const files=context.files&&typeof context.files==='object'&&!Array.isArray(context.files)?context.files:{};
-  const validate=typeof context.validateProjectFiles==='function'?context.validateProjectFiles:validateProjectFiles;
-  const inspect=typeof context.runPreviewDiagnostics==='function'?context.runPreviewDiagnostics:runPreviewDiagnostics;
+  const validate=typeof context.validateProjectFiles==='function'?context.validateProjectFiles:(typeof validateProjectFiles==='function'?validateProjectFiles:()=>[]);
+  const inspect=typeof context.runPreviewDiagnostics==='function'?context.runPreviewDiagnostics:(typeof runPreviewDiagnostics==='function'?runPreviewDiagnostics:null);
   if(tool==='workspace.list_files'){
     const entries=Object.keys(files).filter(name=>isSafeProjectPath(name)&&typeof files[name]==='string').sort().slice(0,100);
     return {ok:true,files:entries.map(path=>({path,characters:files[path].length}))};
@@ -1058,6 +1058,7 @@ async function runVibeBuildPipeline(options){
         }else reviewDetail='The separate QA pass found no additional file changes.';
       }else reviewDetail='The QA response was unavailable or malformed; deterministic checks will still run.';
     }catch(error){reviewDetail='The QA request was unavailable; deterministic checks will still run.'}
+    if(toolCalls)reviewDetail+=' The model used '+toolCalls+' host tool '+(toolCalls===1?'call.':'calls.');
     onProgress('The independent review is complete.',''+reviewDetail);
   }
   onStage('Inspecting','Executing the generated project in an isolated browser and checking desktop and mobile viewport behavior.');
