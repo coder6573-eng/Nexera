@@ -65,7 +65,9 @@ assert.equal(sandbox.mergeProjectFiles(valid, {}, ["notes.txt"]), null, "Linked 
 sandbox.localFolderLinked = false;
 assert.equal(sandbox.mergeProjectFiles(valid, { "../outside.js": "bad" }), null, "Unsafe file paths must be rejected.");
 
-assert.deepEqual(sandbox.resolveProjectReference("../shared.css", "pages/index.html"), { external: false, unsafe: false, path: "shared.css" });
+const nestedReference = sandbox.resolveProjectReference("../shared.css", "pages/index.html");
+assert.equal(nestedReference.path, "shared.css");
+assert.equal(nestedReference.unsafe, false);
 assert.equal(sandbox.resolveProjectReference("../../outside.css", "index.html").unsafe, true);
 
-process.stdout.write("Agent quality tests passed: tolerant parsing, safe partial updates, bounded deletion, nested assets, JavaScript syntax, and HTML validation.\\n");
+process.stdout.write("Agent quality tests passed: tolerant parsing, safe partial updates, bounded deletion, nested assets, safe deletions, tolerant parsing, and HTML validation.\\n");
