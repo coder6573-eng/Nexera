@@ -28,6 +28,12 @@ for (const required of [
   "agentUpdate('The first version is built.",
   "agentUpdate('Done. The files are saved",
   "changedFiles",
+  "careful, iterative software engineering agent",
+  "preserve the existing architecture",
+  "360px phone, 768px tablet, and 1280px desktop",
+  "independent QA reviewer",
+  "I could not safely apply this update",
+  "projectIssues.length?projectIssues.join",
 ]) {
   assert.ok(source.includes(required), "Missing agent chat behavior: " + required);
 }
