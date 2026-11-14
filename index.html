@@ -871,6 +871,7 @@ function agentProgressForStage(stage){
     Planning:'I’ve got the direction. I’m planning the page structure, interactions, and mobile behavior now.',
     Building:'Building the project now. I’m creating the homepage and wiring the main functions.',
     Reviewing:'The main build is in place. I’m checking the result for broken interactions, layout issues, and mobile problems.',
+    Inspecting:'The build is ready. I’m running it in an isolated browser and checking the layout at phone, tablet, and desktop widths.',
     Complete:'Done. I’ve built the project, checked the generated files, and refreshed the live preview.',
     'Waiting for your answer':'I need one detail from you before I change the project.',
     'Needs attention':'I hit a problem while building this. I’ve kept your existing project files safe.'
@@ -1005,7 +1006,10 @@ async function runVibeBuildPipeline(options){
     }catch(error){reviewDetail='The QA request was unavailable; deterministic checks will still run.'}
     onProgress('The independent review is complete.',''+reviewDetail);
   }
+  onStage('Inspecting','Executing the generated project in an isolated browser and checking desktop and mobile viewport behavior.');
+  onProgress('The code review is finished. I’m opening the actual page in an isolated browser now.','Checking runtime errors, responsive overflow, accessible control names, form labels and image descriptions.');
   let runtime=await runPreviewDiagnostics(files);
+  onProgress('The browser inspection is complete.',runtime.supported?(runtime.issues.length?'Found '+runtime.issues.length+' browser issue(s); preparing a targeted repair.':runtime.detail):runtime.detail||'Browser inspection was unavailable; static checks remain in place.');
   if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
   else if(runtime.supported&&!runtime.issues.length)reviewDetail+=' The isolated preview ran without reported runtime or basic accessibility errors.';
   else if(runtime.detail)reviewDetail+=' '+runtime.detail;
