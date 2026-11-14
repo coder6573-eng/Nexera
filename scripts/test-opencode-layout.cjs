@@ -7,6 +7,23 @@ const styleEnd = html.indexOf("</style>", styleStart);
 assert.notEqual(styleStart, -1, "V19 workspace layout styles should exist.");
 assert.notEqual(styleEnd, -1, "V19 workspace layout styles should close.");
 const css = html.slice(styleStart, styleEnd);
+const refinedStart = html.indexOf('<style id="nexera-v19-2-refined-workspace">');
+const refinedEnd = html.indexOf("</style>", refinedStart);
+assert.notEqual(refinedStart, -1, "V19.2 responsive refinement styles should exist.");
+assert.notEqual(refinedEnd, -1, "V19.2 responsive refinement styles should close.");
+const refinedCss = html.slice(refinedStart, refinedEnd);
+for (const token of [
+  "grid-template-columns:minmax(205px,230px) minmax(0,1fr) minmax(285px,330px)",
+  "min-height:43px",
+  ".agent-plan",
+  "max-width:none",
+  "@media(max-width:900px)",
+  "grid-template-columns:repeat(3,minmax(0,1fr))",
+  "safe-area-inset-bottom",
+  "prefers-reduced-motion:reduce"
+]) {
+  assert.ok(refinedCss.includes(token), "Missing refined responsive layout rule: " + token);
+}
 
 for (const token of [
   "grid-template-columns:220px minmax(0,1fr) 340px",
@@ -18,11 +35,6 @@ for (const token of [
   "grid-column:3",
   "@media(max-width:760px)",
   "nexera-v19-android-file-tabs",
-  "nexera-v19-2-refined-workspace",
-  "grid-template-columns:minmax(205px,230px) minmax(0,1fr) minmax(285px,330px)",
-  "min-height:43px",
-  ".agent-plan",
-  "max-width:none",
   "@media(max-width:900px)",
   "grid-template-columns:repeat(3,minmax(0,1fr))",
   "mobile-files #workspaceFiles",
