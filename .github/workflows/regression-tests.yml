@@ -1,15 +1,8 @@
 name: Nexera regression tests
 
 on:
-  push:
+  pull_request:
     branches: [main]
-    paths:
-      - "index.html"
-      - "package.json"
-      - "package-lock.json"
-      - "desktop/**"
-      - "app/**"
-      - "scripts/**"
   workflow_dispatch:
 
 permissions:
