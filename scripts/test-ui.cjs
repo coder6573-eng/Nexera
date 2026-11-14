@@ -221,7 +221,7 @@ try {
   projectButton.click();
   assert.equal(document.getElementById("projectView").style.display, "flex");
   assert.equal(document.querySelector("#projectContent img"), null, "Stored project filenames must not be parsed as HTML");
-  assert.ok([...document.querySelectorAll("#projectContent .file-row")].some(row => row.textContent.includes("<img src=x onerror=alert(1)>")));
+  assert.ok([...document.querySelectorAll("#projectContent .editor-file-item")].some(row => row.textContent.includes("<img src=x onerror=alert(1)>")));
   const notesButton = [...document.querySelectorAll(".editor-file-item")].find(button => button.textContent.includes("notes.txt"));
   assert.ok(notesButton, "Files tab should list workspace files");
   notesButton.click();
