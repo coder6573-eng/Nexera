@@ -19,7 +19,8 @@ const sandbox = {
     supported: true,
     issues: [],
     detail: "Preview inspected.",
-    interactionSmoke: { attempted: 2, changed: 2, noVisibleChange: 0, skipped: 0 }
+    interactionSmoke: { attempted: 2, changed: 2, noVisibleChange: 0, skipped: 0 },
+    reports: [{ expectedWidth: 360, layoutSummary: [{ tag: "main", text: "Ready" }], issues: [], runtimeErrors: [] }]
   })
 };
 vm.runInNewContext(
@@ -71,6 +72,7 @@ const files = {
   const inspection = await sandbox.executeAgentTool("browser.inspect", {}, { files, runPreviewDiagnostics: sandbox.runPreviewDiagnostics });
   assert.equal(inspection.ok, true);
   assert.equal(inspection.interactionSmoke.attempted, 2);
+  assert.equal(inspection.reports[0].layoutSummary[0].tag, "main", "Browser tool results should include compact measured layout evidence.");
 
   const noProject = await sandbox.executeAgentTool("browser.inspect", {}, { files: {} });
   assert.equal(noProject.ok, false);
