@@ -38,10 +38,10 @@ const validFiles = {
 const validResponse = JSON.stringify({ kind: "project", name: "Recovery test", summary: "Recovered successfully", files: validFiles });
 const noPreview = async () => ({ supported: false, issues: [], detail: "Preview unavailable in the test environment." });
 
-async function runPipeline(nativeCall, options = {}, validate = sandbox.agentHelpers.validateProjectFiles) {
+async function runPipeline(nativeCall, options = {}, validate = sandbox.agentHelpers.validateProjectFiles, preview = noPreview) {
   sandbox.nativeCall = nativeCall;
   sandbox.validateProjectFiles = validate;
-  sandbox.runPreviewDiagnostics = noPreview;
+  sandbox.runPreviewDiagnostics = preview;
   const stages = [];
   const result = await sandbox.runVibeBuildPipeline({
     request: "Create a small responsive project",
@@ -111,6 +111,32 @@ async function testModelIndependentHostToolLoop() {
   assert.match(result.reviewDetail, /2 host tool calls/i);
 }
 
+async function testBrowserLayoutEvidenceFeedsRepair() {
+  const brokenFiles = {
+    ...validFiles,
+    "index.html": validFiles["index.html"].replace("style.css", "missing.css")
+  };
+  let calls = 0;
+  let repairPrompt = "";
+  const preview = async () => ({
+    supported: true,
+    issues: [],
+    detail: "Preview inspected.",
+    interactionSmoke: { attempted: 1, changed: 1, noVisibleChange: 0, skipped: 0 },
+    reports: [{ expectedWidth: 360, layoutSummary: [{ tag: "main", text: "Ready", x: 0, y: 0, width: 360, height: 100 }], issues: [], runtimeErrors: [] }]
+  });
+  const { result } = await runPipeline(async (_provider, _endpoint, _model, messages) => {
+    calls++;
+    if (calls === 1) return JSON.stringify({ kind: "project", name: "Before repair", files: brokenFiles });
+    repairPrompt = String(messages.at(-1).content || "");
+    return validResponse;
+  }, {}, sandbox.agentHelpers.validateProjectFiles, preview);
+  assert.equal(calls, 2, "The concrete missing asset should trigger one bounded repair.");
+  assert.ok(repairPrompt.includes("Measured browser layout evidence"), "The repair model should receive measured browser evidence.");
+  assert.ok(repairPrompt.includes('"viewport":360'), "The repair evidence should identify the viewport used.");
+  assert.equal(result.response.kind, "project");
+}
+
 async function testHostToolBudgetIsBounded() {
   let calls = 0;
   const existing = { ...validFiles };
@@ -146,9 +172,10 @@ async function testBoundedRepairPass() {
   await testRecoveryFailurePreservesExistingProject();
   await testPlannerBuildReviewerLifecycle();
   await testModelIndependentHostToolLoop();
+  await testBrowserLayoutEvidenceFeedsRepair();
   await testHostToolBudgetIsBounded();
   await testBoundedRepairPass();
-  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, bounded model-independent host tools, tool-budget exhaustion, and bounded repair.\n");
+  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, bounded model-independent host tools, measured browser evidence in repairs, tool-budget exhaustion, and bounded repair.\n");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
