@@ -1,12 +1,12 @@
 {
   "name": "nexera-ai",
-  "version": "19.9.0",
+  "version": "19.10.0",
   "private": true,
   "description": "Nexera AI desktop app",
   "main": "desktop/main.cjs",
   "scripts": {
     "dist:win": "electron-builder --win portable",
-    "test": "node scripts/check-inline-js.cjs && node scripts/test-agent-chat.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs && node scripts/test-opencode-layout.cjs && node scripts/test-agent-quality.cjs && node scripts/test-agent-recovery.cjs && node scripts/test-agent-tools.cjs && node scripts/test-preview-runner.cjs"
+    "test": "node scripts/check-inline-js.cjs && node scripts/test-agent-chat.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs && node scripts/test-preview-policy.cjs && node scripts/test-opencode-layout.cjs && node scripts/test-agent-quality.cjs && node scripts/test-agent-recovery.cjs && node scripts/test-agent-tools.cjs && node scripts/test-preview-runner.cjs"
   },
   "devDependencies": {
     "electron": "^45.3.0",
