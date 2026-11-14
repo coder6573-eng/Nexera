@@ -1107,7 +1107,7 @@ async function runVibeBuildPipeline(options){
       issues=validateProjectFiles(files);
       runtime=await runPreviewDiagnostics(files);
       browserEvidence=runtime.supported&&Array.isArray(runtime.reports)?runtime.reports.slice(0,3).map(report=>({viewport:report.expectedWidth,layout:report.layoutSummary||[],issues:report.issues||[],runtimeErrors:report.runtimeErrors||[]})):[];
-      if(runtime.supported&&runtime.issues.lengthissues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
+      if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
       if(!issues.length){reviewDetail+=' Repair pass '+attempt+' passed the available checks.';onProgress('The repair passed validation.','Repair pass '+attempt+' of 2 cleared the reported issues.')}
       else onProgress('A repair pass ran, but issues remain.','Remaining checks: '+issues.slice(0,3).join(' · '));
     }catch(error){break}
