@@ -3,7 +3,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const { EventEmitter } = require("node:events");
-const { VIEWPORTS, addRuntimeHarness, createPreviewRunner } = require("../desktop/preview-runner.cjs");
+const { VIEWPORTS, addRuntimeHarness, inspectScript, createPreviewRunner } = require("../desktop/preview-runner.cjs");
 
 class FakeWebContents extends EventEmitter {
   constructor(owner) {
@@ -23,7 +23,8 @@ class FakeWebContents extends EventEmitter {
         readyState: "complete",
         title: "Fixture",
         issues: FakeBrowserWindow.nextScenario.issues || [],
-        runtimeErrors: this.owner.runtimeErrors
+        runtimeErrors: this.owner.runtimeErrors,
+        interactionSmoke: FakeBrowserWindow.nextScenario.interactionSmoke || { attempted: 2, changed: 1, noVisibleChange: 1 }
       };
     }
     return true;
@@ -62,6 +63,10 @@ async function main() {
   assert.ok(mainProcess.includes('ipcMain.handle("nexera:preview-diagnostics"'), "The browser inspector must be reachable through a controlled IPC handler.");
   assert.ok(preload.includes('runPreviewDiagnostics: (html) => ipcRenderer.invoke("nexera:preview-diagnostics", html)'), "The preload bridge must expose only the diagnostics action.");
   assert.deepEqual(VIEWPORTS, [360, 768, 1280]);
+  const interactionProbe = inspectScript({ probeInteractions: true });
+  assert.ok(interactionProbe.includes("MutationObserver"), "The interaction smoke test should observe real DOM changes.");
+  assert.ok(interactionProbe.includes("element.click()"), "The interaction smoke test should dispatch clicks to visible controls.");
+  assert.ok(interactionProbe.includes("interactionSmoke"), "The browser report should expose interaction smoke-test counts.");
   const source = "<!doctype html><html><head><title>Fixture</title></head><body><main>hello</main></body></html>";
   const instrumented = addRuntimeHarness(source);
   assert.ok(instrumented.includes("default-src \'none\'"), "Generated inspection pages must deny all resources by default.");
@@ -82,6 +87,7 @@ async function main() {
   assert.equal(result.supported, true);
   assert.deepEqual(result.reports.map(report => report.expectedWidth), [360, 768, 1280]);
   assert.equal(result.issues.length, 0);
+  assert.deepEqual(result.interactionSmoke, { attempted: 2, changed: 1, noVisibleChange: 1 }, "The preview result should report the first viewport interaction smoke test.");
   const first = FakeBrowserWindow.instances.at(-1);
   assert.equal(first.closed, true, "The hidden browser window must always be closed.");
   assert.equal(first.options.show, false);
