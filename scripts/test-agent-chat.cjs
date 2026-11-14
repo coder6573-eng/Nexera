@@ -34,6 +34,8 @@ for (const required of [
   "independent QA reviewer",
   "I could not safely apply this update",
   "projectIssues.length?projectIssues.join",
+  "mergeProjectFiles(firstFiles,reviewed.files)",
+  "raw=JSON.stringify({...reviewed,files:reviewedFiles})",
 ]) {
   assert.ok(source.includes(required), "Missing agent chat behavior: " + required);
 }
