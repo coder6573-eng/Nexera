@@ -18,6 +18,11 @@ for (const token of [
   "grid-column:3",
   "@media(max-width:760px)",
   "nexera-v19-android-file-tabs",
+  "nexera-v19-2-refined-workspace",
+  "grid-template-columns:minmax(205px,230px) minmax(0,1fr) minmax(285px,330px)",
+  "min-height:43px",
+  ".agent-plan",
+  "max-width:none",
   "@media(max-width:900px)",
   "grid-template-columns:repeat(3,minmax(0,1fr))",
   "mobile-files #workspaceFiles",
@@ -32,5 +37,5 @@ assert.ok(html.includes("AGENT SESSION"), "Workspace header should identify the 
 assert.ok(html.includes(">EXPLORER</span>"), "The left panel should be clearly identified as the file explorer.");
 assert.ok(html.includes("Agent session</span>"), "The right panel should identify agent activity.");
 assert.ok(html.includes("window.innerWidth<=900"), "Android/tablet widths should use tab navigation instead of the cramped desktop sidebar.");
-assert.ok(html.includes('data-nexera-version="19.0.0"'), "The app should identify itself as v19.");
+assert.ok(html.includes('data-nexera-version="19.2.0"'), "The app should identify itself as v19.2.");
 console.log("OpenCode-inspired workspace layout checks passed.");
