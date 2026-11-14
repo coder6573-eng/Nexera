@@ -60,6 +60,7 @@ async function main() {
   const instrumented = addRuntimeHarness(source);
   assert.ok(instrumented.includes("__NEXERA_RUNTIME_ERRORS__"));
   assert.ok(instrumented.indexOf("__NEXERA_RUNTIME_ERRORS__") < instrumented.indexOf("<title>Fixture</title>"));
+  assert.ok(addRuntimeHarness("<html><body>body only</body></html>").includes("<body><script>"), "The runtime harness should also be inserted when no head element exists.");
 
   FakeBrowserWindow.instances = [];
   FakeBrowserWindow.nextScenario = {};
