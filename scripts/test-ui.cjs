@@ -5,7 +5,7 @@ const { JSDOM, VirtualConsole } = require("jsdom");
 const html = fs.readFileSync("index.html", "utf8");
 const iifeEnd = html.lastIndexOf("})();");
 assert.notEqual(iifeEnd, -1, "App IIFE should have a closing marker.");
-const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { buildPreviewHtml, validateProjectFiles, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, addAgentProgress, setAgentStage, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
+const instrumentedHtml = html.slice(0, iifeEnd) + "window.__testHooks = { parseAgentResponse, normalizeAgentResponse, resolveProjectReference, runPreviewDiagnostics, isAndroidNative, buildPreviewHtml, validateProjectFiles, updateAgentWorkbench, renderAssistantContent, addMessage, mergeProjectFiles, getActiveProject: () => activeProject, renderAgentWorkbench, failAgentWorkbench, providerConfig, freeAutoRouteCount: () => FREE_AUTO_ROUTES.length, applyWorkspaceLayout, setMobileWorkspacePanel, updateLivePreview, renderServedModel, setLastRouteInfo: value => lastRouteInfo = value, addAgentProgress, setAgentStage, openLocalFolder, saveLinkedFolder, isSafeProjectPath, isLocalFolderLinked: () => localFolderLinked, openProject, switchTab, runTerminalCommand }; " + html.slice(iifeEnd);
 assert.notEqual(instrumentedHtml, html, "Test hooks should be injected into the app IIFE only for jsdom tests.");
 const virtualConsole = new VirtualConsole();
 const runtimeErrors = [];
@@ -89,11 +89,13 @@ try {
   // Android's embedded preview must not execute untrusted project scripts in the bridge-enabled WebView.
   const livePreviewFrame = document.getElementById("livePreviewFrame");
   assert.ok(livePreviewFrame, "Live preview iframe should exist");
-  window.NexeraNative = {};
+  window.NexeraNative = { platform: () => "android" };
   window.__testHooks.updateLivePreview({ "index.html": "<!doctype html><html><body><script>window.NexeraNative.chat('openrouter')</script><h1>Safe preview</h1></body></html>" });
   assert.equal(livePreviewFrame.getAttribute("sandbox"), "allow-forms", "Android inline preview must disable JavaScript");
+  assert.equal(window.__testHooks.isAndroidNative(), true, "Android bridge platform should be detected explicitly.");
   assert.ok(!livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Android inline preview must not execute generated scripts");
   delete window.NexeraNative;
+  assert.equal(window.__testHooks.isAndroidNative(), false, "Desktop preview should not be mistaken for Android.");
   window.__testHooks.updateLivePreview({ "index.html": "<!doctype html><html><body><h1>Desktop preview</h1></body></html>" });
   assert.ok(livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Desktop preview should retain interactive JavaScript");
 
