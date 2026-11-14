@@ -129,6 +129,7 @@ function createPreviewRunner(BrowserWindow, options = {}) {
       const reports = [];
       for (const width of VIEWPORTS) {
         preview.setContentSize(width, 820);
+        await new Promise(resolve => setTimeout(resolve, 100));
         const report = await withTimeout(
           () => contents.executeJavaScript(inspectScript(), true),
           executionTimeoutMs,
@@ -136,6 +137,7 @@ function createPreviewRunner(BrowserWindow, options = {}) {
         );
         if (report && typeof report === "object") {
           reports.push({ ...report, expectedWidth: width });
+          if (Number(report.width) !== width) record("Expected a " + width + "px viewport but Chromium reported " + report.width + "px");
           for (const issue of Array.isArray(report.issues) ? report.issues : []) {
             record(width + "px preview: " + issue);
           }
