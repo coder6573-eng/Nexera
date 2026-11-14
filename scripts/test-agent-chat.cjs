@@ -22,7 +22,7 @@ for (const required of [
   "function agentUpdate",
   "function setAgentStage",
   "function updateAgentRoute",
-  "agentUpdate('Okay, I’m working on it.",
+  "addAgentProgress('Okay, I’m working on it.",
   "agentUpdate('I’m planning the build now.",
   "agentUpdate('Building the website now",
   "agentUpdate('The first version is built.",
