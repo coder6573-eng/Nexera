@@ -3,6 +3,15 @@
 const VIEWPORTS = Object.freeze([360, 768, 1280]);
 const MAX_HTML_BYTES = 2_000_000;
 const LOAD_TIMEOUT_MS = 12_000;
+const EXECUTION_TIMEOUT_MS = 4_000;
+
+function withTimeout(operation, milliseconds, message) {
+  let timer;
+  return Promise.race([
+    Promise.resolve().then(operation),
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), milliseconds); })
+  ]).finally(() => { if (timer) clearTimeout(timer); });
+}
 
 function addRuntimeHarness(html) {
   const harness = `<script>
@@ -57,8 +66,10 @@ function inspectScript() {
   })()`;
 }
 
-function createPreviewRunner(BrowserWindow) {
+function createPreviewRunner(BrowserWindow, options = {}) {
   if (typeof BrowserWindow !== "function") throw new TypeError("BrowserWindow constructor is required.");
+  const loadTimeoutMs = Number.isFinite(options.loadTimeoutMs) ? Math.max(1, options.loadTimeoutMs) : LOAD_TIMEOUT_MS;
+  const executionTimeoutMs = Number.isFinite(options.executionTimeoutMs) ? Math.max(1, options.executionTimeoutMs) : EXECUTION_TIMEOUT_MS;
 
   return async function runPreviewDiagnostics(html) {
     if (typeof html !== "string" || !html.trim()) {
@@ -94,7 +105,7 @@ function createPreviewRunner(BrowserWindow) {
     const close = () => {
       if (closed) return;
       closed = true;
-      try { if (!preview.isDestroyed || !preview.isDestroyed()) preview.close(); } catch {}
+      try { if (!preview.isDestroyed || !preview.isDestroyed()) { if (typeof preview.destroy === "function") preview.destroy(); else preview.close(); } } catch {}
     };
 
     try {
@@ -109,22 +120,20 @@ function createPreviewRunner(BrowserWindow) {
 
       const inspectedHtml = addRuntimeHarness(html);
       const dataUrl = "data:text/html;charset=utf-8," + encodeURIComponent(inspectedHtml);
-      let loadTimer;
-      try {
-        await Promise.race([
-          preview.loadURL(dataUrl),
-          new Promise((_, reject) => {
-            loadTimer = setTimeout(() => reject(new Error("The isolated browser preview timed out while loading.")), LOAD_TIMEOUT_MS);
-          })
-        ]);
-      } finally {
-        if (loadTimer) clearTimeout(loadTimer);
-      }
+      await withTimeout(
+        () => preview.loadURL(dataUrl),
+        loadTimeoutMs,
+        "The isolated browser preview timed out while loading."
+      );
 
       const reports = [];
       for (const width of VIEWPORTS) {
         preview.setContentSize(width, 820);
-        const report = await contents.executeJavaScript(inspectScript(), true);
+        const report = await withTimeout(
+          () => contents.executeJavaScript(inspectScript(), true),
+          executionTimeoutMs,
+          "The generated project blocked the browser inspector for too long."
+        );
         if (report && typeof report === "object") {
           reports.push({ ...report, expectedWidth: width });
           for (const issue of Array.isArray(report.issues) ? report.issues : []) {
@@ -158,4 +167,4 @@ function createPreviewRunner(BrowserWindow) {
   };
 }
 
-module.exports = { VIEWPORTS, addRuntimeHarness, inspectScript, createPreviewRunner };
+module.exports = { VIEWPORTS, addRuntimeHarness, inspectScript, withTimeout, createPreviewRunner };
