@@ -1043,7 +1043,7 @@ async function runVibeBuildPipeline(options){
   let files=mergeProjectFiles(existingFiles,first.files,first.deletedFiles);
   if(!files)return {response:{kind:'error',issues:['The model response contained no safe, applicable file changes. Existing files were preserved.']},plan,reviewDetail:'No safe file changes were found.'};
   let issues=validateProjectFiles(files);
-  let reviewDetail='Deterministic project checks are running.'+(toolCalls?' The model used '+toolCalls+' host tool call(s).':'');
+  let reviewDetail='Deterministic project checks are running.'+(toolCalls?' The model used '+toolCalls+' host tool '+(toolCalls===1?'call.':'calls.'):'');
   if(agentMode){
     onStage('Reviewing','A separate QA pass is comparing the proposed project with the original request.');
     onProgress('The first version is built. I’m reviewing it before applying it.','Checking architecture preservation, missing assets, JavaScript syntax, interactions and accessibility.');
