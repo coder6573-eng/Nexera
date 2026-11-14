@@ -29,7 +29,7 @@ for (const required of [
   "agentUpdate('Done. The files are saved",
   "changedFiles",
   "careful, iterative software engineering agent",
-  "preserve the existing architecture",
+  "Preserve the existing architecture",
   "360px phone, 768px tablet, and 1280px desktop",
   "independent QA reviewer",
   "I could not safely apply this update",
