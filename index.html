@@ -1003,12 +1003,37 @@ async function runVibeBuildPipeline(options){
   const buildPrompt='USER REQUEST:\n'+request+'\n\nSKILL FOCUS:\n'+skillGuide+'\n\nIMPLEMENTATION PLAN:\n'+plan+projectContext+'\n\nIf a local folder is linked, do not request file deletions; linked-folder deletion is disabled to protect original files.\n\nBuild or update this browser project. Return only the JSON project contract from the system message. Preserve existing files and behavior unless the request requires a change. Include complete contents for changed files only. Make the interface intentionally designed, coherent and responsive, not a generic template. Every visible control must have a real action. Use semantic HTML, keyboard support, accessible names, useful focus states, readable contrast, and polished loading/empty/error states. Check local HTML and CSS asset references, classic JavaScript syntax, event wiring and safe paths. Avoid unnecessary dependencies and fake backend behavior. Prioritize working functionality over decorative complexity.';
   onStage('Building','The selected model is implementing the planned changes in the project files.');
   onProgress('Building the project now…','Creating the interface, wiring interactions and preserving existing files.');
-  const buildRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:buildPrompt}],routeOptions);
+  const buildMessages=[{role:'system',content:VIBE_SYSTEM},{role:'user',content:buildPrompt}];
+  const buildRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,buildMessages,routeOptions);
+  let latestBuildRaw=buildRaw;
   let first=normalizeAgentResponse(buildRaw);
+  let toolCalls=0;
+  const toolBudget=agentMode?6:2;
+  while(first?.kind==='tool_call'&&toolCalls<toolBudget){
+    const toolName=first.tool;
+    onStage('Using tools','Running '+toolName+' in the read-only project environment.');
+    onProgress('I’m checking the project with a host tool.','Running '+toolName+'; no operating-system commands or file writes are exposed to the model.');
+    let toolResult;
+    try{
+      toolResult=await executeAgentTool(toolName,first.args,{files:existingFiles||{},validateProjectFiles,runPreviewDiagnostics});
+    }catch(error){
+      toolResult={ok:false,error:'Host tool failed: '+(error?.message||'unknown error')};
+    }
+    buildMessages.push(
+      {role:'assistant',content:JSON.stringify(first)},
+      {role:'user',content:JSON.stringify({kind:'tool_result',tool:toolName,result:toolResult})}
+    );
+    toolCalls++;
+    latestBuildRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,buildMessages,routeOptions);
+    first=normalizeAgentResponse(latestBuildRaw);
+  }
+  if(first?.kind==='tool_call'){
+    return {response:{kind:'error',issues:['The model reached the read-only host-tool limit of '+toolBudget+' calls. Existing files were preserved.']},plan,reviewDetail:'The model did not return a final project response within the bounded host-tool budget.'};
+  }
   if(!first||!['project','question','error'].includes(first.kind)){
     onStage('Recovering','The first response was not a valid project contract. Asking the selected model to correct its output.');
     onProgress('I’m correcting the model response before changing any files.','The first response was incomplete or not valid project JSON. Your existing project is still untouched.');
-    const recoveryPrompt='Your previous response could not be parsed as the required project JSON contract. Return a complete, valid JSON object only, with no markdown or commentary. Do not repeat the whole project: include complete contents only for files that must change or be created. Keep every path safe and relative. Do not claim tests were run. If the task cannot be completed, return {"kind":"error","issues":["..."]}.\n\nOriginal user request:\n'+request+'\n\nImplementation plan:\n'+plan+'\n\nPrevious response (repair its format and completeness, not its ideas blindly):\n'+String(buildRaw||'').slice(0,24000)+'\n\nExisting project files:\n'+JSON.stringify(existingFiles||{});
+    const recoveryPrompt='Your previous response could not be parsed as the required project JSON contract. Return a complete, valid JSON object only, with no markdown or commentary. Do not repeat the whole project: include complete contents only for files that must change or be created. Keep every path safe and relative. Do not claim tests were run. If the task cannot be completed, return {"kind":"error","issues":["..."]}.\n\nOriginal user request:\n'+request+'\n\nImplementation plan:\n'+plan+'\n\nPrevious response (repair its format and completeness, not its ideas blindly):\n'+String(latestBuildRaw||'').slice(0,24000)+'\n\nExisting project files:\n'+JSON.stringify(existingFiles||{});
     try{first=normalizeAgentResponse(await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:recoveryPrompt}],routeOptions))}
     catch(error){return {response:{kind:'error',issues:['The model response was invalid and the recovery request failed: '+(error.message||'unknown error')]},plan,reviewDetail:'The first response could not be parsed and the bounded recovery request failed.'}}
   }
@@ -1018,11 +1043,11 @@ async function runVibeBuildPipeline(options){
   let files=mergeProjectFiles(existingFiles,first.files,first.deletedFiles);
   if(!files)return {response:{kind:'error',issues:['The model response contained no safe, applicable file changes. Existing files were preserved.']},plan,reviewDetail:'No safe file changes were found.'};
   let issues=validateProjectFiles(files);
-  let reviewDetail='Deterministic project checks are running.';
+  let reviewDetail='Deterministic project checks are running.'+(toolCalls?' The model used '+toolCalls+' host tool call(s).':'');
   if(agentMode){
     onStage('Reviewing','A separate QA pass is comparing the proposed project with the original request.');
     onProgress('The first version is built. I’m reviewing it before applying it.','Checking architecture preservation, missing assets, JavaScript syntax, interactions and accessibility.');
-    const reviewPrompt='Act as a strict software QA reviewer. Review the proposed project against the original user request and acceptance checklist. Look for incomplete or incorrect behavior, dead controls, missing event wiring, broken local assets, syntax mistakes, accessibility issues, layout risks, accidental deletion, and unnecessary rewrites. Do not claim you executed the project. Return the same JSON project contract. Include only concrete fixes. If the project is already correct, return {"kind":"project","name":"...","summary":"QA passed without file changes","tasks":[],"files":{}}. Do not invent runtime results.\n\nOriginal request:\n'+request+'\n\nPlan:\n'+plan+'\n\nInitial deterministic checks:\n'+(issues.length?issues.join('\n'):'passed')+'\n\nProposed complete project:\n'+JSON.stringify(files);
+    const reviewPrompt='Act as a strict software QA reviewer. Review the proposed project against the original user request and acceptance checklist. Look for incomplete or incorrect behavior, dead controls, missing event wiring, broken local assets, syntax mistakes, accessibility issues, layout risks, accidental deletion, and unnecessary rewrites. Do not claim you executed the project. Do not request host tools during this review pass; use the supplied project and deterministic checks. Return the same JSON project contract. Include only concrete fixes. If the project is already correct, return {"kind":"project","name":"...","summary":"QA passed without file changes","tasks":[],"files":{}}. Do not invent runtime results.\n\nOriginal request:\n'+request+'\n\nPlan:\n'+plan+'\n\nInitial deterministic checks:\n'+(issues.length?issues.join('\n'):'passed')+'\n\nProposed complete project:\n'+JSON.stringify(files);
     try{
       const review=normalizeAgentResponse(await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:reviewPrompt}],routeOptions));
       if(review?.kind==='project'){
@@ -1046,7 +1071,7 @@ async function runVibeBuildPipeline(options){
   for(let attempt=1;issues.length&&attempt<=2;attempt++){
     onStage('Repairing','Quality checks found '+issues.length+' issue(s). Repair pass '+attempt+' of 2 is running.');
     onProgress('I found a few issues and I’m repairing them.','Repair pass '+attempt+' of 2: '+issues.slice(0,4).join(' · '));
-    const repairPrompt='Repair only the concrete issues listed below. Preserve the existing architecture, visual design, working interactions and unrelated files. Return the JSON project contract. Include complete contents only for files you change. Do not claim runtime tests; the host will rerun checks. If an issue is a false positive, make no unrelated changes and explain briefly in summary.\n\nOriginal request:\n'+request+'\n\nIssues to fix:\n'+issues.join('\n')+'\n\nCurrent project files:\n'+JSON.stringify(files);
+    const repairPrompt='Repair only the concrete issues listed below. Do not request host tools during repair; use the supplied files and issue list. Preserve the existing architecture, visual design, working interactions and unrelated files. Return the JSON project contract. Include complete contents only for files you change. Do not claim runtime tests; the host will rerun checks. If an issue is a false positive, make no unrelated changes and explain briefly in summary.\n\nOriginal request:\n'+request+'\n\nIssues to fix:\n'+issues.join('\n')+'\n\nCurrent project files:\n'+JSON.stringify(files);
     try{
       const repair=normalizeAgentResponse(await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:repairPrompt}],routeOptions));
       if(!repair||repair.kind!=='project')break;
