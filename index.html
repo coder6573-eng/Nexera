@@ -554,6 +554,49 @@ button:active{transform:scale(.97)}
   #main.vibe-active .agent-step,#main.vibe-active .agent-plan,#main.vibe-active .agent-preview{scroll-behavior:auto;animation:none!important;transition:none!important}
 }
 </style>
+
+<style id="nexera-v19-4-engineering-polish">
+/* V19.4 — clearer engineering session hierarchy and calmer responsive surfaces. */
+#main.vibe-active{background:linear-gradient(145deg,#f7faf5 0%,#f2f7ef 100%)}
+#main.vibe-active #workspaceToolbar{background:rgba(255,255,255,.94);border:1px solid #e2eadf;box-shadow:0 7px 24px rgba(47,75,39,.045)}
+#main.vibe-active .workspace-brand{gap:10px}
+#main.vibe-active .workspace-mark{box-shadow:0 5px 13px rgba(85,135,65,.12)}
+#main.vibe-active #workspaceFiles,#main.vibe-active #conversation,#main.vibe-active .agent-timeline,#main.vibe-active .agent-preview{border-color:#e1e9dd;box-shadow:0 7px 24px rgba(47,75,39,.035)}
+#main.vibe-active .workspace-file{min-height:38px;border:1px solid transparent;transition:background .16s,border-color .16s,color .16s}
+#main.vibe-active .workspace-file:hover{border-color:#e4eddf;background:#f6faf3}
+#main.vibe-active .workspace-file.active{border-color:#dcebd4;background:#edf6e8;color:#37672f;font-weight:700}
+#main.vibe-active .agent-timeline{background:linear-gradient(180deg,#fff 0%,#fcfefb 100%)}
+#main.vibe-active .agent-status{font-weight:750;letter-spacing:.01em}
+#main.vibe-active .agent-progress-detail{font-size:11px;line-height:1.55;color:#687765}
+#main.vibe-active .agent-step{border-bottom:1px solid #f0f3ed}
+#main.vibe-active .agent-step:last-child{border-bottom:0}
+#main.vibe-active .agent-step.active .agent-file{color:#37672f}
+#main.vibe-active .agent-preview{background:#fff}
+#main.vibe-active .preview-top{border-bottom:1px solid #edf1e9}
+#main.vibe-active .preview-open{border:1px solid #e1eadb;border-radius:8px;background:#f6faf3;color:#527348;padding:6px 10px}
+#main.vibe-active .preview-open:hover{background:#edf6e8}
+#main.vibe-active #chatComposer .composer{background:rgba(255,255,255,.97)}
+#main.vibe-active #chatComposer .composer textarea{min-height:48px}
+#main.vibe-active .agent-chat-update{padding:7px 9px;border-radius:12px;transition:background .18s}
+#main.vibe-active .agent-chat-update.is-active{background:#f8fbf6}
+#main.vibe-active .message.user{background:#edf6e8;border-color:#e2eddc}
+@media(min-width:901px) and (max-width:1180px){
+  #main.vibe-active{grid-template-columns:190px minmax(0,1fr) 300px}
+  #main.vibe-active .agent-timeline{padding:10px}
+  #main.vibe-active #conversation{padding:16px 14px}
+}
+@media(max-width:900px){
+  #main.vibe-active #workspaceToolbar{background:rgba(255,255,255,.97);box-shadow:0 4px 16px rgba(47,75,39,.04)}
+  #main.vibe-active .workspace-tab{font-weight:700}
+  #main.vibe-active .workspace-tab.active{box-shadow:inset 0 0 0 1px #d8e8d0;background:#edf6e8;color:#386a30}
+  #main.vibe-active.mobile-chat #conversation{box-shadow:0 6px 20px rgba(47,75,39,.035)}
+  #main.vibe-active.mobile-files #workspaceFiles{background:rgba(255,255,255,.98)}
+  #main.vibe-active.mobile-preview #agentWorkbench{gap:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  #main.vibe-active .workspace-file,#main.vibe-active .agent-chat-update{transition:none;animation:none}
+}
+</style>
 </head>
 <body data-nexera-version="19.3.0">
 <div id="app">
@@ -921,9 +964,17 @@ async function runVibeBuildPipeline(options){
   onStage('Building','The selected model is implementing the planned changes in the project files.');
   onProgress('Building the project now…','Creating the interface, wiring interactions and preserving existing files.');
   const buildRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:buildPrompt}],routeOptions);
-  const first=normalizeAgentResponse(buildRaw);
+  let first=normalizeAgentResponse(buildRaw);
+  if(!first||!['project','question','error'].includes(first.kind)){
+    onStage('Recovering','The first response was not a valid project contract. Asking the selected model to correct its output.');
+    onProgress('I’m correcting the model response before changing any files.','The first response was incomplete or not valid project JSON. Your existing project is still untouched.');
+    const recoveryPrompt='Your previous response could not be parsed as the required project JSON contract. Return a complete, valid JSON object only, with no markdown or commentary. Do not repeat the whole project: include complete contents only for files that must change or be created. Keep every path safe and relative. Do not claim tests were run. If the task cannot be completed, return {"kind":"error","issues":["..."]}.\n\nOriginal user request:\n'+request+'\n\nImplementation plan:\n'+plan+'\n\nPrevious response (repair its format and completeness, not its ideas blindly):\n'+String(buildRaw||'').slice(0,24000)+'\n\nExisting project files:\n'+JSON.stringify(existingFiles||{});
+    try{first=normalizeAgentResponse(await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel||cfg.model,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:recoveryPrompt}],routeOptions))}
+    catch(error){return {response:{kind:'error',issues:['The model response was invalid and the recovery request failed: '+(error.message||'unknown error')]},plan,reviewDetail:'The first response could not be parsed and the bounded recovery request failed.'}}
+  }
   if(first?.kind==='question')return {response:first,plan,reviewDetail:'Waiting for one clarification.'};
-  if(!first||first.kind!=='project')return {response:{kind:'error',issues:['The selected model did not return a readable project response. Try again or use a coding-capable model.']},plan,reviewDetail:'The project response could not be parsed.'};
+  if(first?.kind==='error')return {response:first,plan,reviewDetail:'The model reported that it could not complete the request.'};
+  if(!first||first.kind!=='project')return {response:{kind:'error',issues:['The selected model did not return a readable project response after one recovery attempt. Existing files were preserved.']},plan,reviewDetail:'The project response remained invalid after one bounded recovery attempt.'};
   let files=mergeProjectFiles(existingFiles,first.files,first.deletedFiles);
   if(!files)return {response:{kind:'error',issues:['The model response contained no safe, applicable file changes. Existing files were preserved.']},plan,reviewDetail:'No safe file changes were found.'};
   let issues=validateProjectFiles(files);
@@ -942,11 +993,13 @@ async function runVibeBuildPipeline(options){
         }else reviewDetail='The separate QA pass found no additional file changes.';
       }else reviewDetail='The QA response was unavailable or malformed; deterministic checks will still run.';
     }catch(error){reviewDetail='The QA request was unavailable; deterministic checks will still run.'}
+    onProgress('The independent review is complete.',''+reviewDetail);
   }
   let runtime=await runPreviewDiagnostics(files);
   if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
   else if(runtime.supported&&!runtime.issues.length)reviewDetail+=' The isolated preview ran without reported runtime or basic accessibility errors.';
   else if(runtime.detail)reviewDetail+=' '+runtime.detail;
+  onProgress('The first validation pass is complete.',issues.length?'Found '+issues.length+' issue(s); checking whether a targeted repair can resolve them.':reviewDetail);
   for(let attempt=1;issues.length&&attempt<=2;attempt++){
     onStage('Repairing','Quality checks found '+issues.length+' issue(s). Repair pass '+attempt+' of 2 is running.');
     onProgress('I found a few issues and I’m repairing them.','Repair pass '+attempt+' of 2: '+issues.slice(0,4).join(' · '));
@@ -960,7 +1013,8 @@ async function runVibeBuildPipeline(options){
       issues=validateProjectFiles(files);
       runtime=await runPreviewDiagnostics(files);
       if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
-      if(!issues.length)reviewDetail+=' Repair pass '+attempt+' passed the available checks.';
+      if(!issues.length){reviewDetail+=' Repair pass '+attempt+' passed the available checks.';onProgress('The repair passed validation.','Repair pass '+attempt+' of 2 cleared the reported issues.')}
+      else onProgress('A repair pass ran, but issues remain.','Remaining checks: '+issues.slice(0,3).join(' · '));
     }catch(error){break}
   }
   if(issues.length)return {response:{kind:'error',issues:issues.slice(0,15)},plan,reviewDetail:'The project did not pass all available checks. The previous saved project will be preserved.'};
