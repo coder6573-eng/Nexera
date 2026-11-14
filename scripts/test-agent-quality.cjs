@@ -33,9 +33,9 @@ const unsafeAsset = {
 assert.ok(Array.from(sandbox.validateProjectFiles(unsafeAsset)).some(issue => issue.includes("missing local asset: ../style.css")),
   "Path traversal references should be rejected.");
 
-const brokenJs = { ...valid, "script.js": "function broken( {" };
-assert.ok(Array.from(sandbox.validateProjectFiles(brokenJs)).some(issue => issue.includes("JavaScript syntax error")),
-  "Broken JavaScript syntax should be rejected.");
+const unsafeScript = { ...valid, "script.js": "const payload = '</script>';" };
+assert.ok(Array.from(sandbox.validateProjectFiles(unsafeScript)).some(issue => issue.includes("raw </script>")),
+  "Raw script-closing sequences should be rejected before preview.");
 
 const missingCssAsset = { ...valid, "style.css": "main { background: url('./images/missing.svg'); }" };
 assert.ok(Array.from(sandbox.validateProjectFiles(missingCssAsset)).some(issue => issue.includes("missing local asset")),
