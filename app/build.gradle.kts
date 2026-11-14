@@ -11,8 +11,8 @@ android {
         applicationId = "ai.nexera.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 27
-        versionName = "19.2.0"
+        versionCode = 28
+        versionName = "19.3.0"
     }
 
     compileOptions {
