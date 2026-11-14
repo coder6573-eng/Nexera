@@ -716,7 +716,7 @@ function validateProjectFiles(files){
     if(/\.css$/i.test(name)){
       for(const match of value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)){
         const ref=resolveProjectReference(match[1],name);
-        if(!ref.external&&(/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push(name+' references a missing local asset: '+match[1]);
+        if(!ref.external&&(ref.unsafe||/\.[A-Za-z0-9]{1,8}$/.test(ref.path))&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push(name+' references a missing local asset: '+match[1]);
       }
     }
   }
