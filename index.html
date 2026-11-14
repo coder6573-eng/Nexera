@@ -646,8 +646,93 @@ function renderTasks(items,active){const box=document.createElement('div');box.c
 function renderAgentWorkbench(files){const w=$('agentWorkbench');if(!w)return null;w.hidden=false;const list=files.length?files:['index.html','style.css','script.js'];const steps=$('agentSteps');steps.textContent='';list.forEach((file,i)=>{const row=document.createElement('div');row.className='agent-step '+(i===0?'active':'');const icon=document.createElement('div');icon.className='agent-icon';icon.textContent=i===0?'◌':'○';const body=document.createElement('div');const name=document.createElement('div');name.className='agent-file';name.textContent=String(file);const detail=document.createElement('div');detail.className='agent-detail';detail.textContent=i===0?'working now':'queued';body.append(name,detail);const time=document.createElement('div');time.className='agent-time';time.textContent=i===0?'now':'next';row.append(icon,body,time);steps.appendChild(row)});if(activeTaskStage!=='interrupted')$('agentStatus').textContent='Ready';$('conversation').scrollTop=$('conversation').scrollHeight;renderWorkspaceFiles();return w}
 function updateAgentWorkbench(files,activeIndex,status){const w=$('agentWorkbench');if(!w||w.hidden)return;const list=files.length?files:['index.html','style.css','script.js'];const steps=$('agentSteps');steps.textContent='';list.forEach((file,i)=>{const done=i<activeIndex,active=i===activeIndex;const row=document.createElement('div');row.className='agent-step '+(done?'done ':active?'active ':'');const icon=document.createElement('div');icon.className='agent-icon';icon.textContent=done?'✓':active?'◌':'○';const body=document.createElement('div');const name=document.createElement('div');name.className='agent-file';name.textContent=String(file);const detail=document.createElement('div');detail.className='agent-detail';detail.textContent=done?'completed':active?'working now':'queued';body.append(name,detail);const time=document.createElement('div');time.className='agent-time';time.textContent=done?'done':active?'now':'next';row.append(icon,body,time);steps.appendChild(row)});$('agentStatus').textContent=status||'working';$('conversation').scrollTop=$('conversation').scrollHeight}
 function isSafeProjectPath(name){if(typeof name!=='string'||name.includes('\\'))return false;const parts=name.split('/');return parts.length<=5&&parts.every(part=>/^[A-Za-z0-9._-]{1,80}$/.test(part)&&part!=='.'&&part!=='..')}
-function mergeProjectFiles(existing,incoming){if(!incoming||typeof incoming!=='object'||Array.isArray(incoming))return null;const accepted=Object.fromEntries(Object.entries(incoming).filter(([name,value])=>isSafeProjectPath(name)&&typeof value==='string'&&value.length<=400000));if(!Object.keys(accepted).length)return null;const merged={...(existing||{}),...accepted};const total=Object.values(merged).reduce((size,value)=>size+String(value).length,0);if(total>700000||typeof merged['index.html']!=='string')return null;if(!existing&&!['index.html','style.css','script.js'].every(key=>typeof merged[key]==='string'))return null;return merged}
-function validateProjectFiles(files){const issues=[];const project=files&&typeof files==='object'&&!Array.isArray(files)?files:{};const html=String(project['index.html']||'');if(!html.trim())issues.push('index.html is empty');if(!/^\s*<!doctype html>/i.test(html))issues.push('index.html is missing a DOCTYPE');if(!/<html[\s>]/i.test(html)||!/<\/html>/i.test(html))issues.push('index.html has an incomplete html root');if(!/<meta[^>]+name=["']viewport["']/i.test(html))issues.push('viewport meta tag is missing');for(const [name,value] of Object.entries(project)){if(typeof value!=='string'){issues.push(name+' is not text');continue}if(/\.js$/i.test(name)&&/<\/script/i.test(value))issues.push(name+' contains a raw script-closing sequence')}const refs=[...html.matchAll(/<(?:script|link)\b[^>]*?(?:src|href)\s*=\s*["']([^"']+)["'][^>]*>/gi)];for(const match of refs){const raw=match[1].trim();if(!raw||/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(raw))continue;const clean=raw.split(/[?#]/)[0].replace(/^\.\//,'').replace(/^\//,'');if(!/\.(?:css|js|mjs|png|jpe?g|svg|webp|gif|ico|woff2?|ttf|mp4|webm)$/i.test(clean))continue;const parts=[];let unsafe=false;for(const part of clean.split('/')){if(!part||part==='.')continue;if(part==='..'){unsafe=true;break}parts.push(part)}const normalized=parts.join('/');if(unsafe||!Object.prototype.hasOwnProperty.call(project,normalized))issues.push('missing local asset: '+raw)}return issues.slice(0,10)}
+function parseAgentResponse(raw){
+  const source=String(raw||'').replace(/<think>[\s\S]*?<\/think>/gi,'').trim();
+  if(!source)return null;
+  try{const value=JSON.parse(source);if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch{}
+  for(let start=0;start<source.length;start++){
+    if(source[start]!=='{')continue;
+    let depth=0,inString=false,escaped=false;
+    for(let i=start;i<source.length;i++){
+      const ch=source[i];
+      if(inString){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')inString=false;continue}
+      if(ch==='"'){inString=true;continue}
+      if(ch==='{')depth++;
+      else if(ch==='}'){depth--;if(depth===0){try{const value=JSON.parse(source.slice(start,i+1));if(value&&typeof value==='object'&&!Array.isArray(value))return value}catch{}break}}
+    }
+  }
+  return null;
+}
+function normalizeAgentResponse(raw){
+  const value=typeof raw==='string'?parseAgentResponse(raw):raw;
+  if(!value||typeof value!=='object'||Array.isArray(value))return null;
+  if(value.kind==='question'&&typeof value.question==='string'&&value.question.trim())return {kind:'question',question:value.question.trim()};
+  if(value.kind==='error')return value;
+  if(value.kind!=='project'&&(!value.files||typeof value.files!=='object'||Array.isArray(value.files)))return null;
+  if(!value.files||typeof value.files!=='object'||Array.isArray(value.files))return null;
+  return {kind:'project',name:typeof value.name==='string'?value.name:'',summary:typeof value.summary==='string'?value.summary:'',tasks:Array.isArray(value.tasks)?value.tasks.filter(x=>typeof x==='string').slice(0,20):[],files:value.files,deletedFiles:Array.isArray(value.deletedFiles)?value.deletedFiles:[]};
+}
+function mergeProjectFiles(existing,incoming,deletedFiles=[]){
+  if(!incoming||typeof incoming!=='object'||Array.isArray(incoming)||!Array.isArray(deletedFiles))return null;
+  const accepted={};
+  for(const [name,value] of Object.entries(incoming)){if(!isSafeProjectPath(name)||typeof value!=='string'||value.length>400000)return null;accepted[name]=value}
+  const deletions=[];
+  for(const name of deletedFiles){if(typeof name!=='string'||!isSafeProjectPath(name)||['index.html','style.css','script.js'].includes(name))return null;deletions.push(name)}
+  if(!Object.keys(accepted).length&&!deletions.length)return null;
+  const merged={...(existing||{}),...accepted};
+  for(const name of deletions)delete merged[name];
+  const total=Object.values(merged).reduce((size,value)=>size+String(value).length,0);
+  if(total>700000||typeof merged['index.html']!=='string')return null;
+  if(!existing&&!['index.html','style.css','script.js'].every(key=>typeof merged[key]==='string'))return null;
+  return merged;
+}
+function resolveProjectReference(reference,owner='index.html'){
+  const raw=String(reference||'').trim();
+  if(!raw||/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(raw))return {external:true,path:''};
+  const clean=raw.split(/[?#]/)[0];
+  if(!clean)return {external:true,path:''};
+  const base=clean.startsWith('/')?[]:owner.includes('/')?owner.split('/').slice(0,-1):[];
+  for(const part of clean.replace(/^\/+/,'').split('/')){
+    if(!part||part==='.')continue;
+    if(part==='..'){if(!base.length)return {external:false,unsafe:true,path:''};base.pop();continue}
+    if(!/^[A-Za-z0-9._-]{1,80}$/.test(part))return {external:false,unsafe:true,path:''};
+    base.push(part);
+  }
+  return {external:false,unsafe:false,path:base.join('/')};
+}
+function validateProjectFiles(files){
+  const issues=[];
+  const project=files&&typeof files==='object'&&!Array.isArray(files)?files:{};
+  const html=String(project['index.html']||'');
+  if(!html.trim())issues.push('index.html is empty');
+  if(!/^\s*<!doctype html>/i.test(html))issues.push('index.html is missing a DOCTYPE');
+  if(!/<html[\s>]/i.test(html)||!/<\/html>/i.test(html))issues.push('index.html has an incomplete html root');
+  if(!/<meta[^>]+name=["']viewport["']/i.test(html))issues.push('viewport meta tag is missing');
+  for(const [name,value] of Object.entries(project)){
+    if(!isSafeProjectPath(name)){issues.push('unsafe project path: '+name);continue}
+    if(typeof value!=='string'){issues.push(name+' is not text');continue}
+    if(/\.js$/i.test(name)&&/<\/script/i.test(value))issues.push(name+' contains a raw </script> sequence');
+    if(/\.js$/i.test(name)&&!(/^\s*(?:import|export)\s/m.test(value))){try{new Function(value)}catch(error){issues.push(name+' has a JavaScript syntax error: '+String(error.message||error).slice(0,140))}}
+    if(/\.css$/i.test(name)){
+      for(const match of value.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/gi)){
+        const ref=resolveProjectReference(match[1],name);
+        if(!ref.external&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push(name+' references a missing local asset: '+match[1]);
+      }
+    }
+  }
+  const refs=[...html.matchAll(/<(?:script|link|img|source|video|audio|iframe)\b[^>]*?(?:src|href|poster)\s*=\s*["']([^"']+)["'][^>]*>/gi)];
+  for(const match of refs){
+    const ref=resolveProjectReference(match[1]);
+    if(!ref.external&&(ref.unsafe||!Object.prototype.hasOwnProperty.call(project,ref.path)))issues.push('missing local asset: '+match[1]);
+  }
+  for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
+    const attrs=match[1]||'',code=match[2]||'';
+    if(/\bsrc\s*=/.test(attrs)||/\btype\s*=\s*["'](?:application\/json|application\/ld\+json|module)["']/i.test(attrs)||!code.trim())continue;
+    try{new Function(code)}catch(error){issues.push('inline JavaScript has a syntax error: '+String(error.message||error).slice(0,140))}
+  }
+  return [...new Set(issues)].slice(0,15);
+}
+
 function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function buildPreviewHtml(files){
   const source=String(files?.['index.html']||'');
   if(!source)return '';
