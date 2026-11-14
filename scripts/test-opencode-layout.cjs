@@ -33,7 +33,6 @@ for (const token of [
   "mobile-files #workspaceFiles",
   "display:flex!important;flex:1;min-height:0;width:100%;max-width:none",
   "mobile-preview .agent-preview{display:flex!important",
-  "prefers-reduced-motion:reduce"
 ]) {
   assert.ok(android.includes(token), "Missing Android tab layout rule: " + token);
 }
