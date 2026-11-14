@@ -67,6 +67,7 @@ async function main() {
   assert.ok(interactionProbe.includes("MutationObserver"), "The interaction smoke test should observe real DOM changes.");
   assert.ok(interactionProbe.includes("element.click()"), "The interaction smoke test should dispatch clicks to visible controls.");
   assert.ok(interactionProbe.includes("interactionSmoke"), "The browser report should expose interaction smoke-test counts.");
+  assert.doesNotThrow(() => new Function("return " + interactionProbe), "The generated browser inspection script must be valid JavaScript.");
   const source = "<!doctype html><html><head><title>Fixture</title></head><body><main>hello</main></body></html>";
   const instrumented = addRuntimeHarness(source);
   assert.ok(instrumented.includes("default-src \'none\'"), "Generated inspection pages must deny all resources by default.");
