@@ -94,10 +94,11 @@ try {
   assert.equal(livePreviewFrame.getAttribute("sandbox"), "allow-forms", "Android inline preview must disable JavaScript");
   assert.equal(window.__testHooks.isAndroidNative(), true, "Android bridge platform should be detected explicitly.");
   assert.ok(!livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Android inline preview must not execute generated scripts");
-  delete window.NexeraNative;
-  assert.equal(window.__testHooks.isAndroidNative(), false, "Desktop preview should not be mistaken for Android.");
+  window.NexeraNative = { platform: "windows" };
+  assert.equal(window.__testHooks.isAndroidNative(), false, "Windows native bridge should not be mistaken for Android.");
   window.__testHooks.updateLivePreview({ "index.html": "<!doctype html><html><body><h1>Desktop preview</h1></body></html>" });
-  assert.ok(livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Desktop preview should retain interactive JavaScript");
+  assert.ok(livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Windows preview should retain interactive JavaScript inside the isolated iframe");
+  delete window.NexeraNative;
   const bundledPreview = window.__testHooks.buildPreviewHtml({
     "index.html": '<!doctype html><html><head><link rel="stylesheet" href="base.css"><link rel="stylesheet" href="theme.css"></head><body><script src="first.js"></script><script src="second.js"></script></body></html>',
     "base.css": "body { color: red; }",
