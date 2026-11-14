@@ -243,6 +243,14 @@ try {
   assert.equal(document.querySelectorAll(".editor-file-item").length, 1, "File search should filter the explorer list");
   document.querySelector(".editor-search").value = "";
   document.querySelector(".editor-search").dispatchEvent(new window.Event("input", { bubbles: true }));
+  click("projectContent").querySelector(".editor-add-file").click();
+  document.getElementById("newWorkspaceFileName").value = "../outside.js";
+  click("confirmCreateFile");
+  assert.ok(document.getElementById("modalBackdrop").classList.contains("open"), "Unsafe file paths must not close the create dialog");
+  document.getElementById("newWorkspaceFileName").value = "components/card.js";
+  click("confirmCreateFile");
+  assert.equal(JSON.parse(window.localStorage.getItem("nexera.projects.v1"))[0].files["components/card.js"], "", "The editor should create nested project files");
+  assert.ok([...document.querySelectorAll(".editor-file-item")].some(row => row.textContent.includes("components/card.js")));
 
   document.querySelector('[data-tab="terminal"]').click();
   const terminalInput = document.getElementById("terminalInput");
