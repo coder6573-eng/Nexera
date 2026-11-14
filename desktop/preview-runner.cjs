@@ -49,7 +49,7 @@ function inspectScript(options = {}) {
     if (width && scrollWidth > width + 2) {
       issues.push("Horizontal overflow: content is " + scrollWidth + "px wide in a " + width + "px preview");
     }
-    document.querySelectorAll("button,[role=\"button\"]").forEach((element, index) => {
+    document.querySelectorAll('button,[role="button"]').forEach((element, index) => {
       if (!String(element.innerText || element.textContent || "").trim() &&
           !element.getAttribute("aria-label") && !element.getAttribute("aria-labelledby") && !element.getAttribute("title")) {
         issues.push("Control " + (index + 1) + " has no accessible name");
@@ -66,7 +66,7 @@ function inspectScript(options = {}) {
     });
     const interactionSmoke = { attempted: 0, changed: 0, noVisibleChange: 0, skipped: 0 };
     if (${probeInteractions}) {
-      const controls = Array.from(document.querySelectorAll("button,[role=\"button\"]"))
+      const controls = Array.from(document.querySelectorAll('button,[role="button"]'))
         .filter(element => !element.disabled && element.getClientRects().length > 0).slice(0, 12);
       for (const element of controls) {
         if (!element.isConnected || !element.getClientRects().length) { interactionSmoke.skipped++; continue; }
