@@ -65,6 +65,24 @@ assert.equal(sandbox.mergeProjectFiles(valid, {}, ["notes.txt"]), null, "Linked 
 sandbox.localFolderLinked = false;
 assert.equal(sandbox.mergeProjectFiles(valid, { "../outside.js": "bad" }), null, "Unsafe file paths must be rejected.");
 
+const previewStart = html.indexOf("function buildPreviewHtml(files,diagnosticId=''){");
+const previewEnd = html.indexOf("\\nfunction runPreviewDiagnostics", previewStart);
+assert.notEqual(previewStart, -1, "Preview bundler should exist.");
+assert.notEqual(previewEnd, -1, "Preview diagnostics boundary should exist.");
+vm.runInNewContext(
+  html.slice(previewStart, previewEnd) + "\\nthis.buildPreviewHtml=buildPreviewHtml;",
+  sandbox,
+  { filename: "preview-bundler" }
+);
+const preview = sandbox.buildPreviewHtml({
+  ...valid,
+  "script.js": "window.ready = true;"
+}, "diagnostic-order-test");
+assert.ok(preview.indexOf("nexera-preview-diagnostics") < preview.indexOf("window.ready = true"),
+  "The diagnostic harness must register runtime error listeners before generated project JavaScript executes.");
+assert.ok(preview.includes('addEventListener("unhandledrejection"'),
+  "Preview diagnostics should capture unhandled promise rejections.");
+
 const nestedReference = sandbox.resolveProjectReference("../shared.css", "pages/index.html");
 assert.equal(nestedReference.path, "shared.css");
 assert.equal(nestedReference.unsafe, false);
