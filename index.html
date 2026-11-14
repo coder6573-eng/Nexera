@@ -1028,7 +1028,7 @@ async function runVibeBuildPipeline(options){
     first=normalizeAgentResponse(latestBuildRaw);
   }
   if(first?.kind==='tool_call'){
-    return {response:{kind:'error',issues:['The model reached the read-only host-tool limit of '+toolBudget+' calls. Existing files were preserved.']},plan,reviewDetail:'The model did not return a final project response within the bounded host-tool budget.'};
+    return {response:{kind:'error',issues:['The model reached the read-only host-tool limit of '+toolBudget+' calls. Existing files were preserved.']},plan,reviewDetail:'The read-only host tool limit of '+toolBudget+' calls was reached; the previous project was preserved.'};
   }
   if(!first||!['project','question','error'].includes(first.kind)){
     onStage('Recovering','The first response was not a valid project contract. Asking the selected model to correct its output.');
