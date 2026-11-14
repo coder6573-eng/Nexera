@@ -6,7 +6,7 @@
   "main": "desktop/main.cjs",
   "scripts": {
     "dist:win": "electron-builder --win portable",
-    "test": "node scripts/check-inline-js.cjs && node scripts/test-agent-chat.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs && node scripts/test-opencode-layout.cjs && node scripts/test-agent-quality.cjs"
+    "test": "node scripts/check-inline-js.cjs && node scripts/test-agent-chat.cjs && node scripts/test-ui.cjs && node scripts/test-workspace.cjs && node scripts/test-opencode-layout.cjs && node scripts/test-agent-quality.cjs && node scripts/test-agent-recovery.cjs"
   },
   "devDependencies": {
     "electron": "^45.3.0",
