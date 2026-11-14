@@ -733,7 +733,8 @@ function validateProjectFiles(files){
   return [...new Set(issues)].slice(0,15);
 }
 
-function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function buildPreviewHtml(files,diagnosticId=''){
+function renderChangeSummary(target,before,after){if(!target)return;const oldKeys=new Set(Object.keys(before||{})),newKeys=new Set(Object.keys(after||{}));const rows=[];for(const key of newKeys){if(!oldKeys.has(key))rows.push('Created '+key);else if(String(before[key])!==String(after[key]))rows.push('Updated '+key)}for(const key of oldKeys)if(!newKeys.has(key))rows.push('Removed '+key);if(!rows.length)return;const card=document.createElement('div');card.className='task-card';const title=document.createElement('div');title.className='task-title';title.textContent='Files edited';card.appendChild(title);rows.forEach(label=>{const row=document.createElement('div');row.className='task-row done';const icon=document.createElement('span');icon.textContent='✓';const tx=document.createElement('span');tx.textContent=label;row.append(icon,tx);card.appendChild(row)});target.parentNode?.insertBefore(card,target.nextSibling)}function isAndroidNative(){try{return typeof window.NexeraNative?.platform==='function'?window.NexeraNative.platform()==='android':window.NexeraNative?.platform==='android'}catch{return false}}
+function buildPreviewHtml(files,diagnosticId=''){
   const source=String(files?.['index.html']||'');
   if(!source)return '';
   let html=source;
@@ -778,7 +779,7 @@ function renderChangeSummary(target,before,after){if(!target)return;const oldKey
   return html;
 }
 function runPreviewDiagnostics(files){
-  if(window.NexeraNative)return Promise.resolve({supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'});
+  if(isAndroidNative())return Promise.resolve({supported:false,issues:[],detail:'Android preview keeps generated JavaScript disabled for safety; static checks were used.'});
   const frame=$('livePreviewFrame');
   if(!frame||!frame.contentWindow)return Promise.resolve({supported:false,issues:[],detail:'A browser preview is not available in this environment.'});
   const id='pv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);
@@ -795,7 +796,7 @@ function runPreviewDiagnostics(files){
     frame.srcdoc=buildPreviewHtml(files,id);
   });
 }
-function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',window.NexeraNative?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
+function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',isAndroidNative()?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
 function failAgentWorkbench(){const w=$('agentWorkbench');if(!w||w.hidden)return;w.querySelectorAll('.agent-step').forEach(row=>{row.classList.remove('active');row.classList.add('failed');const icon=row.querySelector('.agent-icon');if(icon)icon.textContent='!';const detail=row.querySelector('.agent-detail');if(detail)detail.textContent='not completed';const time=row.querySelector('.agent-time');if(time)time.textContent='stopped'});$('agentStatus').textContent='Needs attention';$('agentStatusDetail').textContent='The task stopped before the project was updated.'}
 function hideAgentWorkbench(){const w=$('agentWorkbench');if(w)w.hidden=true}
 function addAgentProgress(text){const content=addMessage(text,'assistant');content.classList.add('agent-progress-message');return content}
