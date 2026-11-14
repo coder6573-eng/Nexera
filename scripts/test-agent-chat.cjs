@@ -7,8 +7,7 @@ const vm = require("node:vm");
 
 const html = fs.readFileSync("index.html", "utf8");
 const dom = new JSDOM(html);
-const document = dom.window.document;
-const inline = [...document.querySelectorAll("script")]
+const inline = [...dom.window.document.querySelectorAll("script")]
   .filter(script => !script.src && script.textContent.includes("(()=>{'use strict';"))
   .map(script => script.textContent);
 
@@ -16,28 +15,30 @@ assert.equal(inline.length, 1, "Nexera should have one application inline script
 const source = inline[0];
 
 for (const required of [
-  "let agentUpdates=[]",
-  "function addAgentChatUpdate",
-  "function finishAgentChatUpdate",
-  "function agentUpdate",
-  "function setAgentStage",
-  "function updateAgentRoute",
-  "addAgentProgress('Okay, I’m working on it.",
-  "agentUpdate('I’m planning the build now.",
-  "agentUpdate('Building the website now",
-  "agentUpdate('The first version is built.",
-  "agentUpdate('Done. The files are saved",
+  "function parseAgentResponse",
+  "function normalizeAgentResponse",
+  "function mergeProjectFiles(existing,incoming,deletedFiles=[])",
+  "function validateProjectFiles",
+  "function runPreviewDiagnostics",
+  "async function runVibeBuildPipeline",
+  "async function send(",
+  "Act as the planning stage of a software engineering agent",
+  "Act as a strict software QA reviewer",
+  "Repair only the concrete issues listed below",
+  "attempt<=2",
+  "cfg.orchestratorModel||cfg.model",
+  "cfg.plannerModel||cfg.model",
+  "onRouteAttempt:options.onRoute",
+  "mergeProjectFiles(activeProject?.files,parsed?.files,parsed?.deletedFiles)",
+  "The previous saved project will be preserved",
+  "The isolated preview ran without reported runtime or basic accessibility errors",
+  "Android preview keeps generated JavaScript disabled for safety",
+  "platform()==='android'",
   "changedFiles",
   "careful, iterative software engineering agent",
-  "Preserve the existing architecture",
-  "360px phone, 768px tablet, and 1280px desktop",
-  "independent QA reviewer",
-  "I could not safely apply this update",
-  "projectIssues.length?projectIssues.join",
-  "mergeProjectFiles(firstFiles,reviewed.files)",
-  "raw=JSON.stringify({...reviewed,files:reviewedFiles})",
+  "I could not safely apply this update"
 ]) {
-  assert.ok(source.includes(required), "Missing agent chat behavior: " + required);
+  assert.ok(source.includes(required), "Missing engineering pipeline behavior: " + required);
 }
 
 assert.ok(html.includes('class="agent-chat-update'), "Agent progress messages need dedicated chat styling");
@@ -45,5 +46,4 @@ assert.ok(html.includes('class="agent-chat-text'), "Agent progress messages need
 assert.ok(!source.includes("addAgentProgress(agentProgressForStage(stage))"), "Stage transitions should not duplicate progress messages");
 
 new vm.Script(source, { filename: "index.html:inline-script" });
-
-console.log("Agent chat tests passed: live progress messages, deduplicated stage updates, route-aware status, file-change messaging, and completion chat are wired.");
+console.log("Agent pipeline checks passed: model-agnostic planning, robust response parsing, build, QA, runtime preview checks, bounded repair, and safe project preservation.");
