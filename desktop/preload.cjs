@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("NexeraNative", {
+  platform: "windows",
   hasApiKey: (provider) => ipcRenderer.sendSync("nexera:has-key", provider),
   saveApiKey: (provider, value) => ipcRenderer.sendSync("nexera:save-key", { provider, value }),
   deleteApiKey: (provider) => ipcRenderer.sendSync("nexera:delete-key", provider),
