@@ -1007,11 +1007,11 @@ async function runVibeBuildPipeline(options){
     onProgress('The independent review is complete.',''+reviewDetail);
   }
   onStage('Inspecting','Executing the generated project in an isolated browser and checking desktop and mobile viewport behavior.');
-  onProgress('The code review is finished. I’m opening the actual page in an isolated browser now.','Checking runtime errors, responsive overflow, accessible control names, form labels and image descriptions.');
+  onProgress('The code review is finished. I’m opening the actual page in an isolated browser now.','Checking runtime errors, responsive overflow, accessible labels, image descriptions and visible button interactions.');
   let runtime=await runPreviewDiagnostics(files);
   onProgress('The browser inspection is complete.',runtime.supported?(runtime.issues.length?'Found '+runtime.issues.length+' browser issue(s); preparing a targeted repair.':runtime.detail):runtime.detail||'Browser inspection was unavailable; static checks remain in place.');
   if(runtime.supported&&runtime.issues.length)issues=[...issues,...runtime.issues.map(issue=>'Preview: '+issue)];
-  else if(runtime.supported&&!runtime.issues.length)reviewDetail+=' The isolated preview ran without reported runtime or basic accessibility errors.';
+  else if(runtime.supported&&!runtime.issues.length)reviewDetail+=' The isolated preview ran without reported runtime or basic accessibility errors. Its click smoke test exercised '+(runtime.interactionSmoke?.attempted||0)+' visible controls; this is a crash and visible-response check, not proof of semantic correctness.';
   else if(runtime.detail)reviewDetail+=' '+runtime.detail;
   onProgress('The first validation pass is complete.',issues.length?'Found '+issues.length+' issue(s); checking whether a targeted repair can resolve them.':reviewDetail);
   for(let attempt=1;issues.length&&attempt<=2;attempt++){
