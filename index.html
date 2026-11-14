@@ -408,6 +408,81 @@ button:active{transform:scale(.97)}
 }
 </style>
 
+
+<style id="nexera-v19-android-file-tabs">
+/* Android/tablet: explorer is a full-screen destination, never a squeezed desktop sidebar. */
+@media(max-width:900px){
+  #main.vibe-active{
+    display:flex!important;
+    flex-direction:column;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    gap:9px;
+    padding:8px;
+    overflow:hidden;
+  }
+  #main.vibe-active #workspaceToolbar{
+    display:flex;
+    flex:0 0 auto;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+    padding:8px;
+    min-height:0;
+  }
+  #main.vibe-active .workspace-brand{flex:1 1 100%;min-width:0}
+  #main.vibe-active .workspace-project strong{max-width:none}
+  #main.vibe-active .workspace-toolbar-actions{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    width:100%;
+    gap:6px;
+  }
+  #main.vibe-active .workspace-route,
+  #main.vibe-active .workspace-editor-btn{display:none!important}
+  #main.vibe-active .workspace-tab{
+    display:flex!important;
+    align-items:center;
+    justify-content:center;
+    width:100%;
+    min-width:0;
+    min-height:39px;
+    padding:9px 5px;
+    border-radius:10px;
+    font-size:12px;
+  }
+  #main.vibe-active #workspaceFiles,
+  #main.vibe-active #agentWorkbench,
+  #main.vibe-active #conversation,
+  #main.vibe-active #chatComposer{display:none!important}
+  #main.vibe-active.mobile-chat #conversation{
+    display:block!important;flex:1;min-height:0;width:100%;overflow:auto;
+    padding:14px 12px;border:1px solid #e3eae0;border-radius:13px;background:#fff;
+  }
+  #main.vibe-active.mobile-chat #chatComposer{
+    display:block!important;flex:0 0 auto;width:100%;
+    padding-bottom:max(5px,env(safe-area-inset-bottom));
+  }
+  #main.vibe-active.mobile-preview #agentWorkbench{
+    display:grid!important;flex:1;min-height:0;width:100%;min-width:0;
+    grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(125px,.7fr) minmax(210px,1.3fr);
+    overflow:auto;gap:8px;
+  }
+  #main.vibe-active.mobile-preview .agent-timeline{max-height:none;min-height:125px;overflow:auto}
+  #main.vibe-active.mobile-preview .agent-preview{display:flex!important;min-height:210px}
+  #main.vibe-active.mobile-preview .live-canvas{min-height:150px}
+  #main.vibe-active.mobile-files #workspaceFiles{
+    display:flex!important;flex:1;min-height:0;width:100%;max-width:none;
+    grid-column:auto;grid-row:auto;overflow:hidden;padding:12px;
+    border:1px solid #e3eae0;border-radius:13px;background:#fff;
+  }
+  #main.vibe-active.mobile-files .workspace-file-list{
+    flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+    padding-bottom:max(8px,env(safe-area-inset-bottom));
+  }
+}
+</style>
+
 </head>
 <body data-nexera-version="19.0.0">
 <div id="app">
@@ -443,7 +518,7 @@ function toast(s){const t=$('toast');t.textContent=s;t.classList.add('show');set
 function openDrawer(){ $('drawer').classList.add('open');$('scrim').classList.add('open');renderProjects()}function closeDrawer(){$('drawer').classList.remove('open');$('scrim').classList.remove('open')}
 function setProviderChoice(provider){const supported=$('homeProvider')?[...$('homeProvider').options].map(option=>option.value):['auto'];selectedProvider=supported.includes(provider)?provider:'auto';['homeProvider','chatProvider'].forEach(id=>{if($(id))$(id).value=selectedProvider});if($('workspaceRoute'))$('workspaceRoute').textContent=selectedProvider==='auto'?'Free Auto · 16 candidates':selectedProvider.toUpperCase()}
 function setWorkspaceMode(mode){workspaceMode=mode==='vibe'?'vibe':'chat';['homeMode','chatMode'].forEach(id=>{if($(id))$(id).value=workspaceMode});['homeAgentMode','chatAgentMode','homeSkill','chatSkill'].forEach(id=>{if($(id))$(id).style.display=workspaceMode==='vibe'?'':'none'});['homeWebSearch','chatWebSearch'].forEach(id=>{if($(id))$(id).style.display=workspaceMode==='vibe'?'none':''});applyWorkspaceLayout()}
-function applyWorkspaceLayout(){const main=$('main'),active=workspaceMode==='vibe'&&$('home').style.display==='none'&&$('projectView').style.display!=='flex';main.classList.toggle('vibe-active',active);$('workspaceToolbar').hidden=!active;$('workspaceFiles').hidden=!active;if(!active){main.classList.remove('mobile-chat','mobile-preview','mobile-files');return}renderWorkspaceFiles();if(window.innerWidth<=760&&!main.classList.contains('mobile-chat')&&!main.classList.contains('mobile-preview')&&!main.classList.contains('mobile-files'))setMobileWorkspacePanel('chat');$('workspaceRoute').textContent=selectedProvider==='auto'?'Free Auto · 16 candidates':selectedProvider==='kilo'?'Kilo Auto Free':selectedProvider}
+function applyWorkspaceLayout(){const main=$('main'),active=workspaceMode==='vibe'&&$('home').style.display==='none'&&$('projectView').style.display!=='flex';main.classList.toggle('vibe-active',active);$('workspaceToolbar').hidden=!active;$('workspaceFiles').hidden=!active;if(!active){main.classList.remove('mobile-chat','mobile-preview','mobile-files');return}renderWorkspaceFiles();if(window.innerWidth<=900&&!main.classList.contains('mobile-chat')&&!main.classList.contains('mobile-preview')&&!main.classList.contains('mobile-files'))setMobileWorkspacePanel('chat');$('workspaceRoute').textContent=selectedProvider==='auto'?'Free Auto · 16 candidates':selectedProvider==='kilo'?'Kilo Auto Free':selectedProvider}
 function setMobileWorkspacePanel(panel){const main=$('main');main.classList.remove('mobile-chat','mobile-preview','mobile-files');main.classList.add('mobile-'+panel);['chat','preview','files'].forEach(name=>$('workspace'+name[0].toUpperCase()+name.slice(1)+'Tab').classList.toggle('active',name===panel))}
 function renderWorkspaceFiles(){const list=$('workspaceFileList');if(!list)return;list.textContent='';const projectFiles=activeProject?.files||{};$('workspaceTitle').textContent=activeProject?.name||'New project';$('workspaceFileCount').textContent=Object.keys(projectFiles).length+' files';if(!Object.keys(projectFiles).length){const empty=document.createElement('div');empty.className='empty';empty.textContent='Your project files will appear here after the first build.';list.appendChild(empty);return}Object.keys(projectFiles).sort().forEach(name=>{const button=document.createElement('button');button.type='button';button.className='workspace-file'+(name===activeFile?' active':'');const icon=document.createElement('span');icon.textContent=name.endsWith('.css')?'◈':name.endsWith('.js')?'⌘':'▤';const label=document.createElement('span');label.className='workspace-file-name';label.textContent=name;button.append(icon,label);button.onclick=()=>{activeFile=name;if(activeProject)openProject(activeProject.id,'files')};list.appendChild(button)})}function setExecutionMode(mode){executionMode=mode==='agent'?'agent':'build';['homeAgentMode','chatAgentMode'].forEach(id=>{if($(id))$(id).value=executionMode})}function setSkill(skill){activeSkill=skill||'frontend';['homeSkill','chatSkill'].forEach(id=>{if($(id))$(id).value=activeSkill})}function setWebSearchEnabled(enabled){webSearchEnabled=!!enabled;['homeWebSearch','chatWebSearch'].forEach(id=>{if($(id)){ $(id).classList.toggle('active',webSearchEnabled);$(id).textContent=webSearchEnabled?'Web ✓':'Web'}})}
 async function saveLinkedFolder(){if(!localFolderLinked||typeof window.NexeraNative?.saveFolder!=='function'||!activeProject)return {ok:true,skipped:true};try{const result=await window.NexeraNative.saveFolder(JSON.stringify(activeProject.files));if(!result?.ok)toast(result?.error||'Could not save changes to the linked folder.');return result||{ok:false,error:'No save result was returned.'}}catch(error){toast(error.message||'Could not save changes to the linked folder.');return {ok:false,error:error.message}}}async function openLocalFolder(){if(typeof window.NexeraNative?.openFolder!=='function'){toast('Local folder access is available in the Windows desktop app.');return}try{const result=await window.NexeraNative.openFolder();if(result?.canceled)return;if(!result?.ok)throw new Error(result?.error||'Could not open that folder.');const files=result.files||{};if(typeof files['index.html']!=='string')throw new Error('The selected folder needs an index.html file.');const id='local-'+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36));linkedFolderProjectId=id;activeProject={id,name:result.folderName||'Local project',files,archived:false,updated:Date.now()};projects.unshift(activeProject);localFolderLinked=true;activeFile='index.html';messages=[];$('conversation').textContent='';setWorkspaceMode('vibe');setExecutionMode('agent');startChat();renderAgentWorkbench(Object.keys(files));updateLivePreview(files);addMessage('Opened **'+activeProject.name+'** as a linked local workspace. Changes from Nexera will be saved back to the selected folder.','assistant');saveProjects();renderProjects();toast('Local folder linked')}catch(error){toast(error.message||'Could not open that folder.')}}
