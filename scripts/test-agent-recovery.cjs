@@ -19,10 +19,11 @@ const sandbox = { localFolderLinked: false, VIBE_SYSTEM: "test system", SKILL_GU
 vm.createContext(sandbox);
 vm.runInContext(
   html.slice(helperStart, helperEnd) +
-  "\nthis.agentHelpers={normalizeAgentResponse,mergeProjectFiles,validateProjectFiles};",
+  "\nthis.agentHelpers={normalizeAgentResponse,mergeProjectFiles,validateProjectFiles,executeAgentTool};",
   sandbox,
   { filename: "agent-project-helpers" }
 );
+sandbox.executeAgentTool = sandbox.agentHelpers.executeAgentTool;
 vm.runInContext(
   html.slice(pipelineStart, pipelineEnd) + "\nthis.runVibeBuildPipeline=runVibeBuildPipeline;",
   sandbox,
@@ -84,6 +85,32 @@ async function testPlannerBuildReviewerLifecycle() {
   assert.deepEqual(stages, ["Planning", "Building", "Reviewing", "Inspecting"]);
 }
 
+async function testModelIndependentHostToolLoop() {
+  let calls = 0;
+  let sawListResult = false;
+  let sawReadResult = false;
+  const { result, stages } = await runPipeline(async (_provider, _endpoint, _model, messages) => {
+    calls++;
+    if (calls === 1) return "Plan: inspect the existing project, then implement and verify it.";
+    if (calls === 2) return JSON.stringify({ kind: "tool_call", tool: "workspace.list_files", args: {} });
+    if (calls === 3) {
+      sawListResult = messages.some(message => String(message.content || "").includes('"kind":"tool_result"') && String(message.content).includes("index.html"));
+      return JSON.stringify({ kind: "tool_call", tool: "workspace.read_file", args: { path: "index.html" } });
+    }
+    if (calls === 4) {
+      sawReadResult = messages.some(message => String(message.content || "").includes("Ready"));
+      return validResponse;
+    }
+    return JSON.stringify({ kind: "project", name: "Review", files: {} });
+  }, { agentMode: true, existingFiles: validFiles });
+  assert.equal(calls, 5, "Agent mode should run two host tools, then build and review.");
+  assert.equal(sawListResult, true, "The model should receive the workspace listing result.");
+  assert.equal(sawReadResult, true, "The model should receive bounded file contents from the read tool.");
+  assert.ok(stages.includes("Using tools"), "Host tool execution should be visible in progress stages.");
+  assert.equal(result.response.kind, "project");
+  assert.match(result.reviewDetail, /2 host tool calls/i);
+}
+
 async function testBoundedRepairPass() {
   let calls = 0;
   let validations = 0;
@@ -101,8 +128,9 @@ async function testBoundedRepairPass() {
   await testMalformedResponseRecovery();
   await testRecoveryFailurePreservesExistingProject();
   await testPlannerBuildReviewerLifecycle();
+  await testModelIndependentHostToolLoop();
   await testBoundedRepairPass();
-  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, and bounded repair.\n");
+  process.stdout.write("Agent recovery tests passed: malformed-output retry, safe preservation, planner/build/reviewer lifecycle, bounded model-independent host tools, and bounded repair.\n");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
