@@ -71,7 +71,9 @@ async function main() {
   assert.ok(instrumented.indexOf("Content-Security-Policy") < instrumented.indexOf("<title>Fixture</title>"), "The policy must be installed before project markup can load resources.");
   assert.ok(instrumented.includes("__NEXERA_RUNTIME_ERRORS__"));
   assert.ok(instrumented.indexOf("__NEXERA_RUNTIME_ERRORS__") < instrumented.indexOf("<title>Fixture</title>"));
-  assert.ok(addRuntimeHarness("<html><body>body only</body></html>").includes("<body><script>"), "The runtime harness should also be inserted when no head element exists.");
+  const bodyOnly = addRuntimeHarness("<html><body>body only</body></html>");
+  assert.ok(bodyOnly.includes("<head><meta http-equiv=\"Content-Security-Policy\""), "Documents without a head element should receive a real head containing the inspection policy.");
+  assert.ok(bodyOnly.includes("__NEXERA_RUNTIME_ERRORS__"), "The runtime harness should also be inserted when no head element exists.");
 
   FakeBrowserWindow.instances = [];
   FakeBrowserWindow.nextScenario = {};
