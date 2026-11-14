@@ -634,8 +634,13 @@ function renderProjectContent(){
           row.appendChild(current);
         }
         row.addEventListener('click',()=>{
-          if(editorState.dirty&&!confirm('Discard unsaved changes to '+activeFile+'?'))return;
+          if(editorState.dirty&&localFolderLinked){
+            saveLinkedFolder().then(result=>{
+              if(!result.ok)toast('Could not sync the previous file to the linked folder');
+            });
+          }
           activeFile=name;
+          editorState.dirty=false;
           renderProjectContent();
         });
         list.appendChild(row);
@@ -879,6 +884,7 @@ function createWorkspaceFile(){
 }
 function deleteWorkspaceFile(name){
   if(!activeProject||['index.html','style.css','script.js'].includes(name))return;
+  if(localFolderLinked){toast('Deleting files from a linked folder is disabled to protect your originals.');return;}
   if(!confirm('Delete '+name+' from this project?'))return;
   delete activeProject.files[name];
   activeFile=Object.keys(activeProject.files)[0]||'index.html';
