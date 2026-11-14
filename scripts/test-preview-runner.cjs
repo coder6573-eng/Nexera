@@ -14,6 +14,7 @@ class FakeWebContents extends EventEmitter {
   setWindowOpenHandler(handler) { this.handlers.open = handler; }
   async executeJavaScript(source) {
     this.scripts.push(source);
+    if (source.includes("document.documentElement") && FakeBrowserWindow.nextScenario.hangInspection) return new Promise(() => {});
     if (source.includes("document.documentElement")) {
       return {
         width: this.owner.width,
@@ -50,6 +51,7 @@ class FakeBrowserWindow extends EventEmitter {
   setContentSize(width) { this.width = width; }
   isDestroyed() { return false; }
   close() { this.closed = true; }
+  destroy() { this.closed = true; }
 }
 
 async function main() {
@@ -91,6 +93,13 @@ async function main() {
   assert.equal(loadFailure.supported, false);
   assert.ok(loadFailure.detail.includes("fixture load failure"));
   assert.equal(FakeBrowserWindow.instances.at(-1).closed, true);
+
+  FakeBrowserWindow.nextScenario = { hangInspection: true };
+  const fastInspect = createPreviewRunner(FakeBrowserWindow, { executionTimeoutMs: 15 });
+  const hung = await fastInspect(source);
+  assert.equal(hung.supported, false);
+  assert.ok(hung.detail.includes("blocked the browser inspector"));
+  assert.equal(FakeBrowserWindow.instances.at(-1).closed, true, "A stuck generated page must be forcibly destroyed.");
 
   const beforeInvalid = FakeBrowserWindow.instances.length;
   const invalid = await inspect(" ");
