@@ -81,7 +81,7 @@ async function testPlannerBuildReviewerLifecycle() {
   }, { agentMode: true });
   assert.equal(calls, 3, "Agent mode should call planner, builder and independent reviewer.");
   assert.equal(result.response.kind, "project");
-  assert.deepEqual(stages, ["Planning", "Building", "Reviewing"]);
+  assert.deepEqual(stages, ["Planning", "Building", "Reviewing", "Inspecting"]);
 }
 
 async function testBoundedRepairPass() {
