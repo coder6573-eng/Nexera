@@ -75,9 +75,10 @@ async function main() {
   assert.equal(first.options.webPreferences.contextIsolation, true);
   assert.equal(first.options.webPreferences.sandbox, true);
   assert.equal(first.options.webPreferences.webSecurity, true);
+  assert.equal(first.options.webPreferences.backgroundThrottling, false);
   assert.equal(first.webContents.handlers.open().action, "deny");
-  assert.ok(first.url.startsWith("data:text/html;charset=utf-8,"));
-  assert.ok(decodeURIComponent(first.url).includes("__NEXERA_RUNTIME_ERRORS__"));
+  assert.ok(first.url.startsWith("data:text/html;base64,"));
+  assert.ok(Buffer.from(first.url.slice("data:text/html;base64,".length), "base64").toString("utf8").includes("__NEXERA_RUNTIME_ERRORS__"));
 
   FakeBrowserWindow.nextScenario = { consoleError: "Uncaught ReferenceError: missingThing is not defined" };
   const failedRuntime = await inspect(source);
