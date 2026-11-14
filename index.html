@@ -845,7 +845,7 @@ waiting.appendChild(note);
 if(isVibe){
   setAgentStage(localSave.ok?'Complete':'Needs attention',localSave.ok?'Project files are saved and the live preview has been refreshed.':'The Nexera project was updated, but saving to the linked folder failed. Check the folder permissions and retry.');
   if(localSave.ok)agentUpdate('Done. The files are saved and the live preview is refreshed.','You can keep chatting with me to change the design, add features, or fix anything you notice.',{finishPrevious:true});
-}if(window.innerWidth<=760)setMobileWorkspacePanel('preview')}}else if(isVibe&&parsed?.kind==='question'&&typeof parsed.question==='string'&&parsed.question.trim()){
+}if(window.innerWidth<=760)setMobileWorkspacePanel('preview')}else if(isVibe&&parsed?.kind==='question'&&typeof parsed.question==='string'&&parsed.question.trim()){
   waiting.textContent=parsed.question.trim();
   messages.push({role:'assistant',content:parsed.question.trim()});
   if(taskCard&&taskCard.parentNode)taskCard.remove();
