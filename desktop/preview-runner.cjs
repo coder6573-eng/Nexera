@@ -100,7 +100,7 @@ function createPreviewRunner(BrowserWindow) {
       contents.setWindowOpenHandler(() => ({ action: "deny" }));
       contents.on("will-navigate", event => event.preventDefault());
       contents.on("console-message", (_event, details) => {
-        if (Number(details?.level) >= 2) record("Browser console: " + (details.message || "console error"));
+        if (Number(details?.level) >= 3) record("Browser console: " + (details.message || "console error"));
       });
       contents.on("render-process-gone", (_event, details) => {
         record("Preview renderer stopped: " + (details?.reason || "unknown reason"));
@@ -108,10 +108,17 @@ function createPreviewRunner(BrowserWindow) {
 
       const inspectedHtml = addRuntimeHarness(html);
       const dataUrl = "data:text/html;charset=utf-8," + encodeURIComponent(inspectedHtml);
-      await Promise.race([
-        preview.loadURL(dataUrl),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("The isolated browser preview timed out while loading.")), LOAD_TIMEOUT_MS))
-      ]);
+      let loadTimer;
+      try {
+        await Promise.race([
+          preview.loadURL(dataUrl),
+          new Promise((_, reject) => {
+            loadTimer = setTimeout(() => reject(new Error("The isolated browser preview timed out while loading.")), LOAD_TIMEOUT_MS);
+          })
+        ]);
+      } finally {
+        if (loadTimer) clearTimeout(loadTimer);
+      }
 
       const reports = [];
       for (const width of VIEWPORTS) {
