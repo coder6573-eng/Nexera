@@ -784,8 +784,8 @@ if(executionMode==='agent'){
     try{
       const reviewedRaw=await nativeCall(cfg.provider,cfg.endpoint,cfg.orchestratorModel,[{role:'system',content:VIBE_SYSTEM},{role:'user',content:reviewPrompt}],{onRouteAttempt:(route,index,total)=>updateAgentRoute(route,index,total)});
       const reviewed=JSON.parse(reviewedRaw);
-      const reviewedFiles=reviewed?.kind==='project'?mergeProjectFiles(activeProject?.files,reviewed.files):null;
-      if(reviewedFiles&&!validateProjectFiles(reviewedFiles).length){raw=reviewedRaw;reviewPassed=true}
+      const reviewedFiles=reviewed?.kind==='project'?(Object.keys(reviewed.files||{}).length?mergeProjectFiles(firstFiles,reviewed.files):firstFiles):null;
+      if(reviewedFiles&&!validateProjectFiles(reviewedFiles).length){raw=JSON.stringify({...reviewed,files:reviewedFiles});reviewPassed=true}
     }catch(reviewError){}
     if(!reviewPassed&&firstIssues.length){raw='';reviewDetail='The second-pass review could not repair the structural issues. Existing project files were kept.'}
     else if(!reviewPassed){raw=raw||JSON.stringify(firstPass);reviewDetail='The independent review was unavailable; the first-pass build passed structural checks.'}
