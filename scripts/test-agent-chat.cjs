@@ -20,6 +20,7 @@ for (const required of [
   "function mergeProjectFiles(existing,incoming,deletedFiles=[])",
   "function validateProjectFiles",
   "function runPreviewDiagnostics",
+  "The isolated project preview was checked at 360px, 768px and 1280px",
   "async function runVibeBuildPipeline",
   "async function send(",
   "Act as the planning stage of a software engineering agent",
