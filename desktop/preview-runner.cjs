@@ -15,7 +15,7 @@ function withTimeout(operation, milliseconds, message) {
 
 function addRuntimeHarness(html) {
   const policy = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\' data:; style-src \'unsafe-inline\' data:; img-src data: blob:; font-src data:; media-src data:; connect-src \'none\'; frame-src \'none\'; object-src \'none\'; form-action \'none\'; base-uri \'none\'">';
-  const harness = policy + `<script>
+  const harness = policy + \`<script>
     (() => {
       const errors = window.__NEXERA_RUNTIME_ERRORS__ = [];
       const add = value => {
@@ -25,9 +25,9 @@ function addRuntimeHarness(html) {
       window.addEventListener("error", event => add(event.message || event.error?.message || "Uncaught runtime error"));
       window.addEventListener("unhandledrejection", event => add(event.reason?.message || event.reason || "Unhandled promise rejection"));
     })();
-  <\\/script>`;
-  if (/<head\\b[^>]*>/i.test(html)) return html.replace(/<head\\b[^>]*>/i, opening => opening + harness);
-  if (/<html\\b[^>]*>/i.test(html)) return html.replace(/<html\\b[^>]*>/i, opening => opening + "<head>" + harness + "</head>");
+  <\/script>\`;
+  if (/<head\b[^>]*>/i.test(html)) return html.replace(/<head\b[^>]*>/i, opening => opening + harness);
+  if (/<html\b[^>]*>/i.test(html)) return html.replace(/<html\b[^>]*>/i, opening => opening + "<head>" + harness + "</head>");
   return "<head>" + harness + "</head>" + html;
 }
 function inspectScript() {
