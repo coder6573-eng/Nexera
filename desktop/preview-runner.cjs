@@ -17,7 +17,7 @@ function addRuntimeHarness(html) {
     })();
   <\/script>`;
   if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, harness + "</head>");
-  if (/<body\b[^>]*>/i.test(html)) return html.replace(/<body\\b[^>]*>/i, opening => opening + harness);
+  if (/<body\b[^>]*>/i.test(html)) return html.replace(/<body\b[^>]*>/i, opening => opening + harness);
   return harness + html;
 }
 
@@ -80,7 +80,8 @@ function createPreviewRunner(BrowserWindow) {
         sandbox: true,
         webSecurity: true,
         webviewTag: false,
-        devTools: false
+        devTools: false,
+        backgroundThrottling: false
       }
     });
     const contents = preview.webContents;
@@ -136,7 +137,7 @@ function createPreviewRunner(BrowserWindow) {
         } else {
           record(width + "px preview: the browser inspector returned an invalid result");
         }
-        await contents.executeJavaScript("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))", true);
+        await contents.executeJavaScript("new Promise(resolve => setTimeout(resolve, 120))", true);
       }
 
       return {
