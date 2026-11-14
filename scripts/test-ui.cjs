@@ -98,6 +98,18 @@ try {
   assert.equal(window.__testHooks.isAndroidNative(), false, "Desktop preview should not be mistaken for Android.");
   window.__testHooks.updateLivePreview({ "index.html": "<!doctype html><html><body><h1>Desktop preview</h1></body></html>" });
   assert.ok(livePreviewFrame.getAttribute("sandbox").includes("allow-scripts"), "Desktop preview should retain interactive JavaScript");
+  const bundledPreview = window.__testHooks.buildPreviewHtml({
+    "index.html": '<!doctype html><html><head><link rel="stylesheet" href="base.css"><link rel="stylesheet" href="theme.css"></head><body><script src="first.js"></script><script src="second.js"></script></body></html>',
+    "base.css": "body { color: red; }",
+    "theme.css": "main { display: grid; }",
+    "first.js": "window.firstLoaded = true;",
+    "second.js": "window.secondLoaded = true;",
+    "extra.js": "window.extraLoaded = true;"
+  }, "test-preview-run");
+  assert.ok(bundledPreview.indexOf("body { color: red; }") < bundledPreview.indexOf("main { display: grid; }"), "Referenced stylesheets should preserve document order.");
+  assert.ok(bundledPreview.indexOf("window.firstLoaded = true;") < bundledPreview.indexOf("window.secondLoaded = true;"), "Referenced scripts should preserve document order.");
+  assert.ok(bundledPreview.includes("window.extraLoaded = true;"), "Unreferenced project scripts should still be included.");
+  assert.ok(bundledPreview.includes("nexera-preview-diagnostics"), "The preview should include its isolated runtime diagnostic harness.");
 
   click("menuBtn");
   assert.ok(document.getElementById("drawer").classList.contains("open"));
