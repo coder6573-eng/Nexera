@@ -1238,7 +1238,7 @@ async function runPythonAgentPipeline(options){
  const base=pythonAgentSession.baseUrl.replace(/\/+$/,'');
  const headers={'Authorization':'Bearer '+pythonAgentSession.token,'Content-Type':'application/json','Accept':'application/json'};
  const api=async(path,init={})=>{const response=await fetch(base+path,{...init,headers:{...headers,...(init.headers||{})}});let data={};try{data=await response.json()}catch{}if(!response.ok)throw new Error(data.detail||data.error||('Python backend returned HTTP '+response.status));return data};
- const safeFiles=options.existingFiles&&typeof options.existingFiles==='object'?options.existingFiles:{};
+ const sourceFiles=options.existingFiles&&typeof options.existingFiles==='object'?options.existingFiles:{};const safeFiles=Object.fromEntries(Object.entries(sourceFiles).filter(([name,value])=>typeof value==='string'&&!name.split('/').some(part=>part.startsWith('.'))));
  options.onStage?.('Synchronizing','Sending the active project files to the private Python workspace.');
  const sync=await api('/v1/workspaces/'+encodeURIComponent(workspaceId)+'/files',{method:'PUT',body:JSON.stringify({files:safeFiles})});
  if(!sync.ok)throw new Error(sync.error||'Could not synchronize project files.');
@@ -1285,7 +1285,7 @@ async function runPythonAgentPipeline(options){
  }
  if(issues.length)return {response:{kind:'error',issues:issues.slice(0,15)},plan,reviewDetail:'The Python agent changes did not pass all available client checks. The previously saved Nexera project was preserved.'};
  const detail='Python backend agent completed. '+(modelUsed?'Model: '+modelUsed+'. ':'')+(runtime.supported?'The isolated desktop preview inspection reported no remaining issues.':runtime.detail||'Static project checks passed; runtime browser inspection was unavailable on this platform.');
- return {response:{kind:'project',name:activeProject?.name||request.slice(0,42)||'New project',summary:result.text||'The Python agent updated the project files.',tasks:[],files,deletedFiles:Object.keys(options.existingFiles||{}).filter(name=>!Object.prototype.hasOwnProperty.call(files,name))},plan,reviewDetail:detail};
+ return {response:{kind:'project',name:activeProject?.name||request.slice(0,42)||'New project',summary:result.text||'The Python agent updated the project files.',tasks:[],files,deletedFiles:Object.keys(options.existingFiles||{}).filter(name=>!name.split('/').some(part=>part.startsWith('.'))&&!Object.prototype.hasOwnProperty.call(files,name))},plan,reviewDetail:detail};
 }
 async function send(text,fromHome){
   if(!text.trim()||busy)return;
