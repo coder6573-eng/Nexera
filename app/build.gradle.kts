@@ -13,12 +13,12 @@ val hasReleaseSigning = listOf(releaseStoreFile, releaseKeyAlias, releaseStorePa
 
 android {
     namespace = "ai.nexera.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ai.nexera.app"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 210
         versionName = "21.0.0"
     }
