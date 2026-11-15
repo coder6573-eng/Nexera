@@ -50,7 +50,7 @@ Do not expose the service without TLS, a strong API key, rate limiting at the ed
 
 ## Terminal sandbox
 
-Terminal execution is disabled by default. To enable it, install Docker on the API host and set `NEXERA_ENABLE_SANDBOX=true`. Commands execute in a short-lived container with no network, a 512 MB memory cap, one CPU, 64 process limit, a read-only container filesystem, and only the selected workspace mounted writable. This is a baseline isolation layer, not a substitute for a dedicated hardened sandbox service.
+Terminal execution is disabled by default. To enable it on a private, single-user host, install Docker, build the sandbox image with `docker build -t nexera-agent-sandbox:latest backend/sandbox`, and set `NEXERA_ENABLE_SANDBOX=true`. The image includes Node.js and Python. Commands execute in a short-lived container with no network, dropped Linux capabilities, no-new-privileges, a 512 MB memory cap, one CPU, 64 process limit, a read-only container filesystem, and only the selected workspace mounted writable. The API process must be able to reach the Docker daemon. Do not expose Docker socket access to an untrusted multi-user API; use a dedicated hardened sandbox service for public deployments.
 
 ## Limits and current integration status
 
