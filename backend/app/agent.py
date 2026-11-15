@@ -9,6 +9,15 @@ import httpx
 from .config import settings
 from .tools import WorkspaceTools
 
+SKILL_GUIDES = {
+    "frontend": "Build semantic, maintainable HTML, CSS and JavaScript. Make interactions real and responsive.",
+    "design": "Prioritize visual hierarchy, spacing, typography, coherent colors, accessibility, and mobile-first UX.",
+    "debug": "Inspect existing code and actual tool results. Find root causes, preserve working behavior, and make minimal repairs.",
+    "accessibility": "Use semantic elements, keyboard support, accessible names, visible focus, sufficient contrast, and reduced-motion support.",
+    "performance": "Keep the project lightweight. Avoid unnecessary dependencies, oversized assets, layout shifts, and repeated expensive work.",
+}
+
+
 SYSTEM_PROMPT = """You are Nexera, a careful software engineering agent.
 Work on the user's project, not merely describe how. Inspect the workspace first, understand constraints,
 then plan, implement changes using workspace tools, run checks when available, inspect results, and repair
@@ -77,7 +86,7 @@ async def run_agent(request: Any) -> AsyncIterator[dict[str, Any]]:
     skill = str(request.skill or "frontend")[:80]
     mode = request.mode if request.mode in {"agent", "build"} else "agent"
     skill_prompt = (
-        f"Selected skill: {skill}. Apply its relevant professional practices. "
+        f"Selected skill: {skill}. " + SKILL_GUIDES.get(skill, "Use sound software engineering practices.") + " "
         "Return concise progress explanations, and make real workspace changes when asked to build."
     )
     system = SYSTEM_PROMPT + "\n" + skill_prompt
@@ -92,7 +101,7 @@ async def run_agent(request: Any) -> AsyncIterator[dict[str, Any]]:
         if mode == "agent" and planner_model:
             yield {"type": "stage", "stage": "Planning", "detail": f"Planning with {planner_model}."}
             planner_messages = [
-                {"role": "system", "content": "Create a concise implementation plan, maximum 180 words. Do not write code. Include the user's outcome, workspace inspection, architecture, responsive behavior, interactions, preservation constraints, and checks. Do not reveal private reasoning."},
+                {"role": "system", "content": "Create a concise implementation plan, maximum 180 words. Do not write code. Include the user's outcome, workspace inspection, architecture, responsive behavior, interactions, preservation constraints, and checks. Apply this skill: " + SKILL_GUIDES.get(skill, "Use sound engineering practices.") + " Do not reveal private reasoning."},
                 *history,
                 {"role": "user", "content": request.message},
             ]
