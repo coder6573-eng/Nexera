@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
       - name: Install dependencies
         run: npm install --ignore-scripts
       - name: Run regression suite
@@ -58,13 +57,37 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Install Android SDK 36
+        uses: android-actions/setup-android@v3
+      - name: Install Android 16 platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: "8.13"
       - name: Prepare WebView assets
         run: |
           mkdir -p app/src/main/assets/www
           cp index.html app/src/main/assets/www/index.html
       - name: Compile Android Kotlin sources (no APK)
         run: gradle --no-daemon compileDebugKotlin
+
+  python-backend:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend test dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Compile backend modules
+        run: python -m compileall -q app tests
+      - name: Run backend tests
+        run: pytest -q
