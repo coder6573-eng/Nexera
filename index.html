@@ -1285,7 +1285,7 @@ async function runPythonAgentPipeline(options){
  }
  if(issues.length)return {response:{kind:'error',issues:issues.slice(0,15)},plan,reviewDetail:'The Python agent changes did not pass all available client checks. The previously saved Nexera project was preserved.'};
  const detail='Python backend agent completed. '+(modelUsed?'Model: '+modelUsed+'. ':'')+(runtime.supported?'The isolated desktop preview inspection reported no remaining issues.':runtime.detail||'Static project checks passed; runtime browser inspection was unavailable on this platform.');
- return {response:{kind:'project',name:activeProject?.name||request.slice(0,42)||'New project',summary:result.text||'The Python agent updated the project files.',tasks:[],files,deletedFiles:[]},plan,reviewDetail:detail};
+ return {response:{kind:'project',name:activeProject?.name||request.slice(0,42)||'New project',summary:result.text||'The Python agent updated the project files.',tasks:[],files,deletedFiles:Object.keys(options.existingFiles||{}).filter(name=>!Object.prototype.hasOwnProperty.call(files,name))},plan,reviewDetail:detail};
 }
 async function send(text,fromHome){
   if(!text.trim()||busy)return;
