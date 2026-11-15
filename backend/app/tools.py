@@ -28,6 +28,76 @@ class WorkspaceTools:
                     break
         return {"ok": True, "files": items}
 
+    def sync_files(self, files: dict[str, str]) -> dict[str, Any]:
+        if not isinstance(files, dict) or len(files) > MAX_FILES:
+            return {"ok": False, "error": f"Workspace sync accepts at most {MAX_FILES} files."}
+        validated: dict[str, str] = {}
+        total_bytes = 0
+        for raw_path, content in files.items():
+            if not isinstance(raw_path, str) or not isinstance(content, str):
+                return {"ok": False, "error": "Every workspace file must have a text path and content."}
+            try:
+                rel = safe_relative_path(raw_path)
+            except ValueError as exc:
+                return {"ok": False, "error": str(exc)}
+            if any(part.startswith(".") for part in rel.parts):
+                return {"ok": False, "error": "Hidden files are not accepted by workspace sync."}
+            size = len(content.encode("utf-8"))
+            if size > MAX_FILE_BYTES:
+                return {"ok": False, "error": f"{raw_path} exceeds the 256 KB file limit."}
+            total_bytes += size
+            if total_bytes > 2_000_000:
+                return {"ok": False, "error": "Workspace sync exceeds the 2 MB total limit."}
+            validated[rel.as_posix()] = content
+
+        # Validate the complete request before changing any workspace files.
+        for raw_path in validated:
+            target = (self.root / safe_relative_path(raw_path)).resolve()
+            if self.root not in target.parents:
+                return {"ok": False, "error": "A workspace path escaped its root."}
+        for raw_path, content in validated.items():
+            result = self.write_file(raw_path, content)
+            if not result.get("ok"):
+                return result
+
+        expected = set(validated)
+        removed = []
+        for path in sorted(self.root.rglob("*"), reverse=True):
+            if not path.is_file():
+                continue
+            rel = path.relative_to(self.root).as_posix()
+            if any(part.startswith(".") for part in Path(rel).parts) or rel in expected:
+                continue
+            resolved = path.resolve()
+            if self.root not in resolved.parents:
+                continue
+            path.unlink()
+            removed.append(rel)
+        return {"ok": True, "written": len(validated), "removed": removed}
+
+    def export_files(self) -> dict[str, Any]:
+        files: dict[str, str] = {}
+        total_bytes = 0
+        for path in sorted(self.root.rglob("*")):
+            if not path.is_file():
+                continue
+            rel = path.relative_to(self.root)
+            if any(part.startswith(".") for part in rel.parts):
+                continue
+            resolved = path.resolve()
+            if self.root not in resolved.parents:
+                continue
+            data = path.read_bytes()
+            if len(data) > MAX_FILE_BYTES:
+                return {"ok": False, "error": f"{rel.as_posix()} exceeds the export file limit."}
+            total_bytes += len(data)
+            if total_bytes > 2_000_000:
+                return {"ok": False, "error": "Workspace export exceeds the 2 MB total limit."}
+            files[rel.as_posix()] = data.decode("utf-8", "replace")
+            if len(files) > MAX_FILES:
+                return {"ok": False, "error": f"Workspace export exceeds {MAX_FILES} files."}
+        return {"ok": True, "files": files}
+
     def read_file(self, path: str) -> dict[str, Any]:
         rel = safe_relative_path(path)
         target = (self.root / rel).resolve()
