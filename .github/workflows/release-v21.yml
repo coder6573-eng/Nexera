@@ -59,6 +59,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.13"
+      - name: Require completed public privacy policy
+        run: |
+          if grep -q "REPLACE WITH A PUBLIC PRIVACY CONTACT EMAIL" privacy-policy.html; then
+            echo "::error::Replace the privacy contact placeholder before releasing."
+            exit 1
+          fi
       - name: Require publisher signing secrets
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
