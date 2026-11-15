@@ -38,9 +38,9 @@ The supported project output is browser-based **HTML, CSS, and JavaScript**. The
 
 ## Python Agent backend
 
-V21 adds an optional **Nexera Python Agent** route for Vibecoding. The client synchronizes the active project to the FastAPI service, streams model-selected workspace tool calls and results, then retrieves the updated files and runs the client's available checks before applying them. Agent mode supports a separate planning model and orchestrator/build model; Build mode uses the restricted file tools without delete or terminal tools. The server-side OpenRouter key is never placed in the frontend.
+V21 includes an optional **Nexera Python Agent** route for Vibecoding. It synchronizes the active app workspace to a FastAPI service, streams model-selected workspace tool calls and results, and retrieves the updated files for client-side checks. Agent mode supports separate planning and implementation models; Build mode omits destructive and terminal tools.
 
-The API is not hosted by this repository. To use this route, deploy `backend/` privately, configure `NEXERA_API_KEY`, `OPENROUTER_API_KEY`, a persistent workspace volume, TLS, rate limiting, and the exact `NEXERA_CORS_ORIGINS`. Enter the API URL and bearer token in Nexera Settings. The token is held in the active app session and is not saved to browser storage; re-enter it after restarting. The current single shared bearer-token scheme is for private testing only, not a public multi-user service. Do not expose a shared master token to untrusted clients. Terminal execution stays disabled unless the operator builds the Node/Python sandbox image and explicitly enables Docker execution on a private single-user host. Do not mount a host Docker socket into a public multi-user service.
+**This route is self-hosted, not a public Nexera cloud service.** Each operator must deploy their own backend and configure `NEXERA_API_KEY`, `OPENROUTER_API_KEY`, a persistent workspace volume, TLS, rate limiting, and trusted CORS origins. The app stores the backend URL in settings and keeps the bearer token in the active session only. Do not distribute a shared master token in a public app. The OpenRouter key remains server-side. Terminal execution is disabled by default and should only be enabled on a private single-user host with the documented Docker sandbox.
 
 ## Normal Chat
 
