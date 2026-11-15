@@ -16,7 +16,7 @@ from .security import workspace_path
 app = FastAPI(title=settings.app_name, version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in __import__("os").getenv("NEXERA_CORS_ORIGINS", "null").split(",") if origin.strip()],
+    allow_origins=[origin.strip() for origin in __import__("os").getenv("NEXERA_CORS_ORIGINS", "https://appassets.androidplatform.net,null").split(",") if origin.strip()],
     # Electron's local origin uses a dynamically selected localhost port. Android WebView
     # file origins are serialized as "null"; both still require the bearer-token check.
     allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
