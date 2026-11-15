@@ -26,4 +26,6 @@ assert.match(monochrome, /android:pathData=/);
 assert.equal((html.match(/class="nexera-mark"/g) || []).length, 2,
   "Header and home screen should use the shared Nexera N mark.");
 assert.match(html, /Nexera AI/);
+assert.match(androidGradle, /compileSdk\s*=\s*36/);
+assert.match(androidGradle, /targetSdk\s*=\s*36/);
 console.log("Brand/release tests passed: v21 version metadata, adaptive/round/monochrome launcher icons, and shared in-app logo.");
