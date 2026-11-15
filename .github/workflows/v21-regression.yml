@@ -1,0 +1,45 @@
+name: Nexera V21 regression checks
+
+on:
+  push:
+    branches: [main, v21-python-agent-redesign]
+    paths:
+      - "index.html"
+      - "backend/**"
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/v21-regression.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "backend/**"
+      - "scripts/**"
+      - "package.json"
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - run: npm test
+
+  python-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m compileall -q app tests
+      - run: pytest -q
