@@ -36,7 +36,7 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 
 The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
-## Normal Chat
+## Python Agent backend\n\nV21 adds an optional **Nexera Python Agent** route for Vibecoding. The client synchronizes the active project to the FastAPI service, streams model-selected workspace tool calls and results, then retrieves the updated files and runs the client's available checks before applying them. Agent mode supports a separate planning model and orchestrator/build model; Build mode uses the restricted file tools without delete or terminal tools. The server-side OpenRouter key is never placed in the frontend.\n\nThe API is not hosted by this repository. To use this route, deploy `backend/` privately, configure `NEXERA_API_KEY`, `OPENROUTER_API_KEY`, a persistent workspace volume, TLS, rate limiting, and the exact `NEXERA_CORS_ORIGINS`. Enter the API URL and bearer token in Nexera Settings. The token is held in the active app session and is not saved to browser storage; re-enter it after restarting. The current single shared bearer-token scheme is for private testing only, not a public multi-user service. Do not expose a shared master token to untrusted clients. Terminal execution stays disabled unless the operator explicitly enables the isolated Docker sandbox.\n\n## Normal Chat
 
 - Optional web search using DuckDuckGo search results.
 - Chart rendering for numeric data when the model returns the supported chart format.
@@ -48,11 +48,11 @@ Web search results are snippets and links, not a guarantee of exhaustive researc
 
 ### Android APK
 
-The workflow `.github/workflows/build-apk.yml` builds the v20.0.0 Android APK from the final release commit (or by manual workflow dispatch). It runs the regression suite, copies the shared UI into Android WebView assets, builds the debug APK, and attaches it to the v20.0.0 GitHub release. The Android launcher icon and in-app brand mark use the same Nexera N symbol.
+The existing `.github/workflows/build-apk.yml` remains the V20 release workflow and is not changed by the V21 branch. The V21 branch adds `.github/workflows/v21-android-preview.yml`, which runs frontend regression tests, builds a debug APK, and uploads it as a short-lived Actions artifact rather than publishing a release. The Android launcher icon and in-app brand mark use the same Nexera N symbol.
 
 ### Windows portable app
 
-The Windows portable workflow remains a separate release task; the v20.0.0 milestone here publishes the Android APK.
+The V21 branch adds `.github/workflows/v21-windows-preview.yml` to run regression tests, build the portable Windows app, and upload a preview artifact. Neither preview workflow publishes a public release.
 
 ## Development checks
 
