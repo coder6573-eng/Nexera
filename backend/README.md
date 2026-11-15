@@ -40,7 +40,9 @@ Check `GET /health`. Agent calls use `POST /v1/agent/run` with a bearer token an
 }
 ```
 
-The client first synchronizes project files with `PUT /v1/workspaces/{workspace_id}/files` using `{ "files": { "index.html": "..." } }`. It can retrieve the updated workspace with `GET /v1/workspaces/{workspace_id}/files/content`. Both routes require the same bearer token.\n\nThe response is an SSE stream. Each `data:` line contains JSON with a `type` of `stage`, `plan`, `tool_start`, `tool_result`, `final`, or `error`. Supply `planner_model` and `orchestrator_model` to route planning and implementation separately. `mode` accepts `agent` or `build`; build mode omits destructive delete and terminal tools.
+The client first synchronizes project files with `PUT /v1/workspaces/{workspace_id}/files` using `{ "files": { "index.html": "..." } }`. It can retrieve the updated workspace with `GET /v1/workspaces/{workspace_id}/files/content`. Both routes require the same bearer token.
+
+The response is an SSE stream. Each `data:` line contains JSON with a `type` of `stage`, `plan`, `tool_start`, `tool_result`, `final`, or `error`. Supply `planner_model` and `orchestrator_model` to route planning and implementation separately. `mode` accepts `agent` or `build`; build mode omits destructive delete and terminal tools.
 
 ## Docker deployment
 
@@ -52,6 +54,6 @@ Do not expose the service without TLS, a strong API key, rate limiting at the ed
 
 Terminal execution is disabled by default. To enable it on a private, single-user host, install Docker, build the sandbox image with `docker build -t nexera-agent-sandbox:latest backend/sandbox`, and set `NEXERA_ENABLE_SANDBOX=true`. The image includes Node.js and Python. Commands execute in a short-lived container with no network, dropped Linux capabilities, no-new-privileges, a 512 MB memory cap, one CPU, 64 process limit, a read-only container filesystem, and only the selected workspace mounted writable. The API process must be able to reach the Docker daemon. Do not expose Docker socket access to an untrusted multi-user API; use a dedicated hardened sandbox service for public deployments.
 
-## Limits and current integration status
+## Client integration and deployment status
 
-The API is a deployable backend foundation. The existing Android/Electron frontend still has its own provider path; it does not automatically call this API until an API URL and bearer-token configuration flow is connected. Do not treat the backend as integrated into the shipped APK yet.
+The V21 Android/Electron client includes an optional Python Agent route. In Settings, select **Nexera Python Agent**, enter the URL of your privately deployed API and its bearer token, then use Vibecoding mode. The URL is saved in app settings; the token is memory-only and must be entered again after restarting the app. The backend is not hosted by this repository and is not enabled automatically for public users.
