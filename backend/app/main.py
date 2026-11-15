@@ -50,6 +50,27 @@ async def agent_run(request: AgentRequest) -> StreamingResponse:
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+@app.put("/v1/workspaces/{workspace_id}/files", dependencies=[Depends(require_auth)])
+async def sync_workspace_files(workspace_id: str, payload: dict) -> dict:
+    from .tools import WorkspaceTools
+    files = payload.get("files") if isinstance(payload, dict) else None
+    if not isinstance(files, dict):
+        raise HTTPException(status_code=422, detail="Request body must contain a files object.")
+    result = WorkspaceTools(workspace_id).sync_files(files)
+    if not result.get("ok"):
+        raise HTTPException(status_code=422, detail=result.get("error", "Workspace sync failed."))
+    return result
+
+
+@app.get("/v1/workspaces/{workspace_id}/files/content", dependencies=[Depends(require_auth)])
+async def export_workspace_files(workspace_id: str) -> dict:
+    from .tools import WorkspaceTools
+    result = WorkspaceTools(workspace_id).export_files()
+    if not result.get("ok"):
+        raise HTTPException(status_code=413, detail=result.get("error", "Workspace export failed."))
+    return result
+
+
 @app.get("/v1/workspaces/{workspace_id}/files", dependencies=[Depends(require_auth)])
 async def list_workspace_files(workspace_id: str) -> dict:
     from .tools import WorkspaceTools
