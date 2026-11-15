@@ -22,7 +22,7 @@ class WorkspaceTools:
     def list_files(self) -> dict[str, Any]:
         items = []
         for path in sorted(self.root.rglob("*")):
-            if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.root).parts):
+            if path.is_file() and not any(part.startswith(".") for part in path.relative_to(self.root).parts) and self.root in path.resolve().parents:
                 items.append({"path": path.relative_to(self.root).as_posix(), "bytes": path.stat().st_size})
                 if len(items) >= MAX_FILES:
                     break
