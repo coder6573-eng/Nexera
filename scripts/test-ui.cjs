@@ -52,8 +52,10 @@ const change = id => {
 
 try {
   const routeValues = [...document.getElementById("homeProvider").options].map(option => option.value);
+  const chatRouteValues = [...document.getElementById("chatProvider").options].map(option => option.value);
   for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter", "deepseek", "glm", "qwen", "python-agent"]) {
-    assert.ok(routeValues.includes(route), "Missing chat route: " + route);
+    assert.ok(routeValues.includes(route), "Missing home chat route: " + route);
+    assert.ok(chatRouteValues.includes(route), "Missing conversation chat route: " + route);
   }
   document.getElementById("homeProvider").value = "ovh";
   change("homeProvider");
