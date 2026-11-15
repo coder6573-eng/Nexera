@@ -40,7 +40,7 @@ Check `GET /health`. Agent calls use `POST /v1/agent/run` with a bearer token an
 }
 ```
 
-The response is an SSE stream. Each `data:` line contains JSON with a `type` of `stage`, `tool_start`, `tool_result`, `final`, or `error`.
+The client first synchronizes project files with `PUT /v1/workspaces/{workspace_id}/files` using `{ "files": { "index.html": "..." } }`. It can retrieve the updated workspace with `GET /v1/workspaces/{workspace_id}/files/content`. Both routes require the same bearer token.\n\nThe response is an SSE stream. Each `data:` line contains JSON with a `type` of `stage`, `plan`, `tool_start`, `tool_result`, `final`, or `error`. Supply `planner_model` and `orchestrator_model` to route planning and implementation separately. `mode` accepts `agent` or `build`; build mode omits destructive delete and terminal tools.
 
 ## Docker deployment
 
