@@ -13,6 +13,7 @@ class Settings:
     default_model: str = os.getenv("NEXERA_DEFAULT_MODEL", "openrouter/auto")
     workspace_root: str = os.getenv("NEXERA_WORKSPACE_ROOT", "/data/workspaces")
     enable_docker_sandbox: bool = os.getenv("NEXERA_ENABLE_SANDBOX", "false").lower() == "true"
+    sandbox_image: str = os.getenv("NEXERA_SANDBOX_IMAGE", "nexera-agent-sandbox:latest")
     max_tool_rounds: int = int(os.getenv("NEXERA_MAX_TOOL_ROUNDS", "8"))
     max_output_chars: int = int(os.getenv("NEXERA_MAX_OUTPUT_CHARS", "18000"))
     request_timeout_seconds: float = float(os.getenv("NEXERA_REQUEST_TIMEOUT", "90"))
