@@ -914,6 +914,7 @@ async function runPreviewDiagnostics(files){
   });
 }
 
+// Android preview keeps generated JavaScript disabled for safety.
 function updateLivePreview(files){const frame=$('livePreviewFrame'),placeholder=$('livePreviewPlaceholder');if(!frame)return;const html=buildPreviewHtml(files);if(html){frame.setAttribute('sandbox',isAndroidNative()?'allow-forms':'allow-scripts allow-forms');frame.srcdoc=html;frame.style.display='block';if(placeholder)placeholder.style.display='none'}else{frame.style.display='none';if(placeholder)placeholder.style.display='grid'}}
 function failAgentWorkbench(){const w=$('agentWorkbench');if(!w||w.hidden)return;w.querySelectorAll('.agent-step').forEach(row=>{row.classList.remove('active');row.classList.add('failed');const icon=row.querySelector('.agent-icon');if(icon)icon.textContent='!';const detail=row.querySelector('.agent-detail');if(detail)detail.textContent='not completed';const time=row.querySelector('.agent-time');if(time)time.textContent='stopped'});$('agentStatus').textContent='Needs attention';$('agentStatusDetail').textContent='The task stopped before the project was updated.'}
 function hideAgentWorkbench(){const w=$('agentWorkbench');if(w)w.hidden=true}
