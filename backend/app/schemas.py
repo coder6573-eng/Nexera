@@ -12,6 +12,8 @@ class AgentRequest(BaseModel):
     message: str = Field(min_length=1, max_length=12000)
     workspace_id: str = Field(default="default", pattern="^[a-zA-Z0-9_-]{1,64}$")
     model: str | None = Field(default=None, max_length=160)
+    planner_model: str | None = Field(default=None, max_length=160)
+    orchestrator_model: str | None = Field(default=None, max_length=160)
     provider: str = Field(default="openrouter", pattern="^[a-zA-Z0-9_-]{1,40}$")
     mode: str = Field(default="agent", pattern="^(agent|build)$")
     skill: str = Field(default="frontend", max_length=80)
