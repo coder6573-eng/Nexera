@@ -143,7 +143,7 @@ class WorkspaceTools:
             "--pids-limit", "64", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
             "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
             "-v", f"{self.root}:/workspace:rw", "-w", "/workspace",
-            "python:3.12-slim", "sh", "-lc", command,
+            settings.sandbox_image, "sh", "-lc", command,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         )
         try:
