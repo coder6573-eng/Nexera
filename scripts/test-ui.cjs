@@ -378,12 +378,16 @@ try {
   assert.equal(partialEdit["style.css"], "body { color: green; }");
   assert.equal(partialEdit["script.js"], "window.keepThis = true;", "Untouched project files must survive iterative edits");
   assert.equal(window.__testHooks.mergeProjectFiles(null, { "style.css": "body{}" }), null, "New projects still require core files");
-  const filteredEdit = window.__testHooks.mergeProjectFiles({ "index.html": "<html></html>" }, {
+  const existingProject = { "index.html": "<html></html>" };
+  const rejectedUnsafeEdit = window.__testHooks.mergeProjectFiles(existingProject, {
     "../escape.js": "bad",
     "script.js": "window.safe = true;"
   });
-  assert.equal(filteredEdit["../escape.js"], undefined, "Project file paths must be constrained");
-  assert.equal(filteredEdit["script.js"], "window.safe = true;");
+  assert.equal(rejectedUnsafeEdit, null, "An update containing an unsafe path must be rejected atomically");
+  const safeEdit = window.__testHooks.mergeProjectFiles(existingProject, {
+    "script.js": "window.safe = true;"
+  });
+  assert.equal(safeEdit["script.js"], "window.safe = true;", "Safe project updates should still be accepted");
   assert.equal(window.__testHooks.mergeProjectFiles({ "index.html": "<html></html>" }, { "oversized.js": "x".repeat(400001) }), null, "Oversized generated files must be rejected");
 
   // AI-generated file names are untrusted text and must never become executable HTML.
