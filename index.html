@@ -597,6 +597,118 @@ button:active{transform:scale(.97)}
   #main.vibe-active .workspace-file,#main.vibe-active .agent-chat-update{transition:none;animation:none}
 }
 </style>
+
+<style id="nexera-v21-spacious-redesign">
+/* V21 — intentional hierarchy, breathing room, and mobile-first controls. */
+:root{--nx-bg:#f7f9f6;--nx-panel:#fff;--nx-line:#e5ebe2;--nx-text:#243128;--nx-muted:#788477;--nx-green:#6ea64e;--nx-green-dark:#416f35;--nx-tint:#edf5e8;--nx-shadow:0 12px 36px rgba(43,68,37,.055)}
+html,body{background:var(--nx-bg);color:var(--nx-text)}
+#app{background:linear-gradient(155deg,#fbfcfa 0%,#f5f8f2 100%)}
+.topbar{height:62px;padding:0 clamp(14px,3vw,30px);background:rgba(251,252,250,.92);border-bottom:1px solid var(--nx-line);backdrop-filter:blur(18px)}
+.brand{font-size:17px;letter-spacing:-.45px}.brand-mark{width:32px;height:32px;border-radius:11px;box-shadow:none}
+#main{max-width:1280px;padding:0 clamp(14px,3vw,34px)}
+.home{width:min(880px,100%);padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.home-brand{margin-top:clamp(48px,14vh,132px);font-size:clamp(30px,5vw,42px);letter-spacing:-1.8px;gap:12px}
+.home-brand .brand-mark{width:52px;height:52px;border-radius:17px}
+.home-gap{min-height:clamp(42px,12vh,112px)}
+.home .hint{font-size:11px;color:var(--nx-muted);margin-top:14px}
+.composer{max-width:860px;border:1px solid #e1e9dc;border-radius:23px;padding:14px 15px 12px;box-shadow:0 14px 40px rgba(42,70,34,.065)}
+.composer:focus-within{border-color:#a8c69a;box-shadow:0 16px 44px rgba(63,109,47,.09),0 0 0 4px rgba(119,170,91,.07)}
+.composer textarea{min-height:60px;max-height:200px;padding:7px 5px;font-size:15.5px;line-height:1.65}
+.composer-row{display:flex;align-items:center;gap:10px;padding-top:10px;flex-wrap:wrap}
+.composer-left{display:flex;align-items:center;gap:7px;flex:1 1 0;min-width:0;flex-wrap:wrap;overflow:visible}
+.composer-right{flex:0 0 auto}
+.round-action,.mode-select{height:36px;min-height:36px;border-radius:10px}
+.round-action{min-width:36px;background:#f3f7f0;border:1px solid #e9efe6}
+.mode-select{max-width:150px;padding:0 10px;background:#f9fbf8;border:1px solid #e7ede4;color:#53634f;font-size:11px}
+.provider-select{max-width:155px}
+.mode-select.agent{max-width:100px}.mode-select.skill{max-width:118px}
+.send{width:42px;height:42px;border-radius:13px;box-shadow:none}
+#conversation{width:min(850px,100%);padding:26px clamp(8px,2vw,18px) 34px}
+.message{max-width:min(82%,720px);font-size:14px;line-height:1.75;margin-bottom:24px}
+.message.user{padding:12px 16px;border-radius:18px 18px 5px 18px;box-shadow:none}
+.message.assistant{padding:3px 2px}
+.assistant-label{font-size:10px;letter-spacing:.55px;color:#64835a}
+.message.assistant .assistant-content{max-width:760px}
+.agent-chat-update{max-width:760px;padding:6px 8px;margin-bottom:12px;border-radius:12px}
+.task-card{max-width:760px;border-radius:15px;box-shadow:none}
+.drawer{width:min(320px,88vw)}
+/* The coding workspace uses three calm, independent regions on wide screens. */
+#main.vibe-active{max-width:none;grid-template-columns:minmax(175px,210px) minmax(0,1fr) minmax(270px,320px);grid-template-rows:54px minmax(0,1fr) auto;gap:12px;padding:12px clamp(10px,1.5vw,22px);background:transparent}
+#main.vibe-active #workspaceToolbar{min-height:54px;padding:7px 12px;border-radius:14px;border:1px solid var(--nx-line);box-shadow:none;background:rgba(255,255,255,.94)}
+#main.vibe-active #workspaceFiles{border:1px solid var(--nx-line);border-radius:14px;padding:12px 10px;box-shadow:none;background:#fff}
+#main.vibe-active #conversation{padding:22px clamp(14px,2vw,26px);border:1px solid var(--nx-line);border-radius:14px;background:#fff;box-shadow:none}
+#main.vibe-active .agent-workbench{gap:10px;grid-template-rows:minmax(180px,.8fr) minmax(220px,1.2fr)}
+#main.vibe-active .agent-timeline,#main.vibe-active .agent-preview{border:1px solid var(--nx-line);border-radius:14px;box-shadow:none}
+#main.vibe-active .agent-timeline{padding:13px}
+#main.vibe-active .agent-head{height:42px;padding:0 2px 8px}
+#main.vibe-active .agent-head-title{font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+#main.vibe-active .agent-status{background:#f0f6ec;color:#4b7440;border-radius:20px;padding:5px 8px}
+#main.vibe-active .agent-step{padding:10px 0;gap:9px}
+#main.vibe-active .agent-preview{background:#fff}
+#main.vibe-active .preview-top{height:44px}
+#main.vibe-active .live-canvas{margin:12px;min-height:160px;border-radius:11px}
+#main.vibe-active #chatComposer .composer{border-radius:15px;box-shadow:0 5px 20px rgba(42,70,34,.04)}
+#main.vibe-active #chatComposer .composer-row{flex-wrap:wrap}
+#main.vibe-active #chatComposer .composer-left{flex:1 1 100%;gap:6px}
+#main.vibe-active #chatComposer .mode-select{max-width:135px}
+#main.vibe-active #chatComposer .provider-select{max-width:145px}
+#main.vibe-active #chatComposer .composer-right{margin-left:auto}
+#main.vibe-active .workspace-file{min-height:36px;border-radius:9px}
+#main.vibe-active .workspace-file.active{background:#edf5e8;border:1px solid #dce9d5}
+#main.vibe-active .agent-plan{max-height:135px;border-radius:10px;line-height:1.55}
+@media(max-width:1050px) and (min-width:901px){
+ #main.vibe-active{grid-template-columns:165px minmax(0,1fr) 270px;gap:9px;padding:9px}
+ #main.vibe-active .agent-timeline{padding:10px}
+ #main.vibe-active #conversation{padding:17px 14px}
+}
+@media(max-width:900px){
+ #main{padding:0 12px}
+ #main.vibe-active{display:flex!important;flex-direction:column;gap:9px;padding:8px 10px;overflow:hidden}
+ #main.vibe-active #workspaceToolbar{display:flex;flex:0 0 auto;flex-wrap:wrap;gap:8px;padding:9px 10px}
+ #main.vibe-active .workspace-brand{flex:1 1 100%;min-width:0}
+ #main.vibe-active .workspace-toolbar-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;width:100%}
+ #main.vibe-active .workspace-tab{display:flex!important;justify-content:center;align-items:center;min-width:0;min-height:40px;padding:8px 5px}
+ #main.vibe-active .workspace-route,#main.vibe-active .workspace-editor-btn{display:none!important}
+ #main.vibe-active #workspaceFiles,#main.vibe-active #agentWorkbench,#main.vibe-active #conversation,#main.vibe-active #chatComposer{width:100%;min-width:0}
+ #main.vibe-active #workspaceFiles,#main.vibe-active #agentWorkbench,#main.vibe-active #conversation,#main.vibe-active #chatComposer{display:none!important}
+ #main.vibe-active.mobile-chat #conversation{display:block!important;flex:1;min-height:0;overflow:auto;padding:16px 13px}
+ #main.vibe-active.mobile-chat #chatComposer{display:block!important;flex:0 0 auto;padding-bottom:max(5px,env(safe-area-inset-bottom))}
+ #main.vibe-active.mobile-preview #agentWorkbench{display:grid!important;flex:1;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(150px,.8fr) minmax(200px,1.2fr);overflow:auto;gap:9px}
+ #main.vibe-active.mobile-preview .agent-timeline{min-height:150px;max-height:none}
+ #main.vibe-active.mobile-preview .agent-preview{display:flex!important;min-height:200px}
+ #main.vibe-active.mobile-files #workspaceFiles{display:flex!important;flex:1;min-height:0;overflow:hidden;padding:12px}
+ #main.vibe-active.mobile-files .workspace-file-list{min-height:0;overflow:auto}
+}
+@media(max-width:560px){
+ .topbar{height:56px;padding:0 10px}
+ .brand{font-size:16px}
+ .home-brand{margin-top:clamp(38px,10vh,88px);font-size:31px;gap:9px}
+ .home-brand .brand-mark{width:46px;height:46px;border-radius:15px}
+ .home-gap{min-height:35px}
+ .composer{padding:11px;border-radius:19px}
+ .composer textarea{min-height:52px;font-size:14px}
+ .composer-row{align-items:center;gap:7px}
+ .composer-left{gap:5px}
+ .mode-select{height:34px;min-height:34px;max-width:112px;font-size:10px;padding:0 7px}
+ .provider-select{max-width:125px}
+ .mode-select.agent{max-width:82px}.mode-select.skill{max-width:95px}
+ .round-action{height:34px;min-width:34px}
+ .send{width:39px;height:39px}
+ #conversation{padding:17px 2px 26px}
+ .message{max-width:96%;font-size:13.5px}
+ #main.vibe-active{gap:7px;padding:7px}
+ #main.vibe-active #workspaceToolbar{padding:8px;border-radius:12px}
+ #main.vibe-active .workspace-tab{min-height:39px;font-size:11px}
+ #main.vibe-active.mobile-chat #conversation{padding:13px 11px;border-radius:12px}
+ #main.vibe-active #chatComposer .composer{padding:9px;border-radius:13px}
+ #main.vibe-active #chatComposer .composer-left{flex:1 1 100%}
+ #main.vibe-active #chatComposer .mode-select{max-width:108px}
+ #main.vibe-active #chatComposer .provider-select{max-width:125px}
+ #main.vibe-active .agent-timeline{padding:10px}
+}
+@media(prefers-reduced-motion:reduce){#main.vibe-active *,#main.vibe-active *:before,#main.vibe-active *:after{animation:none!important;transition:none!important}}
+</style>
+
 </head>
 <body data-nexera-version="19.3.0">
 <div id="app">
