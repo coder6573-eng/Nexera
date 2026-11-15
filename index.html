@@ -700,7 +700,7 @@ async function executeAgentTool(tool,args={},context={}){
   }
   if(tool==='workspace.read_file'){
     const path=args.path;
-    if(typeof path!=='string'||!isSafeProjectPath(path))return {ok:false,error:'Use a safe relative project file path.'};
+    if(typeof path!=='string'||!isSafeProjectPath(path))return {ok:false,error:'Use a safe relative path for project files.'};
     if(typeof files[path]!=='string')return {ok:false,error:'File not found: '+path};
     return {ok:true,path,content:files[path].slice(0,12000),truncated:files[path].length>12000};
   }
