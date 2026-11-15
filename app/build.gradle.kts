@@ -1,3 +1,8 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+}
+
 val releaseStoreFile = System.getenv("ANDROID_KEYSTORE_PATH")
 val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
 val releaseStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
@@ -5,10 +10,6 @@ val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
 val hasReleaseSigning = listOf(releaseStoreFile, releaseKeyAlias, releaseStorePassword, releaseKeyPassword)
     .all { !it.isNullOrBlank() }
 
-plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-}
 
 android {
     namespace = "ai.nexera.app"
