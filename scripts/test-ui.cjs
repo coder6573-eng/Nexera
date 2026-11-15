@@ -225,7 +225,7 @@ try {
   document.getElementById("chatMode").value = "vibe";
   window.__testHooks.addAgentProgress("Okay, I’m working on it.");
   window.__testHooks.setAgentStage("Building", "Building the homepage.");
-  const progressMessages = [...document.querySelectorAll("#conversation .agent-progress-message")].map(el => el.textContent);
+  const progressMessages = [...document.querySelectorAll("#conversation .agent-progress-message, #conversation .agent-chat-update .agent-chat-text")].map(el => el.textContent);
   assert.ok(progressMessages.some(text => text.includes("Okay, I’m working on it.")), "Agent should speak in chat when work begins");
   assert.ok(progressMessages.some(text => text.includes("Building the project now.")), "Agent should speak in chat when building starts");
 
