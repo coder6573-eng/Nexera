@@ -14,8 +14,8 @@ const foreground = read("app/src/main/res/drawable/ic_nexera_foreground.xml");
 const monochrome = read("app/src/main/res/drawable/ic_nexera_monochrome.xml");
 
 assert.equal(packageJson.version, "21.0.0", "Desktop package version should match v21.");
-assert.match(androidGradle, /versionCode\s*=\s*200/);
-assert.match(androidGradle, /versionName\s*=\s*"20\.0\.0"/);
+assert.match(androidGradle, /versionCode\s*=\s*210/);
+assert.match(androidGradle, /versionName\s*=\s*"21\.0\.0"/);
 assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
 assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
 assert.match(adaptiveIcon, /@drawable\/ic_nexera_foreground/);
