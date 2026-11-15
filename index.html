@@ -1268,6 +1268,8 @@ async function runPythonAgentPipeline(options){
  let exported=await api('/v1/workspaces/'+encodeURIComponent(workspaceId)+'/files/content');
  if(!exported.ok||!exported.files||typeof exported.files!=='object')throw new Error('The Python backend did not return workspace files.');
  let files=exported.files;
+ if(typeof files['style.css']!=='string')files['style.css']='';
+ if(typeof files['script.js']!=='string')files['script.js']='';
  if(typeof files['index.html']!=='string')return {response:{kind:'error',issues:['The agent did not create an index.html file. The existing Nexera project was not changed.']},plan,reviewDetail:'The backend returned no usable browser project.'};
  let issues=validateProjectFiles(files);
  let runtime=await runPreviewDiagnostics(files);
@@ -1295,7 +1297,7 @@ async function send(text,fromHome){
   const isVibe=workspaceMode==='vibe';
   if(cfg.provider==='python-agent'&&!isVibe){addMessage('The Python Agent route is available in Vibecoding mode. Switch Workspace mode to Vibecoding and try again.','assistant');return}
   if(!secretAvailable(cfg.provider,cfg.model)){
-    addMessage('This route needs the installed Nexera Android or Windows app. Open Settings to connect a supported account or choose a free route.','assistant');
+    addMessage(cfg.provider==='python-agent'?'Open Settings and configure the Python backend URL and bearer token for this session.':'This route needs the installed Nexera Android or Windows app. Open Settings to connect a supported account or choose a free route.','assistant');
     return;
   }
   busy=true;
