@@ -229,7 +229,7 @@ try {
   assert.ok(progressMessages.some(text => text.includes("Okay, I’m working on it.")), "Agent should speak in chat when work begins");
   assert.ok(progressMessages.some(text => text.includes("Building the project now.")), "Agent should speak in chat when building starts");
 
-  assert.equal(document.getElementById("homeMode").value, "chat");
+  assert.equal(document.getElementById("homeMode").value, "vibe", "Progress checks must not silently switch the selected workspace mode");
   assert.equal(document.getElementById("home").style.display, "flex");
 
   click("menuBtn");
