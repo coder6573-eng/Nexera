@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
       - name: Install dependencies
         run: npm install --ignore-scripts
       - name: Run regression suite
@@ -39,7 +38,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
       - name: Install desktop dependencies
         run: npm install
       - name: Run shared regression suite
@@ -58,10 +56,14 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: Install Android SDK 36
+        uses: android-actions/setup-android@v3
+      - name: Install Android 16 platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.9"
+          gradle-version: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'v21-') && '8.13' || '8.9' }}
       - name: Prepare WebView assets
         run: |
           mkdir -p app/src/main/assets/www
