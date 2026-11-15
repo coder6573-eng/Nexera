@@ -140,9 +140,10 @@ class WorkspaceTools:
         # The workspace is the only writable mount. No network, low resource limits, non-root user.
         proc = await asyncio.create_subprocess_exec(
             "docker", "run", "--rm", "--network", "none", "--memory", "512m", "--cpus", "1",
-            "--pids-limit", "64", "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
+            "--pids-limit", "64", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+            "--read-only", "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
             "-v", f"{self.root}:/workspace:rw", "-w", "/workspace",
-            "--user", "10001:10001", "python:3.12-slim", "sh", "-lc", command,
+            "python:3.12-slim", "sh", "-lc", command,
             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
         )
         try:
