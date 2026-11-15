@@ -934,7 +934,9 @@ function agentProgressForStage(stage){
 }
 function startAgentTask(routeLabel){activeTaskStartedAt=Date.now();activeTaskStage='Understanding';try{localStorage.setItem('nexera.activeTask.v1',JSON.stringify({startedAt:activeTaskStartedAt,stage:activeTaskStage,route:routeLabel||'Free Auto'}))}catch{}if(activeTaskTimer)clearInterval(activeTaskTimer);activeTaskTimer=setInterval(()=>{const seconds=Math.max(0,Math.floor((Date.now()-activeTaskStartedAt)/1000));$('agentElapsed').textContent=seconds<60?seconds+'s':Math.floor(seconds/60)+'m '+(seconds%60)+'s';if(busy&&!['Complete','Waiting for your answer','Needs attention'].includes(activeTaskStage))$('agentStatusDetail').textContent=activeTaskStage+' · waiting for the model; Nexera is still working.'},1000);$('agentElapsed').textContent='0s';$('agentRoute').textContent=routeLabel||'Free Auto · 16 candidates'}
 function setAgentStage(stage,detail){
+  const stageChanged=activeTaskStage!==stage;
   activeTaskStage=stage;
+  if(stageChanged)agentUpdate(agentProgressForStage(stage),detail||'');
   $('agentStatus').textContent=stage;
   $('agentStatusDetail').textContent=detail||'Nexera is working on this step.';
   try{
