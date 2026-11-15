@@ -11,7 +11,7 @@ assert.notEqual(start, -1, "Agent response helpers should exist.");
 assert.notEqual(end, -1, "Agent quality helpers should end before change summary.");
 
 const source = html.slice(start, end) + "\nthis.parseAgentResponse=parseAgentResponse;this.normalizeAgentResponse=normalizeAgentResponse;this.mergeProjectFiles=mergeProjectFiles;this.resolveProjectReference=resolveProjectReference;this.validateProjectFiles=validateProjectFiles;";
-const sandbox = { localFolderLinked: false, isSafeProjectPath: name => typeof name === "string" && !name.includes("\\") && name.split("/").length <= 5 && name.split("/").every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..") };
+const sandbox = { localFolderLinked: false, isAndroidNative: () => false, isSafeProjectPath: name => typeof name === "string" && !name.includes("\\") && name.split("/").length <= 5 && name.split("/").every(part => /^[A-Za-z0-9._-]{1,80}$/.test(part) && part !== "." && part !== "..") };
 vm.runInNewContext(source, sandbox, { filename: "agent-quality-helpers" });
 
 const valid = {
