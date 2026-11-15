@@ -70,3 +70,11 @@ def test_workspace_sync_rejects_oversized_file(tmp_path, monkeypatch):
     result = workspace.sync_files({"large.txt": "x" * 256_001})
     assert result["ok"] is False
     assert workspace.export_files()["files"] == {}
+
+
+def test_workspace_sync_validates_all_paths_before_writing(tmp_path, monkeypatch):
+    monkeypatch.setattr(tools_module, "settings", Settings(workspace_root=str(tmp_path)))
+    workspace = WorkspaceTools("atomic-demo")
+    result = workspace.sync_files({"valid.txt": "must not be written", "../invalid.txt": "reject"})
+    assert result["ok"] is False
+    assert workspace.export_files()["files"] == {}
