@@ -9,6 +9,8 @@ on:
       - "scripts/**"
       - "package.json"
       - ".github/workflows/v21-regression.yml"
+  workflow_dispatch:
+
   pull_request:
     paths:
       - "index.html"
