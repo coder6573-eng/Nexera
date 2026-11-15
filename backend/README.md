@@ -46,7 +46,7 @@ The client first synchronizes project files with `PUT /v1/workspaces/{workspace_
 
 Build with `docker build -t nexera-agent-api backend`. Provide `NEXERA_API_KEY` and `OPENROUTER_API_KEY` as runtime secrets, not build arguments. Persist `/data/workspaces` on a private volume. Set `NEXERA_CORS_ORIGINS` to the exact trusted frontend origins.
 
-Do not expose the service without TLS, a strong API key, rate limiting at the edge, and a private workspace volume. Do not put either server secret in frontend JavaScript or a public repository.
+Do not expose the service without TLS, a strong API key, rate limiting at the edge, and a private workspace volume. The current single bearer token is suitable only for private testing: any client that uses it can extract it from its own network session. Do not distribute a shared master token to public users; add per-user authentication and quotas before a public launch. The OpenRouter provider key must remain server-side and must never be put in frontend JavaScript or a public repository.
 
 ## Terminal sandbox
 
