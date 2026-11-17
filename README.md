@@ -1,4 +1,4 @@
-# Nexera AI v20.0.0
+# Nexera AI v21.0.0
 
 Nexera is a light, mobile-first AI workspace with two separate experiences:
 
@@ -36,6 +36,12 @@ API keys are not stored in browser localStorage. Android uses Android Keystore-b
 
 The supported project output is browser-based **HTML, CSS, and JavaScript**. The app does not execute arbitrary operating-system commands.
 
+## Python Agent backend
+
+V21 includes an optional **Nexera Python Agent** route for Vibecoding. It synchronizes the active app workspace to a FastAPI service, streams model-selected workspace tool calls and results, and retrieves the updated files for client-side checks. Agent mode supports separate planning and implementation models; Build mode omits destructive and terminal tools.
+
+**This route is self-hosted, not a public Nexera cloud service.** Each operator must deploy their own backend and configure `NEXERA_API_KEY`, `OPENROUTER_API_KEY`, a persistent workspace volume, TLS, rate limiting, and trusted CORS origins. The app stores the backend URL in settings and keeps the bearer token in the active session only. Do not distribute a shared master token in a public app. The OpenRouter key remains server-side. Terminal execution is disabled by default and should only be enabled on a private single-user host with the documented Docker sandbox.
+
 ## Normal Chat
 
 - Optional web search using DuckDuckGo search results.
@@ -48,11 +54,11 @@ Web search results are snippets and links, not a guarantee of exhaustive researc
 
 ### Android APK
 
-The workflow `.github/workflows/build-apk.yml` builds the v20.0.0 Android APK from the final release commit (or by manual workflow dispatch). It runs the regression suite, copies the shared UI into Android WebView assets, builds the debug APK, and attaches it to the v20.0.0 GitHub release. The Android launcher icon and in-app brand mark use the same Nexera N symbol.
+The existing `.github/workflows/build-apk.yml` remains the V20 release workflow. V21 adds a preview APK workflow and a separate tagged release workflow. The release workflow requires the publisher's Android upload keystore and GitHub Actions secrets; it builds a signed APK and Android App Bundle (AAB). The Android launcher icon and in-app brand mark use the same Nexera N symbol.
 
 ### Windows portable app
 
-The Windows portable workflow remains a separate release task; the v20.0.0 milestone here publishes the Android APK.
+The V21 branch adds a Windows preview workflow and includes a portable Windows build in the tagged release workflow. Windows builds are unsigned unless a code-signing certificate is configured separately.
 
 ## Development checks
 

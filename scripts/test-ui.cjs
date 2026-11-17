@@ -52,8 +52,10 @@ const change = id => {
 
 try {
   const routeValues = [...document.getElementById("homeProvider").options].map(option => option.value);
-  for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter", "deepseek", "glm", "qwen"]) {
-    assert.ok(routeValues.includes(route), "Missing chat route: " + route);
+  const chatRouteValues = [...document.getElementById("chatProvider").options].map(option => option.value);
+  for (const route of ["auto", "kilo", "llmfaucet", "ovh", "llm7", "uncloseai", "puter", "openrouter", "deepseek", "glm", "qwen", "python-agent"]) {
+    assert.ok(routeValues.includes(route), "Missing home chat route: " + route);
+    assert.ok(chatRouteValues.includes(route), "Missing conversation chat route: " + route);
   }
   document.getElementById("homeProvider").value = "ovh";
   change("homeProvider");
@@ -121,7 +123,7 @@ try {
 
   click("settingsBtn");
   assert.ok(document.getElementById("modalBackdrop").classList.contains("open"));
-  for (const id of ["provider", "endpoint", "modelId", "plannerModel", "orchestratorModel", "apiKey"]) {
+  for (const id of ["provider", "endpoint", "modelId", "plannerModel", "orchestratorModel", "apiKey", "pythonBackendUrl", "pythonBackendToken"]) {
     assert.ok(document.querySelector('label[for="' + id + '"]'), "Settings field #" + id + " needs an associated label");
   }
   for (const button of document.querySelectorAll("button")) {
@@ -181,6 +183,16 @@ try {
   assert.equal(document.getElementById("chatProvider").value, "ovh", "Saving settings should apply the provider to the chat composer");
   assert.equal(window.__testHooks.providerConfig().provider, "ovh", "Provider requests should use the newly saved route");
   assert.equal(window.__testHooks.providerConfig().endpoint, "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions");
+  click("settingsBtn");
+  document.getElementById("provider").value = "python-agent";
+  change("provider");
+  assert.equal(document.getElementById("pythonBackendFields").style.display, "block", "Python backend settings should appear for the Python Agent route");
+  document.getElementById("pythonBackendUrl").value = "https://agent.example.test";
+  document.getElementById("pythonBackendToken").value = "session-only-secret";
+  click("saveSettings");
+  assert.equal(document.getElementById("homeProvider").value, "python-agent");
+  assert.equal(window.__testHooks.providerConfig().provider, "python-agent");
+  assert.ok(!window.localStorage.getItem("nexera.settings.v1").includes("session-only-secret"), "Backend bearer token must not be persisted in browser storage");
   click("settingsBtn");
   document.getElementById("provider").value = "kilo";
   change("provider");

@@ -3,16 +3,43 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val releaseStoreFile = System.getenv("ANDROID_KEYSTORE_PATH")
+val releaseKeyAlias = System.getenv("ANDROID_KEY_ALIAS")
+val releaseStorePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+val releaseKeyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+val hasReleaseSigning = listOf(releaseStoreFile, releaseKeyAlias, releaseStorePassword, releaseKeyPassword)
+    .all { !it.isNullOrBlank() }
+
+
 android {
     namespace = "ai.nexera.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "ai.nexera.app"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 200
-        versionName = "20.0.0"
+        targetSdk = 36
+        versionCode = 210
+        versionName = "21.0.0"
+    }
+
+    if (hasReleaseSigning) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     compileOptions {
@@ -22,6 +49,7 @@ android {
 
     kotlinOptions { jvmTarget = "17" }
 }
+
 dependencies {
     implementation("androidx.webkit:webkit:1.15.0")
 }

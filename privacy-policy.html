@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy notice for Nexera AI.">
+  <title>Nexera AI Privacy Notice</title>
+  <style>
+    :root{color-scheme:light;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#243323;background:#f7faf4}
+    body{margin:0;padding:40px 18px;line-height:1.65}
+    main{max-width:780px;margin:0 auto;background:#fff;padding:clamp(22px,5vw,48px);border:1px solid #e3eadf;border-radius:20px}
+    h1,h2{line-height:1.2;color:#315c2c}h1{font-size:2rem}h2{font-size:1.2rem;margin-top:2rem}
+    p,li{color:#435242}a{color:#315c2c}small{color:#687767}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Nexera AI Privacy Notice</h1>
+  <p><strong>Last updated: 15 November 2026</strong></p>
+  <p><strong>Publisher contact:</strong> [REPLACE WITH A PUBLIC PRIVACY CONTACT EMAIL BEFORE RELEASE]</p>
+  <p>This notice is a draft and must be reviewed by the publisher against the final app build, provider terms, and applicable law before publication.</p>
+  <h2>Who operates Nexera</h2>
+  <p>Nexera AI is distributed by the publisher identified on the app's store listing. The app does not require a Nexera account. This project does not provide a Nexera-operated hosted Python Agent service.</p>
+  <h2>Information stored on your device</h2>
+  <p>Project/workspace information and app settings are stored in local app storage. Android provider API keys are encrypted using Android Keystore-backed storage. Windows uses Electron's operating-system secure storage. Browser-only use does not provide the same native credential storage and does not persist BYOK keys.</p>
+  <p>The optional Python Agent backend URL is saved in app settings. Its bearer token is held in the active app session and must be entered again after restarting.</p>
+  <h2>Information sent to other services</h2>
+  <p>When you send a message, your prompt and relevant conversation context are sent to the AI provider selected in the app. Providers may include Kilo Gateway, LLMFaucet, OVH AI Endpoints, LLM7, UncloseAI, Puter, OpenRouter, DeepSeek, Zhipu/GLM, or Alibaba Cloud DashScope/Qwen. Each provider processes requests under its own terms and privacy policy. Nexera does not control their retention or model-training practices.</p>
+  <p>If you use web search, the search query is sent to DuckDuckGo.</p>
+  <p>If you select the optional Python Agent route, the current project files and agent request are sent to the backend URL you configure. That backend operator controls access, workspace retention, logs, backups, and the OpenRouter account used by the service. Only connect to a backend you trust.</p>
+  <h2>Information sharing and sale</h2>
+  <p>Nexera does not operate an advertising profile or sell user information. Information is sent to third-party services when you choose a feature or provider that requires it, as described above. The publisher must review all third-party SDKs and provider terms before release.</p>
+  <h2>Data retention and deletion</h2>
+  <p>Project data stored locally can generally be removed by deleting projects or clearing app storage/uninstalling the app. Data already sent to an AI provider, search service, or user-configured Python backend is subject to that service's retention and deletion policies.</p>
+  <h2>Security</h2>
+  <p>Nexera uses native secure storage for saved provider credentials on Android and Windows. Network requests to configured AI providers use HTTPS. The optional Python Agent backend should only be used with a trusted HTTPS endpoint. No internet-connected service can guarantee absolute security.</p>
+  <h2>Children's privacy</h2>
+  <p>Nexera is not designed to collect personal information from children. Do not submit sensitive personal information, passwords, private keys, or confidential documents to public AI gateways.</p>
+  <h2>Changes and contact</h2>
+  <p>This notice may be updated when app features, providers, or data practices change. For privacy questions, contact the publisher at the address listed above.</p>
+</main>
+</body>
+</html>

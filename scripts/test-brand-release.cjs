@@ -12,10 +12,12 @@ const adaptiveIcon = read("app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml");
 const roundIcon = read("app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml");
 const foreground = read("app/src/main/res/drawable/ic_nexera_foreground.xml");
 const monochrome = read("app/src/main/res/drawable/ic_nexera_monochrome.xml");
+const androidMain = read("app/src/main/java/ai/nexera/app/MainActivity.kt");
+const releaseWorkflow = read(".github/workflows/release-v21.yml");
 
-assert.equal(packageJson.version, "20.0.0", "Desktop package version should match v20.");
-assert.match(androidGradle, /versionCode\s*=\s*200/);
-assert.match(androidGradle, /versionName\s*=\s*"20\.0\.0"/);
+assert.equal(packageJson.version, "21.0.0", "Desktop package version should match v21.");
+assert.match(androidGradle, /versionCode\s*=\s*210/);
+assert.match(androidGradle, /versionName\s*=\s*"21\.0\.0"/);
 assert.match(manifest, /android:icon="@mipmap\/ic_launcher"/);
 assert.match(manifest, /android:roundIcon="@mipmap\/ic_launcher_round"/);
 assert.match(adaptiveIcon, /@drawable\/ic_nexera_foreground/);
@@ -26,4 +28,15 @@ assert.match(monochrome, /android:pathData=/);
 assert.equal((html.match(/class="nexera-mark"/g) || []).length, 2,
   "Header and home screen should use the shared Nexera N mark.");
 assert.match(html, /Nexera AI/);
-console.log("Brand/release tests passed: v20 version metadata, adaptive/round/monochrome launcher icons, and shared in-app logo.");
+assert.match(androidGradle, /compileSdk\s*=\s*36/);
+assert.match(androidGradle, /targetSdk\s*=\s*36/);
+assert.match(androidMain, /WindowCompat\.setDecorFitsSystemWindows\(window, false\)/);
+assert.match(androidMain, /WindowInsetsCompat\.Type\.displayCutout\(\)/);
+for (const secret of ["ANDROID_KEYSTORE_BASE64", "ANDROID_KEY_ALIAS", "ANDROID_KEYSTORE_PASSWORD", "ANDROID_KEY_PASSWORD"]) {
+  assert.ok(releaseWorkflow.includes(secret), "Release workflow must require publisher signing secret " + secret);
+}
+assert.ok(releaseWorkflow.includes("bundleRelease"), "Production release must build a Google Play App Bundle.");
+assert.ok(releaseWorkflow.includes("assembleRelease"), "Production release must build a signed Android APK.");
+assert.ok(releaseWorkflow.includes("nexera-v21-windows-release"), "Production release must wait for a Windows package.");
+
+console.log("Brand/release tests passed: v21 version metadata, adaptive/round/monochrome launcher icons, and shared in-app logo.");

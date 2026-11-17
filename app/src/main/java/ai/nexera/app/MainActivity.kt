@@ -16,6 +16,9 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -88,15 +91,27 @@ class MainActivity : Activity() {
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
 
-        window.statusBarColor = Color.rgb(251, 252, 249)
-        window.navigationBarColor = Color.rgb(251, 252, 249)
-        window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-
-        root = FrameLayout(this)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        root = FrameLayout(this).apply {
+            setBackgroundColor(Color.rgb(251, 252, 249))
+        }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+            )
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
+        }
+        WindowCompat.getInsetsController(window, root).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         appWebView = buildWebView(exposeNativeBridge = true)
         root.addView(appWebView, FrameLayout.LayoutParams(-1, -1))
         setContentView(root)
+        ViewCompat.requestApplyInsets(root)
         appWebView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
     }
 

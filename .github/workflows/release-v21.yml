@@ -1,0 +1,179 @@
+name: Nexera V21 production release
+
+on:
+  push:
+    tags:
+      - "v21.0.0"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing V21 tag to build and publish
+        required: true
+        default: v21.0.0
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nexera-v21-release
+  cancel-in-progress: false
+
+jobs:
+  android:
+    name: Test and build signed Android release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend test dependencies
+        run: npm install --ignore-scripts
+      - name: Run frontend regression suite
+        run: npm test
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test Python backend
+        working-directory: backend
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m compileall -q app tests
+          pytest -q
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Android SDK 36
+        uses: android-actions/setup-android@v3
+      - name: Install Android 16 platform and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - name: Require completed public privacy policy
+        run: |
+          if grep -q "REPLACE WITH A PUBLIC PRIVACY CONTACT EMAIL" privacy-policy.html; then
+            echo "::error::Replace the privacy contact placeholder before releasing."
+            exit 1
+          fi
+      - name: Require publisher signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_PASSWORD"
+      - name: Restore Android upload keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/nexera-upload.jks"
+          test -s "$RUNNER_TEMP/nexera-upload.jks"
+      - name: Build signed Android APK and App Bundle
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/nexera-upload.jks
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          mkdir -p app/src/main/assets/www
+          cp index.html app/src/main/assets/www/index.html
+          gradle --no-daemon clean assembleRelease bundleRelease
+      - name: Verify signed release artifacts
+        run: |
+          test -s app/build/outputs/apk/release/app-release.apk
+          test -s app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify -certs app/build/outputs/bundle/release/app-release.aab
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose app/build/outputs/apk/release/app-release.apk
+      - name: Upload Android release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexera-v21-android-release
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+  windows:
+    name: Test and build Windows portable release
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out release source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install desktop build dependencies
+        run: npm install
+      - name: Run frontend regression suite
+        run: npm test
+      - name: Build portable Windows app
+        run: npm run dist:win
+      - name: Verify Windows executable
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path dist -Filter *.exe
+          if ($files.Count -lt 1) { throw "No Windows portable executable was produced." }
+          $files | ForEach-Object { if ($_.Length -lt 1000000) { throw "Unexpectedly small executable: $($_.Name)" } }
+      - name: Upload Windows release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexera-v21-windows-release
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish verified V21 release
+    runs-on: ubuntu-latest
+    needs: [android, windows]
+    steps:
+      - name: Download Android release files
+        uses: actions/download-artifact@v4
+        with:
+          name: nexera-v21-android-release
+          path: release/android
+      - name: Download Windows release files
+        uses: actions/download-artifact@v4
+        with:
+          name: nexera-v21-windows-release
+          path: release/windows
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          target_commitish: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.sha }}
+          name: Nexera AI 21.0.0
+          body: |
+            Nexera AI 21.0.0.
+
+            Android APK and Google Play App Bundle are signed with the publisher-provided upload key. Windows portable build is currently unsigned. Review the release notes and verify the APK/AAB signatures before distribution.
+          files: |
+            release/android/app-release.apk
+            release/android/app-release.aab
+            release/windows/*.exe
+          fail_on_unmatched_files: true
+          make_latest: true
